@@ -1,0 +1,2 @@
+# shinyExametrika
+ShiyApp of Exametrika
