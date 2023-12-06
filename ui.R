@@ -1,6 +1,8 @@
 pacman::p_load(shinydashboard)
 source('ui_about.R', local = TRUE)
-source('ui_CPU.R', local = TRUE)
+source('ui_input.R', local = TRUE)
+source('ui_skelton.R', local = TRUE)
+
 dashboardPage(
     dashboardHeader(
         title = "Shiny Exametrika",
@@ -25,7 +27,7 @@ dashboardPage(
     dashboardSidebar(
         sidebarMenu(
             menuItem("About", icon=icon("info"), tabName = "tab_About"),
-            menuItem("Input", icon=icon("cogs"), tabName = "tab_About"),
+            menuItem("Input", icon=icon("cogs"), tabName = "tab_Input"),
             menuItem("Data Check", icon=icon("cogs"), tabName = "tab_About"),
             menuItem("IRT models", icon=icon("line-chart"),
                      menuSubItem("2plmodel", tabName = "tab_CPU"),
@@ -49,7 +51,8 @@ dashboardPage(
     dashboardBody(
         tabItems(
             tabItem_About,
-            tabItem_CPU
+            tabItem_Input,
+            tabItem_skelton
         )
     ),
 
