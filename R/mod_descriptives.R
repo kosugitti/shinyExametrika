@@ -23,12 +23,12 @@ mod_descriptives_ui <- function(id, i18n) {
 
       downloadButton(
         ns("dl_test_csv"),
-        label = paste(i18n$t("Download CSV"), "(Test)"),
+        label = i18n$t("Download CSV (Test)"),
         class = "btn-outline-secondary w-100 mb-2"
       ),
       downloadButton(
         ns("dl_item_csv"),
-        label = paste(i18n$t("Download CSV"), "(Item)"),
+        label = i18n$t("Download CSV (Item)"),
         class = "btn-outline-secondary w-100"
       )
     ),
@@ -85,49 +85,63 @@ mod_descriptives_server <- function(id, formatted_data, i18n) {
     })
 
     # TestStatistics を data.frame に変換するヘルパー
+    # binary/ordinal でフィールドが異なるため names(ts) を動的に走査する
     test_stats_df <- reactive({
       req(desc_result())
       ts <- desc_result()$test
 
-      scalars <- c("TestLength", "SampleSize", "Mean", "SEofMean",
-                   "Variance", "SD", "Skewness", "Kurtosis",
-                   "Min", "Max", "Range")
-      rows <- lapply(scalars, function(nm) {
-        data.frame(Statistic = nm, Value = as.numeric(ts[[nm]]))
+      rows <- lapply(names(ts), function(nm) {
+        val <- ts[[nm]]
+        if (is.null(val)) return(NULL)
+
+        if (length(val) == 1) {
+          data.frame(Statistic = nm, Value = as.numeric(val))
+        } else {
+          # 名前付きベクトル（Stanine 等）は展開して複数行に
+          labels <- if (!is.null(names(val))) {
+            paste0(nm, " (", names(val), ")")
+          } else {
+            paste0(nm, "[", seq_along(val), "]")
+          }
+          data.frame(Statistic = labels, Value = as.numeric(val))
+        }
       })
 
-      # Q1, Median, Q3, IQR（named numeric length-1）
-      for (nm in c("Q1", "Median", "Q3", "IQR")) {
-        rows <- c(rows, list(data.frame(Statistic = nm, Value = as.numeric(ts[[nm]]))))
-      }
-
-      # Stanine（named numeric length-8）
-      stanine_vals <- ts$Stanine
-      stanine_rows <- lapply(seq_along(stanine_vals), function(i) {
-        data.frame(
-          Statistic = paste0("Stanine (", names(stanine_vals)[i], ")"),
-          Value     = as.numeric(stanine_vals[i])
-        )
-      })
-      rows <- c(rows, stanine_rows)
-
-      do.call(rbind, rows)
+      do.call(rbind, Filter(Negate(is.null), rows))
     })
 
     # ItemStatistics を data.frame に変換するヘルパー
+    # binary/ordinal でフィールドが異なるため存在確認しながら動的に構築する
     item_stats_df <- reactive({
       req(desc_result())
       is_r <- desc_result()$item
-      data.frame(
-        Item      = is_r$ItemLabel,
-        NR        = as.integer(is_r$NR),
-        CRR       = round(as.numeric(is_r$CRR),   3),
-        ODDs      = round(as.numeric(is_r$ODDs),  3),
-        Threshold = round(as.numeric(is_r$Threshold), 3),
-        Entropy   = round(as.numeric(is_r$Entropy),   3),
-        ITCrr     = round(as.numeric(is_r$ITCrr),     3),
+
+      df <- data.frame(
+        Item = is_r$ItemLabel,
+        NR   = as.integer(is_r$NR),
         stringsAsFactors = FALSE
       )
+
+      # CRR, ODDs は binary のみ
+      if (!is.null(is_r$CRR))  df$CRR  <- round(drop(is_r$CRR),  3)
+      if (!is.null(is_r$ODDs)) df$ODDs <- round(drop(is_r$ODDs), 3)
+
+      # Threshold: binary は n×1 行列（1列）、ordinal は n×(cat-1) 行列（複数列）
+      if (!is.null(is_r$Threshold)) {
+        thr <- is_r$Threshold
+        if (ncol(thr) == 1) {
+          df$Threshold <- round(drop(thr), 3)
+        } else {
+          for (j in seq_len(ncol(thr))) {
+            df[[paste0("Threshold.", j)]] <- round(thr[, j], 3)
+          }
+        }
+      }
+
+      if (!is.null(is_r$Entropy)) df$Entropy <- round(drop(is_r$Entropy), 3)
+      if (!is.null(is_r$ITCrr))   df$ITCrr   <- round(drop(is_r$ITCrr),  3)
+
+      df
     })
 
     # --- Test Statistics テーブル ---
@@ -148,24 +162,29 @@ mod_descriptives_server <- function(id, formatted_data, i18n) {
     # --- Item Statistics テーブル ---
     output$item_stats_table <- DT::renderDT({
       req(item_stats_df())
-      DT::datatable(
-        item_stats_df(),
+      # 数値列のみ丸める
+      df <- item_stats_df()
+      num_cols <- names(df)[sapply(df, is.numeric)]
+      dt <- DT::datatable(
+        df,
         rownames = FALSE,
         options = list(
           pageLength = 30,
           scrollX = TRUE
         )
       )
+      if (length(num_cols) > 0) dt <- DT::formatRound(dt, columns = num_cols, digits = 3)
+      dt
     })
 
     # --- CSV ダウンロード ---
     output$dl_test_csv <- downloadHandler(
-      filename = function() "test_statistics.csv",
+      filename = function() paste0("test_statistics_", Sys.Date(), ".csv"),
       content  = function(file) utils::write.csv(test_stats_df(), file, row.names = FALSE)
     )
 
     output$dl_item_csv <- downloadHandler(
-      filename = function() "item_statistics.csv",
+      filename = function() paste0("item_statistics_", Sys.Date(), ".csv"),
       content  = function(file) utils::write.csv(item_stats_df(), file, row.names = FALSE)
     )
   })

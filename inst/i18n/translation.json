@@ -67,6 +67,8 @@
     {"en": "Item Statistics", "ja": "項目統計量"},
     {"en": "Running Descriptives analysis...", "ja": "記述統計を実行中..."},
     {"en": "Analysis completed!", "ja": "分析が完了しました"},
-    {"en": "Analysis failed", "ja": "分析に失敗しました"}
+    {"en": "Analysis failed", "ja": "分析に失敗しました"},
+    {"en": "Download CSV (Test)", "ja": "CSV ダウンロード（テスト）"},
+    {"en": "Download CSV (Item)", "ja": "CSV ダウンロード（項目）"}
   ]
 }
