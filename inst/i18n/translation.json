@@ -69,6 +69,18 @@
     {"en": "Analysis completed!", "ja": "分析が完了しました"},
     {"en": "Analysis failed", "ja": "分析に失敗しました"},
     {"en": "Download CSV (Test)", "ja": "CSV ダウンロード（テスト）"},
-    {"en": "Download CSV (Item)", "ja": "CSV ダウンロード（項目）"}
+    {"en": "Download CSV (Item)", "ja": "CSV ダウンロード（項目）"},
+
+    {"en": "CTT analyzes test reliability using Classical Test Theory.", "ja": "古典的テスト理論（CTT）によりテストの信頼性を分析します。"},
+    {"en": "Running CTT analysis...", "ja": "CTT 分析を実行中..."},
+    {"en": "CTT requires binary response data.", "ja": "CTT には二値データが必要です"},
+    {"en": "Reliability", "ja": "信頼性係数"},
+    {"en": "Reliability if Item Deleted", "ja": "項目削除時の信頼性"},
+    {"en": "Index", "ja": "指標"},
+    {"en": "Value", "ja": "値"},
+    {"en": "Alpha (Covariance)", "ja": "Alpha（共分散）"},
+    {"en": "Omega (Covariance)", "ja": "Omega（共分散）"},
+    {"en": "Download CSV (Reliability)", "ja": "CSV ダウンロード（信頼性）"},
+    {"en": "Download CSV (Item Deleted)", "ja": "CSV ダウンロード（項目削除時）"}
   ]
 }

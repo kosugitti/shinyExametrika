@@ -23,6 +23,6 @@ app_server <- function(input, output, session) {
 
   # --- 分析モジュール ---
   mod_descriptives_server("descriptives", formatted_data = formatted_data, i18n = i18n)
-  # mod_ctt_server("ctt", formatted_data = formatted_data, i18n = i18n)
+  mod_ctt_server("ctt", formatted_data = formatted_data, i18n = i18n)
   # mod_irt_server("irt", formatted_data = formatted_data, i18n = i18n)
 }
