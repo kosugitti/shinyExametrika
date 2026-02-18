@@ -1,0 +1,35 @@
+Package: shinyExametrika
+Title: A Shiny GUI for the exametrika Psychometric Package
+Version: 0.0.0.9000
+Authors@R:
+    person(given = "Koji",
+           family = "Kosugi",
+           role = c("aut", "cre"),
+           email = "kosugitti@gmail.com",
+           comment = c(ORCID = "0000-0002-9014-738X"))
+Description: Provides a web-based graphical user interface for the exametrika
+    psychometric analysis package. Supports Classical Test Theory (CTT),
+    Item Response Theory (IRT), Latent Class Analysis (LCA), Latent Rank
+    Analysis (LRA), Biclustering, and more, with bilingual (English/Japanese)
+    interface.
+License: MIT + file LICENSE
+URL: https://github.com/kosugitti/shinyExametrika
+BugReports: https://github.com/kosugitti/shinyExametrika/issues
+Imports:
+    bslib,
+    config,
+    DT,
+    exametrika (>= 1.9.0),
+    golem,
+    shiny,
+    shiny.i18n,
+    shinyjs,
+    shinyWidgets,
+    waiter
+Suggests:
+    ggExametrika,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.3.2
