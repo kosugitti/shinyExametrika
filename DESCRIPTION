@@ -19,7 +19,7 @@ Imports:
     bslib,
     config,
     DT,
-    exametrika (>= 1.9.0),
+    exametrika (>= 1.8.0),
     golem,
     shiny,
     shiny.i18n,

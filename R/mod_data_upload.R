@@ -241,8 +241,8 @@ mod_data_upload_server <- function(id, i18n) {
       fd <- formatted_data()
 
       resp_type <- if (!is.null(fd$response.type)) fd$response.type else "unknown"
-      n_items <- if (!is.null(fd$testlength)) fd$testlength else ncol(fd$U %||% fd$Q)
-      n_examinees <- if (!is.null(fd$nobs)) fd$nobs else nrow(fd$U %||% fd$Q)
+      n_items <- ncol(fd$U)
+      n_examinees <- nrow(fd$U)
 
       tags$div(
         class = "d-flex gap-3 mb-3",
@@ -276,8 +276,7 @@ mod_data_upload_server <- function(id, i18n) {
       fd <- formatted_data()
 
       # 表示用の行列を取得
-      mat <- if (!is.null(fd$U)) fd$U else fd$Q
-      display_df <- as.data.frame(mat)
+      display_df <- as.data.frame(fd$U)
       if (!is.null(fd$ID)) {
         display_df <- cbind(ID = fd$ID, display_df)
       }
