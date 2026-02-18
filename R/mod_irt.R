@@ -84,6 +84,9 @@ mod_irt_ui <- function(id, i18n) {
             )
           ),
 
+          # アイテム選択UI（ICC/IICの場合のみ表示）
+          uiOutput(ns("item_selection_ui")),
+
           plotOutput(ns("plot"), height = "600px"),
           downloadButton(ns("download_plot"), i18n$t("Download Plot"), class = "mt-2")
         )
@@ -145,6 +148,28 @@ mod_irt_server <- function(id, formatted_data, i18n) {
       })
     })
 
+    # ========== アイテム選択UI（動的） ==========
+
+    output$item_selection_ui <- renderUI({
+      req(result())
+
+      # ICC/IICの場合のみアイテム選択UIを表示
+      if (input$plot_type %in% c("ICC", "IIC")) {
+        item_names <- rownames(result()$params)
+
+        tags$div(
+          class = "mb-3",
+          checkboxGroupInput(
+            session$ns("selected_items"),
+            label = i18n$t("Select Items to Plot"),
+            choices = setNames(seq_along(item_names), item_names),
+            selected = seq_along(item_names),  # デフォルトは全選択
+            inline = TRUE
+          )
+        )
+      }
+    })
+
     # ========== プロット生成ヘルパー ==========
 
     current_plot <- reactive({
@@ -159,9 +184,23 @@ mod_irt_server <- function(id, formatted_data, i18n) {
       }
 
       switch(input$plot_type,
-        "ICC" = ggExametrika::plotICC_gg(result()),
+        "ICC" = {
+          items <- if (!is.null(input$selected_items) && length(input$selected_items) > 0) {
+            as.numeric(input$selected_items)
+          } else {
+            NULL
+          }
+          ggExametrika::plotICC_overlay_gg(result(), items = items, show_legend = TRUE)
+        },
         "TRF" = ggExametrika::plotTRF_gg(result()),
-        "IIC" = ggExametrika::plotIIC_gg(result()),
+        "IIC" = {
+          items <- if (!is.null(input$selected_items) && length(input$selected_items) > 0) {
+            as.numeric(input$selected_items)
+          } else {
+            NULL
+          }
+          ggExametrika::plotIIC_overlay_gg(result(), items = items, show_legend = TRUE)
+        },
         "TIC" = ggExametrika::plotTIC_gg(result())
       )
     })
