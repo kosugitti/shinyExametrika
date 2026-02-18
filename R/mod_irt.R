@@ -185,12 +185,20 @@ mod_irt_server <- function(id, formatted_data, i18n) {
 
       switch(input$plot_type,
         "ICC" = {
-          items <- if (!is.null(input$selected_items)) as.numeric(input$selected_items) else NULL
+          items <- if (!is.null(input$selected_items) && length(input$selected_items) > 0) {
+            as.numeric(input$selected_items)
+          } else {
+            NULL
+          }
           ggExametrika::plotICC_overlay_gg(result(), items = items, show_legend = TRUE)
         },
         "TRF" = ggExametrika::plotTRF_gg(result()),
         "IIC" = {
-          items <- if (!is.null(input$selected_items)) as.numeric(input$selected_items) else NULL
+          items <- if (!is.null(input$selected_items) && length(input$selected_items) > 0) {
+            as.numeric(input$selected_items)
+          } else {
+            NULL
+          }
           ggExametrika::plotIIC_overlay_gg(result(), items = items, show_legend = TRUE)
         },
         "TIC" = ggExametrika::plotTIC_gg(result())
