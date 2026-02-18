@@ -34,13 +34,11 @@ mod_data_upload_ui <- function(id, i18n) {
           "J15S500 (15 items, 500 examinees, binary)" = "J15S500",
           "J35S515 (35 items, 515 examinees, binary)" = "J35S515",
           "J20S400 (20 items, 400 examinees, binary)" = "J20S400",
-          "J14S500 (14 items, 500 examinees, binary)" = "J14S500",
           "J12S5000 (12 items, 5000 examinees, binary)" = "J12S5000",
+          "J35S5000 (35 items, 5000 examinees, binary)" = "J35S5000",
           "J50S100 (50 items, 100 examinees, binary)" = "J50S100",
           "J5S1000 (5 items, 1000 examinees, ordinal)" = "J5S1000",
-          "J15S3810 (15 items, 3810 examinees, ordinal)" = "J15S3810",
-          "J35S500 (35 items, 500 examinees, ordinal)" = "J35S500",
-          "J20S600 (20 items, 600 examinees, nominal)" = "J20S600"
+          "J15S3810 (15 items, 3810 examinees, ordinal)" = "J15S3810"
         )
       ),
 
@@ -150,13 +148,23 @@ mod_data_upload_server <- function(id, i18n) {
     observeEvent(input$sample_data, {
       req(input$sample_data != "")
       tryCatch({
-        df <- get(input$sample_data, envir = asNamespace("exametrika"))
-        raw_data(as.data.frame(df))
-        formatted_data(NULL)
+        env <- new.env(parent = emptyenv())
+        utils::data(list = input$sample_data, package = "exametrika", envir = env)
+        df <- get(input$sample_data, envir = env)
+
+        # サンプルデータはすでに exametrikaData 形式
+        # Raw Data タブ: 元の値を表示（ordinal は Q、binary は U）
+        raw_df <- as.data.frame(if (!is.null(df$Q)) df$Q else df$U)
+        if (!is.null(df$ID)) raw_df <- cbind(ID = df$ID, raw_df)
+        if (!is.null(df$ItemLabel)) colnames(raw_df)[seq_along(df$ItemLabel) + (!is.null(df$ID))] <- df$ItemLabel
+        raw_data(raw_df)
+
+        # Formatted Data はそのまま設定（Format Data ボタン不要）
+        formatted_data(df)
         showNotification(i18n$t("Data loaded successfully!"), type = "message")
-      }, error = function(e) {
+      }, error = function(err) {
         showNotification(
-          paste(i18n$t("Error loading data"), ":", e$message),
+          paste(i18n$t("Error loading data"), ":", err$message),
           type = "error"
         )
       })
@@ -169,9 +177,6 @@ mod_data_upload_server <- function(id, i18n) {
       tryCatch({
         df <- raw_data()
 
-        # ID列の設定
-        id_arg <- if (input$id_column == "first") 1 else NULL
-
         # 欠損値コード
         na_arg <- NULL
         if (nchar(trimws(input$na_code)) > 0) {
@@ -182,12 +187,14 @@ mod_data_upload_server <- function(id, i18n) {
         resp_type <- if (input$response_type == "auto") NULL else input$response_type
 
         # dataFormat() 実行
-        result <- exametrika::dataFormat(
+        # id=NULL を渡すとエラーになるため、do.call() で引数を動的に構築する
+        fmt_args <- list(
           df,
-          id = id_arg,
           na = na_arg,
           response.type = resp_type
         )
+        if (input$id_column == "first") fmt_args$id <- 1
+        result <- do.call(exametrika::dataFormat, fmt_args)
 
         formatted_data(result)
         showNotification(i18n$t("Data formatted successfully!"), type = "message")
@@ -204,20 +211,24 @@ mod_data_upload_server <- function(id, i18n) {
       req(raw_data())
       df <- raw_data()
       tags$div(
-        class = "d-flex gap-3 mb-3",
+        class = "d-flex flex-wrap gap-3 mb-3",
         bslib::value_box(
           title = i18n$t("Rows"),
           value = nrow(df),
           showcase = icon("users"),
+          showcase_layout = bslib::showcase_left_center(),
           theme = "primary",
-          height = "100px"
+          height = "100px",
+          style = "flex: 1; min-width: 150px;"
         ),
         bslib::value_box(
           title = i18n$t("Columns"),
           value = ncol(df),
           showcase = icon("table-columns"),
+          showcase_layout = bslib::showcase_left_center(),
           theme = "info",
-          height = "100px"
+          height = "100px",
+          style = "flex: 1; min-width: 150px;"
         )
       )
     })
@@ -241,31 +252,38 @@ mod_data_upload_server <- function(id, i18n) {
       fd <- formatted_data()
 
       resp_type <- if (!is.null(fd$response.type)) fd$response.type else "unknown"
-      n_items <- if (!is.null(fd$testlength)) fd$testlength else ncol(fd$U %||% fd$Q)
-      n_examinees <- if (!is.null(fd$nobs)) fd$nobs else nrow(fd$U %||% fd$Q)
+      mat <- if (!is.null(fd$U)) fd$U else fd$Q
+      n_items <- ncol(mat)
+      n_examinees <- nrow(mat)
 
       tags$div(
-        class = "d-flex gap-3 mb-3",
+        class = "d-flex flex-wrap gap-3 mb-3",
         bslib::value_box(
           title = i18n$t("Examinees"),
           value = n_examinees,
           showcase = icon("users"),
+          showcase_layout = bslib::showcase_left_center(),
           theme = "primary",
-          height = "100px"
+          height = "100px",
+          style = "flex: 1; min-width: 150px;"
         ),
         bslib::value_box(
           title = i18n$t("Items"),
           value = n_items,
           showcase = icon("list-check"),
+          showcase_layout = bslib::showcase_left_center(),
           theme = "info",
-          height = "100px"
+          height = "100px",
+          style = "flex: 1; min-width: 150px;"
         ),
         bslib::value_box(
           title = i18n$t("Detected type"),
-          value = resp_type,
+          value = tags$span(resp_type, style = "font-size: 2rem; line-height: 1.2;"),
           showcase = icon("tag"),
+          showcase_layout = bslib::showcase_left_center(),
           theme = "success",
-          height = "100px"
+          height = "100px",
+          style = "flex: 1; min-width: 150px;"
         )
       )
     })
@@ -275,9 +293,8 @@ mod_data_upload_server <- function(id, i18n) {
       req(formatted_data())
       fd <- formatted_data()
 
-      # 表示用の行列を取得
-      mat <- if (!is.null(fd$U)) fd$U else fd$Q
-      display_df <- as.data.frame(mat)
+      # 表示用の行列を取得（binary: U, ordinal/nominal/rated: Q）
+      display_df <- as.data.frame(if (!is.null(fd$U)) fd$U else fd$Q)
       if (!is.null(fd$ID)) {
         display_df <- cbind(ID = fd$ID, display_df)
       }
