@@ -29,11 +29,16 @@ mod_ctt_ui <- function(id, i18n) {
 
       tags$hr(),
 
-      # ダウンロード（分析後に有効化）
+      # Reliability と ReliabilityExcludingItem を別々にダウンロード
       downloadButton(
         ns("dl_reliability"),
-        label = i18n$t("Download CSV"),
-        class = "btn-outline-secondary w-100 mt-1"
+        label = i18n$t("Download CSV (Reliability)"),
+        class = "btn-outline-secondary w-100 mb-2"
+      ),
+      downloadButton(
+        ns("dl_item_deleted"),
+        label = i18n$t("Download CSV (Item Deleted)"),
+        class = "btn-outline-secondary w-100"
       )
     ),
 
@@ -109,14 +114,13 @@ mod_ctt_server <- function(id, formatted_data, i18n) {
       req(ctt_result())
       rel <- ctt_result()$Reliability
 
-      # Alpha(Covariance) と Omega(Covariance) を取り出す
       alpha_val <- rel$value[rel$name == "Alpha(Covariance)"]
       omega_val <- rel$value[rel$name == "Omega(Covariance)"]
 
       tags$div(
         class = "d-flex flex-wrap gap-3 mb-3",
         bslib::value_box(
-          title = "Alpha (Covariance)",
+          title = i18n$t("Alpha (Covariance)"),
           value = tags$span(round(alpha_val, 3),
                             style = "font-size: 2rem; line-height: 1.2;"),
           showcase = icon("calculator"),
@@ -126,10 +130,10 @@ mod_ctt_server <- function(id, formatted_data, i18n) {
           style = "flex: 1; min-width: 150px;"
         ),
         bslib::value_box(
-          title = "Omega (Covariance)",
+          title = i18n$t("Omega (Covariance)"),
           value = tags$span(round(omega_val, 3),
                             style = "font-size: 2rem; line-height: 1.2;"),
-          showcase = icon("omega"),
+          showcase = icon("chart-line"),
           showcase_layout = bslib::showcase_left_center(),
           theme = "info",
           height = "100px",
@@ -159,32 +163,35 @@ mod_ctt_server <- function(id, formatted_data, i18n) {
     output$item_deleted_table <- DT::renderDT({
       req(ctt_result())
       df <- ctt_result()$ReliabilityExcludingItem
-      DT::datatable(
+      # 数値列を自動検出して丸める
+      num_cols <- names(df)[sapply(df, is.numeric)]
+      dt <- DT::datatable(
         df,
         rownames = FALSE,
         options = list(
           pageLength = 20,
           scrollX = TRUE
         )
-      ) |>
-        DT::formatRound(columns = c("Alpha.Covariance", "Alpha.Phi",
-                                    "Alpha.Tetrachoric"),
-                        digits = 4)
+      )
+      if (length(num_cols) > 0) dt <- DT::formatRound(dt, columns = num_cols, digits = 4)
+      dt
     })
 
-    # --- CSV ダウンロード ---
+    # --- CSV ダウンロード: Reliability ---
     output$dl_reliability <- downloadHandler(
-      filename = function() paste0("CTT_reliability_", Sys.Date(), ".csv"),
-      content = function(file) {
+      filename = function() paste0("CTT_Reliability_", Sys.Date(), ".csv"),
+      content  = function(file) {
         req(ctt_result())
-        rel  <- ctt_result()$Reliability
-        rdel <- ctt_result()$ReliabilityExcludingItem
-        # 2シートを1ファイルにまとめる（区切り行を挟む）
-        write.csv(rel,  file, row.names = FALSE)
-        write.table(data.frame(), file, append = TRUE,
-                    col.names = FALSE, row.names = FALSE)
-        write.table(rdel, file, append = TRUE,
-                    sep = ",", col.names = TRUE, row.names = FALSE)
+        utils::write.csv(ctt_result()$Reliability, file, row.names = FALSE)
+      }
+    )
+
+    # --- CSV ダウンロード: ReliabilityExcludingItem ---
+    output$dl_item_deleted <- downloadHandler(
+      filename = function() paste0("CTT_ReliabilityExcludingItem_", Sys.Date(), ".csv"),
+      content  = function(file) {
+        req(ctt_result())
+        utils::write.csv(ctt_result()$ReliabilityExcludingItem, file, row.names = FALSE)
       }
     )
   })

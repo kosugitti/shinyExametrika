@@ -77,6 +77,10 @@
     {"en": "Reliability", "ja": "信頼性係数"},
     {"en": "Reliability if Item Deleted", "ja": "項目削除時の信頼性"},
     {"en": "Index", "ja": "指標"},
-    {"en": "Value", "ja": "値"}
+    {"en": "Value", "ja": "値"},
+    {"en": "Alpha (Covariance)", "ja": "Alpha（共分散）"},
+    {"en": "Omega (Covariance)", "ja": "Omega（共分散）"},
+    {"en": "Download CSV (Reliability)", "ja": "CSV ダウンロード（信頼性）"},
+    {"en": "Download CSV (Item Deleted)", "ja": "CSV ダウンロード（項目削除時）"}
   ]
 }
