@@ -212,20 +212,22 @@ mod_data_upload_server <- function(id, i18n) {
       req(raw_data())
       df <- raw_data()
       tags$div(
-        class = "d-flex gap-3 mb-3",
+        class = "d-flex flex-wrap gap-3 mb-3",
         bslib::value_box(
           title = i18n$t("Rows"),
           value = nrow(df),
           showcase = icon("users"),
           theme = "primary",
-          height = "100px"
+          height = "100px",
+          style = "flex: 1; min-width: 150px;"
         ),
         bslib::value_box(
           title = i18n$t("Columns"),
           value = ncol(df),
           showcase = icon("table-columns"),
           theme = "info",
-          height = "100px"
+          height = "100px",
+          style = "flex: 1; min-width: 150px;"
         )
       )
     })
@@ -253,27 +255,30 @@ mod_data_upload_server <- function(id, i18n) {
       n_examinees <- nrow(fd$U)
 
       tags$div(
-        class = "d-flex gap-3 mb-3",
+        class = "d-flex flex-wrap gap-3 mb-3",
         bslib::value_box(
           title = i18n$t("Examinees"),
           value = n_examinees,
           showcase = icon("users"),
           theme = "primary",
-          height = "100px"
+          height = "100px",
+          style = "flex: 1; min-width: 150px;"
         ),
         bslib::value_box(
           title = i18n$t("Items"),
           value = n_items,
           showcase = icon("list-check"),
           theme = "info",
-          height = "100px"
+          height = "100px",
+          style = "flex: 1; min-width: 150px;"
         ),
         bslib::value_box(
           title = i18n$t("Detected type"),
           value = resp_type,
           showcase = icon("tag"),
           theme = "success",
-          height = "100px"
+          height = "100px",
+          style = "flex: 1; min-width: 150px;"
         )
       )
     })
