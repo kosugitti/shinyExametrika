@@ -50,11 +50,11 @@ app_ui <- function(request) {
         mod_descriptives_ui("descriptives", i18n)
       ),
 
-      # --- 分析タブ（Phase 1 以降で実装） ---
+      # --- 分析タブ ---
       bslib::nav_panel(
         title = i18n$t("CTT"),
         value = "tab_ctt",
-        mod_placeholder_ui("ctt", i18n)
+        mod_ctt_ui("ctt", i18n)
       ),
       bslib::nav_panel(
         title = i18n$t("IRT"),
