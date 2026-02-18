@@ -178,7 +178,9 @@ mod_data_upload_server <- function(id, i18n) {
         df <- raw_data()
 
         # ID列の設定
-        id_arg <- if (input$id_column == "first") 1 else NULL
+        # exametrika は id=NULL を受け付けないため常に 1 を渡す
+        # 文字列先頭列 → ID として使用、数値先頭列 → 自動ID生成（全列を項目として保持）
+        id_arg <- 1
 
         # 欠損値コード
         na_arg <- NULL
@@ -217,6 +219,7 @@ mod_data_upload_server <- function(id, i18n) {
           title = i18n$t("Rows"),
           value = nrow(df),
           showcase = icon("users"),
+          showcase_layout = bslib::showcase_left_center(),
           theme = "primary",
           height = "100px",
           style = "flex: 1; min-width: 150px;"
@@ -225,6 +228,7 @@ mod_data_upload_server <- function(id, i18n) {
           title = i18n$t("Columns"),
           value = ncol(df),
           showcase = icon("table-columns"),
+          showcase_layout = bslib::showcase_left_center(),
           theme = "info",
           height = "100px",
           style = "flex: 1; min-width: 150px;"
@@ -251,8 +255,9 @@ mod_data_upload_server <- function(id, i18n) {
       fd <- formatted_data()
 
       resp_type <- if (!is.null(fd$response.type)) fd$response.type else "unknown"
-      n_items <- ncol(fd$U)
-      n_examinees <- nrow(fd$U)
+      mat <- if (!is.null(fd$U)) fd$U else fd$Q
+      n_items <- ncol(mat)
+      n_examinees <- nrow(mat)
 
       tags$div(
         class = "d-flex flex-wrap gap-3 mb-3",
@@ -260,6 +265,7 @@ mod_data_upload_server <- function(id, i18n) {
           title = i18n$t("Examinees"),
           value = n_examinees,
           showcase = icon("users"),
+          showcase_layout = bslib::showcase_left_center(),
           theme = "primary",
           height = "100px",
           style = "flex: 1; min-width: 150px;"
@@ -268,14 +274,16 @@ mod_data_upload_server <- function(id, i18n) {
           title = i18n$t("Items"),
           value = n_items,
           showcase = icon("list-check"),
+          showcase_layout = bslib::showcase_left_center(),
           theme = "info",
           height = "100px",
           style = "flex: 1; min-width: 150px;"
         ),
         bslib::value_box(
           title = i18n$t("Detected type"),
-          value = resp_type,
+          value = tags$span(resp_type, style = "font-size: 2rem; line-height: 1.2;"),
           showcase = icon("tag"),
+          showcase_layout = bslib::showcase_left_center(),
           theme = "success",
           height = "100px",
           style = "flex: 1; min-width: 150px;"
@@ -288,8 +296,8 @@ mod_data_upload_server <- function(id, i18n) {
       req(formatted_data())
       fd <- formatted_data()
 
-      # 表示用の行列を取得
-      display_df <- as.data.frame(fd$U)
+      # 表示用の行列を取得（binary: U, ordinal/nominal/rated: Q）
+      display_df <- as.data.frame(if (!is.null(fd$U)) fd$U else fd$Q)
       if (!is.null(fd$ID)) {
         display_df <- cbind(ID = fd$ID, display_df)
       }
