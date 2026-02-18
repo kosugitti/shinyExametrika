@@ -57,6 +57,7 @@
     {"en": "Plot", "ja": "プロット"},
     {"en": "Download CSV", "ja": "CSV ダウンロード"},
     {"en": "Download Plot", "ja": "プロット ダウンロード"},
+    {"en": "Select Items to Plot", "ja": "表示する項目を選択"},
 
     {"en": "Coming soon", "ja": "準備中"},
     {"en": "This analysis will be available in a future release.", "ja": "この分析は今後のリリースで利用可能になります。"},
