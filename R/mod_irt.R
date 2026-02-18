@@ -11,7 +11,7 @@ mod_irt_ui <- function(id, i18n) {
     # ========== サイドバー ==========
     sidebar = bslib::sidebar(
       width = 300,
-      title = i18n$t("Settings"),
+      title = i18n$t("IRT"),
 
       # モデル選択
       radioButtons(
@@ -31,62 +31,62 @@ mod_irt_ui <- function(id, i18n) {
       actionButton(
         ns("btn_run"),
         label = i18n$t("Run Analysis"),
-        class = "btn-primary",
-        width = "100%"
+        class = "btn-primary w-100",
+        icon = icon("play")
       )
     ),
 
     # ========== メインパネル ==========
-    tabsetPanel(
+    bslib::navset_card_tab(
       id = ns("main_tabs"),
 
       # --- Results タブ ---
-      tabPanel(
+      bslib::nav_panel(
         title = i18n$t("Results"),
-        value = "tab_results",
+        bslib::card_body(
+          # 適合度指標セクション
+          tags$div(
+            class = "mb-5",
+            tags$h5(i18n$t("Fit Indices"), class = "mt-3 mb-3"),
+            DT::DTOutput(ns("table_fit"))
+          ),
 
-        # 適合度指標セクション
-        tags$div(
-          class = "mb-5",
-          tags$h5(i18n$t("Fit Indices"), class = "mt-3 mb-3"),
-          DT::DTOutput(ns("table_fit"))
-        ),
+          # 項目パラメータセクション
+          tags$div(
+            class = "mb-5",
+            tags$h5(i18n$t("Item Parameters"), class = "mt-3 mb-3"),
+            DT::DTOutput(ns("table_params")),
+            downloadButton(ns("download_params"), i18n$t("Download CSV"), class = "mt-3 mb-2")
+          ),
 
-        # 項目パラメータセクション
-        tags$div(
-          class = "mb-5",
-          tags$h5(i18n$t("Item Parameters"), class = "mt-3 mb-3"),
-          DT::DTOutput(ns("table_params")),
-          downloadButton(ns("download_params"), i18n$t("Download CSV"), class = "mt-3 mb-2")
-        ),
-
-        # 能力推定値セクション
-        tags$div(
-          class = "mb-5",
-          tags$h5(i18n$t("Ability Estimates"), class = "mt-3 mb-3"),
-          DT::DTOutput(ns("table_ability")),
-          downloadButton(ns("download_ability"), i18n$t("Download CSV"), class = "mt-3 mb-2")
+          # 能力推定値セクション
+          tags$div(
+            class = "mb-5",
+            tags$h5(i18n$t("Ability Estimates"), class = "mt-3 mb-3"),
+            DT::DTOutput(ns("table_ability")),
+            downloadButton(ns("download_ability"), i18n$t("Download CSV"), class = "mt-3 mb-2")
+          )
         )
       ),
 
       # --- Plots タブ ---
-      tabPanel(
+      bslib::nav_panel(
         title = i18n$t("Plots"),
-        value = "tab_plots",
+        bslib::card_body(
+          selectInput(
+            ns("plot_type"),
+            label = i18n$t("Plot Type"),
+            choices = c(
+              "ICC (Item Characteristic Curve)" = "ICC",
+              "TRF (Test Response Function)" = "TRF",
+              "IIC (Item Information Curve)" = "IIC",
+              "TIC (Test Information Curve)" = "TIC"
+            )
+          ),
 
-        selectInput(
-          ns("plot_type"),
-          label = i18n$t("Plot Type"),
-          choices = c(
-            "ICC (Item Characteristic Curve)" = "ICC",
-            "TRF (Test Response Function)" = "TRF",
-            "IIC (Item Information Curve)" = "IIC",
-            "TIC (Test Information Curve)" = "TIC"
-          )
-        ),
-
-        plotOutput(ns("plot"), height = "600px"),
-        downloadButton(ns("download_plot"), i18n$t("Download Plot"), class = "mt-2")
+          plotOutput(ns("plot"), height = "600px"),
+          downloadButton(ns("download_plot"), i18n$t("Download Plot"), class = "mt-2")
+        )
       )
     )
   )
@@ -116,7 +116,7 @@ mod_irt_server <- function(id, formatted_data, i18n) {
       maxscore <- fd$maxscore
       if (!is.null(maxscore) && length(maxscore) > 0 && any(maxscore > 1)) {
         shiny::showNotification(
-          "IRT requires binary data (0/1). Please use GRM for ordinal data.",
+          i18n$t("IRT requires binary data. Please use GRM for ordinal data."),
           type = "warning",
           duration = 5
         )
@@ -124,15 +124,15 @@ mod_irt_server <- function(id, formatted_data, i18n) {
       }
 
       # プログレスバー表示
-      withProgress(message = 'Running IRT analysis...', value = 0, {
-        incProgress(0.3, detail = "Estimating parameters...")
+      withProgress(message = i18n$t("Running IRT analysis..."), value = 0, {
+        incProgress(0.3, detail = i18n$t("Estimating parameters..."))
 
         # IRT実行（exametrikaオブジェクト全体を渡す）
         result <- tryCatch(
           exametrika::IRT(fd, model = model_num),
           error = function(e) {
             shiny::showNotification(
-              paste("Error:", e$message),
+              paste(i18n$t("Analysis failed"), ":", e$message),
               type = "error",
               duration = 10
             )
@@ -143,6 +143,27 @@ mod_irt_server <- function(id, formatted_data, i18n) {
         incProgress(1)
         result
       })
+    })
+
+    # ========== プロット生成ヘルパー ==========
+
+    current_plot <- reactive({
+      req(result())
+
+      if (!requireNamespace("ggExametrika", quietly = TRUE)) {
+        shiny::showNotification(
+          i18n$t("ggExametrika package is required for plots."),
+          type = "warning"
+        )
+        return(NULL)
+      }
+
+      switch(input$plot_type,
+        "ICC" = ggExametrika::plotICC_gg(result()),
+        "TRF" = ggExametrika::plotTRF_gg(result()),
+        "IIC" = ggExametrika::plotIIC_gg(result()),
+        "TIC" = ggExametrika::plotTIC_gg(result())
+      )
     })
 
     # ========== テーブル出力 ==========
@@ -197,19 +218,7 @@ mod_irt_server <- function(id, formatted_data, i18n) {
     # ========== プロット ==========
 
     output$plot <- renderPlot({
-      req(result())
-
-      plot_type <- input$plot_type
-
-      if (plot_type == "ICC") {
-        ggExametrika::plotICC_gg(result())
-      } else if (plot_type == "TRF") {
-        ggExametrika::plotTRF_gg(result())
-      } else if (plot_type == "IIC") {
-        ggExametrika::plotIIC_gg(result())
-      } else if (plot_type == "TIC") {
-        ggExametrika::plotTIC_gg(result())
-      }
+      current_plot()
     })
 
     # ========== ダウンロード ==========
@@ -220,7 +229,7 @@ mod_irt_server <- function(id, formatted_data, i18n) {
         paste0("IRT_parameters_", Sys.Date(), ".csv")
       },
       content = function(file) {
-        write.csv(result()$params, file, row.names = TRUE)
+        utils::write.csv(result()$params, file, row.names = TRUE)
       }
     )
 
@@ -230,8 +239,7 @@ mod_irt_server <- function(id, formatted_data, i18n) {
         paste0("IRT_ability_", Sys.Date(), ".csv")
       },
       content = function(file) {
-        ability <- result()$ability
-        write.csv(ability, file, row.names = FALSE)
+        utils::write.csv(result()$ability, file, row.names = FALSE)
       }
     )
 
@@ -241,19 +249,9 @@ mod_irt_server <- function(id, formatted_data, i18n) {
         paste0("IRT_", input$plot_type, "_", Sys.Date(), ".png")
       },
       content = function(file) {
-        plot_type <- input$plot_type
-
-        if (plot_type == "ICC") {
-          p <- ggExametrika::plotICC_gg(result())
-        } else if (plot_type == "TRF") {
-          p <- ggExametrika::plotTRF_gg(result())
-        } else if (plot_type == "IIC") {
-          p <- ggExametrika::plotIIC_gg(result())
-        } else if (plot_type == "TIC") {
-          p <- ggExametrika::plotTIC_gg(result())
-        }
-
-        ggsave(file, plot = p, width = 10, height = 6, dpi = 300)
+        p <- current_plot()
+        req(p)
+        ggplot2::ggsave(file, plot = p, width = 10, height = 6, dpi = 300)
       }
     )
   })

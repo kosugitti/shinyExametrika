@@ -81,6 +81,16 @@
     {"en": "Alpha (Covariance)", "ja": "Alpha（共分散）"},
     {"en": "Omega (Covariance)", "ja": "Omega（共分散）"},
     {"en": "Download CSV (Reliability)", "ja": "CSV ダウンロード（信頼性）"},
-    {"en": "Download CSV (Item Deleted)", "ja": "CSV ダウンロード（項目削除時）"}
+    {"en": "Download CSV (Item Deleted)", "ja": "CSV ダウンロード（項目削除時）"},
+
+    {"en": "IRT Model", "ja": "IRT モデル"},
+    {"en": "IRT requires binary data. Please use GRM for ordinal data.", "ja": "IRT は二値データが必要です。多値データには GRM を使用してください。"},
+    {"en": "Running IRT analysis...", "ja": "IRT 分析を実行中..."},
+    {"en": "Estimating parameters...", "ja": "パラメータ推定中..."},
+    {"en": "Item Parameters", "ja": "項目パラメータ"},
+    {"en": "Ability Estimates", "ja": "能力推定値"},
+    {"en": "Plots", "ja": "プロット"},
+    {"en": "Plot Type", "ja": "プロットの種類"},
+    {"en": "ggExametrika package is required for plots.", "ja": "プロットには ggExametrika パッケージが必要です。"}
   ]
 }
