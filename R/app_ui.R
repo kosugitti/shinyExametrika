@@ -43,6 +43,13 @@ app_ui <- function(request) {
         mod_data_upload_ui("data_upload", i18n)
       ),
 
+      # --- 記述統計タブ ---
+      bslib::nav_panel(
+        title = i18n$t("Descriptives"),
+        value = "tab_descriptives",
+        mod_descriptives_ui("descriptives", i18n)
+      ),
+
       # --- 分析タブ（Phase 1 以降で実装） ---
       bslib::nav_panel(
         title = i18n$t("CTT"),

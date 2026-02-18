@@ -60,6 +60,13 @@
 
     {"en": "Coming soon", "ja": "準備中"},
     {"en": "This analysis will be available in a future release.", "ja": "この分析は今後のリリースで利用可能になります。"},
-    {"en": "Language", "ja": "言語"}
+    {"en": "Language", "ja": "言語"},
+
+    {"en": "Descriptives", "ja": "記述統計"},
+    {"en": "Test Statistics", "ja": "テスト統計量"},
+    {"en": "Item Statistics", "ja": "項目統計量"},
+    {"en": "Running Descriptives analysis...", "ja": "記述統計を実行中..."},
+    {"en": "Analysis completed!", "ja": "分析が完了しました"},
+    {"en": "Analysis failed", "ja": "分析に失敗しました"}
   ]
 }
