@@ -153,8 +153,8 @@ mod_data_upload_server <- function(id, i18n) {
         df <- get(input$sample_data, envir = env)
 
         # サンプルデータはすでに exametrikaData 形式
-        # Raw Data タブ: U 行列を data.frame で表示
-        raw_df <- as.data.frame(df$U)
+        # Raw Data タブ: 元の値を表示（ordinal は Q、binary は U）
+        raw_df <- as.data.frame(if (!is.null(df$Q)) df$Q else df$U)
         if (!is.null(df$ID)) raw_df <- cbind(ID = df$ID, raw_df)
         if (!is.null(df$ItemLabel)) colnames(raw_df)[seq_along(df$ItemLabel) + (!is.null(df$ID))] <- df$ItemLabel
         raw_data(raw_df)
@@ -177,11 +177,6 @@ mod_data_upload_server <- function(id, i18n) {
       tryCatch({
         df <- raw_data()
 
-        # ID列の設定
-        # exametrika は id=NULL を受け付けないため常に 1 を渡す
-        # 文字列先頭列 → ID として使用、数値先頭列 → 自動ID生成（全列を項目として保持）
-        id_arg <- 1
-
         # 欠損値コード
         na_arg <- NULL
         if (nchar(trimws(input$na_code)) > 0) {
@@ -192,12 +187,14 @@ mod_data_upload_server <- function(id, i18n) {
         resp_type <- if (input$response_type == "auto") NULL else input$response_type
 
         # dataFormat() 実行
-        result <- exametrika::dataFormat(
+        # id=NULL を渡すとエラーになるため、do.call() で引数を動的に構築する
+        fmt_args <- list(
           df,
-          id = id_arg,
           na = na_arg,
           response.type = resp_type
         )
+        if (input$id_column == "first") fmt_args$id <- 1
+        result <- do.call(exametrika::dataFormat, fmt_args)
 
         formatted_data(result)
         showNotification(i18n$t("Data formatted successfully!"), type = "message")
