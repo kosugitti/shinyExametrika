@@ -52,7 +52,7 @@ app_ui <- function(request) {
       bslib::nav_panel(
         title = i18n$t("IRT"),
         value = "tab_irt",
-        mod_placeholder_ui("irt", i18n)
+        mod_irt_ui("irt", i18n)
       ),
       bslib::nav_panel(
         title = i18n$t("LCA"),
