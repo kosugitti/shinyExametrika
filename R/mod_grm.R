@@ -71,7 +71,8 @@ mod_grm_ui <- function(id, i18n) {
             ns("plot_type"),
             label = i18n$t("Plot Type"),
             choices = c(
-              # "ICRF (Item Category Response Function)" = "ICRF",  # 一時的に無効化
+              # TODO: ggExametrika に plotICRF_gg 実装後に有効化する
+              # "ICRF (Item Category Response Function)" = "ICRF",
               "IIC (Item Information Curve)" = "IIC",
               "TIC (Test Information Curve)" = "TIC"
             )
@@ -224,12 +225,24 @@ mod_grm_server <- function(id, formatted_data, i18n) {
       req(result())
 
       fit <- result()$TestFitIndices
-      # リストをデータフレームに変換
-      fit_df <- data.frame(
-        Index = names(fit),
-        Value = unlist(fit),
-        stringsAsFactors = FALSE
-      )
+      # data.frame / list 両方に対応して縦長テーブルに変換
+      fit_df <- tryCatch({
+        if (is.data.frame(fit)) {
+          data.frame(
+            Index = colnames(fit),
+            Value = as.numeric(fit[1, ]),
+            stringsAsFactors = FALSE
+          )
+        } else {
+          data.frame(
+            Index = names(fit),
+            Value = as.numeric(unlist(fit)),
+            stringsAsFactors = FALSE
+          )
+        }
+      }, error = function(e) {
+        data.frame(Index = "Error", Value = NA, stringsAsFactors = FALSE)
+      })
 
       dt <- DT::datatable(
         fit_df,
@@ -274,7 +287,11 @@ mod_grm_server <- function(id, formatted_data, i18n) {
     # ========== プロット ==========
 
     output$plot <- renderPlot({
-      current_plot()
+      p <- current_plot()
+      shiny::validate(
+        shiny::need(!is.null(p), i18n$t("Plot generation failed"))
+      )
+      p
     })
 
     # ========== ダウンロード ==========
