@@ -2,6 +2,25 @@
 
 ## Changes
 
+### LCA / LRA モジュール追加（2026-02-20）
+
+- `R/mod_lca.R` を新規追加: LCA（潜在クラス分析）モジュール
+  - サイドバー: クラス数スライダー（2-10）+ 実行ボタン
+  - Results タブ: 適合度指標 / クラスプロファイル(IRP) / クラスサマリー / 受検者クラス帰属
+  - Item Fit タブ: 項目適合度指標テーブル
+  - Plots タブ: IRP（項目選択付き）/ TRP / LCD / CMP（受検者選択付き）
+  - CSV ダウンロード（IRP, Students）+ プロット PNG ダウンロード
+  - ggExametrika 優先、base plot フォールバック対応
+- `R/mod_lra.R` を新規追加: LRA（潜在ランク分析）モジュール
+  - サイドバー: ランク数スライダー / 推定方法（GTM/SOM）/ 単調増加制約チェック
+  - Results タブ: 適合度指標 / IRP テーブル / IRP Index / ランクサマリー / 受検者ランク帰属
+  - Item Fit タブ: 項目適合度指標テーブル
+  - Plots タブ: IRP（項目選択付き）/ TRP / LRD / RMP（受検者選択付き、ggplot2 手動描画）
+  - RMP は exametrika / ggExametrika 双方のバグを回避するため ggplot2 で手動描画
+- `R/app_ui.R`: LCA / LRA タブを placeholder から実モジュールに切り替え
+- `R/app_server.R`: mod_lca_server / mod_lra_server を追加
+- `inst/i18n/translation.json`: LCA / LRA 関連の翻訳キーを追加
+
 - CLAUDE.md に NEWS.md 記録ルールを追加（全ての変更を NEWS.md に記録する恒久ルール）
 - `R/fct_analysis.R` を新規作成: 分析結果からの共通ヘルパー関数を追加
   - `extract_ability()`: IRT（$ability data.frame）と GRM（$EAP/$MAP/$PSD 個別ベクトル）の両形式に対応した能力推定値抽出関数

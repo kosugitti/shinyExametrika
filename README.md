@@ -39,9 +39,9 @@ This project is under active development.
 
 | Phase | Scope | Status |
 |-------|-------|--------|
-| Phase 0 | Project setup, data upload, i18n | In progress |
-| Phase 1 | CTT, IRT, GRM | Planned |
-| Phase 2 | LCA, LRA, Biclustering, IRM | Planned |
+| Phase 0 | Project setup, data upload, i18n | Done |
+| Phase 1 | Descriptives, CTT, IRT, GRM | Done |
+| Phase 2 | LCA, LRA, Biclustering, IRM, GridSearch | In progress (LCA, LRA done) |
 | Phase 3 | BNM, LDLRA, LDB, BINET | Planned |
 | Phase 4 | Polish, deploy, documentation | Planned |
 
