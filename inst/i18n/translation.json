@@ -101,12 +101,6 @@
     {"en": "Running GRM analysis...", "ja": "GRM分析を実行中..."},
     {"en": "Plot generation failed", "ja": "プロット生成に失敗しました"},
 
-    {"en": "Number of Classes", "ja": "クラス数"},
-    {"en": "LCA requires binary response data.", "ja": "LCA には二値データが必要です。"},
-    {"en": "Running LCA analysis...", "ja": "LCA 分析を実行中..."},
-    {"en": "Class Profiles (IRP)", "ja": "クラスプロファイル（IRP）"},
-    {"en": "Class Summary", "ja": "クラスサマリー"},
-    {"en": "Student Membership", "ja": "受検者クラス帰属"},
     {"en": "Item Fit", "ja": "項目適合度"},
     {"en": "Select Student", "ja": "受検者を選択"},
 

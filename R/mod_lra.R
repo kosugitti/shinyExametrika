@@ -149,7 +149,8 @@ mod_lra_server <- function(id, formatted_data, i18n) {
         return(NULL)
       }
 
-      withProgress(message = i18n$t("Running LRA analysis..."), value = 0.5, {
+      withProgress(message = i18n$t("Running LRA analysis..."), value = 0, {
+        incProgress(0.3, detail = i18n$t("Estimating parameters..."))
         r <- tryCatch(
           exametrika::LRA(fd, nrank = input$nrank, method = input$method, mic = input$mic),
           error = function(e) {
@@ -160,6 +161,7 @@ mod_lra_server <- function(id, formatted_data, i18n) {
             NULL
           }
         )
+        incProgress(1)
         if (!is.null(r)) {
           shiny::showNotification(i18n$t("Analysis completed!"), type = "message", duration = 3)
         }
@@ -169,18 +171,13 @@ mod_lra_server <- function(id, formatted_data, i18n) {
 
     # ========== テーブル出力 ==========
 
-    # 適合度指標（TestFitIndices を縦長に変換）
+    # 適合度指標（共通ヘルパー関数を使用）
     output$table_fit <- DT::renderDT({
       req(result())
-      fit <- result()$TestFitIndices
-      fit_df <- data.frame(
-        Index = names(fit),
-        Value = unlist(fit),
-        stringsAsFactors = FALSE
-      )
-      DT::datatable(fit_df, rownames = FALSE,
-                    options = list(dom = "t", pageLength = 20)) |>
-        DT::formatRound("Value", digits = 4)
+      fit_df <- extract_fit_indices(result())
+      dt <- DT::datatable(fit_df, rownames = FALSE,
+                          options = list(dom = "t", pageLength = 20))
+      DT::formatRound(dt, columns = "Value", digits = 4)
     })
 
     # IRP テーブル（行: 項目、列: ランク）
@@ -350,6 +347,8 @@ mod_lra_server <- function(id, formatted_data, i18n) {
       filename = function() {
         if (input$plot_type == "RMP") {
           paste0("LRA_RMP_student", input$selected_student, "_", Sys.Date(), ".png")
+        } else if (input$plot_type == "IRP") {
+          paste0("LRA_IRP_item", input$selected_item, "_", Sys.Date(), ".png")
         } else {
           paste0("LRA_", input$plot_type, "_", Sys.Date(), ".png")
         }
@@ -357,7 +356,7 @@ mod_lra_server <- function(id, formatted_data, i18n) {
       content = function(file) {
         p <- current_plot()
         if (!is.null(p)) {
-          ggplot2::ggsave(file, plot = p, width = 8, height = 5, dpi = 300)
+          ggplot2::ggsave(file, plot = p, width = 10, height = 6, dpi = 300)
         } else {
           png(file, width = 800, height = 500)
           plot(result(), type = input$plot_type)
