@@ -256,39 +256,29 @@ mod_lra_server <- function(id, formatted_data, i18n) {
       req(result())
       r <- result()
 
+      # RMP: ggExametrika::plotRMP_gg / plotCMP_gg はいずれも $Nclass を参照するため
+      # LRA オブジェクト（$Nrank）では動作しない → base plot を使用
+      if (input$plot_type == "RMP") {
+        idx <- as.integer(input$selected_student)
+        if (length(idx) == 0 || is.na(idx)) idx <- 1L
+        plot(r, type = "RMP", students = idx)
+        return(NULL)
+      }
+
       if (requireNamespace("ggExametrika", quietly = TRUE)) {
         tryCatch(
           switch(input$plot_type,
             "IRP" = ggExametrika::plotIRP_gg(r),
             "TRP" = ggExametrika::plotTRP_gg(r),
-            "LRD" = ggExametrika::plotLRD_gg(r),
-            "RMP" = {
-              # plotCMP_gg は LRA にも対応（RMP として描画）
-              all_plots <- ggExametrika::plotCMP_gg(r)
-              idx <- as.integer(input$selected_student)
-              if (is.null(idx) || is.na(idx)) idx <- 1L
-              all_plots[[idx]]
-            }
+            "LRD" = ggExametrika::plotLRD_gg(r)
           ),
           error = function(e) {
-            if (input$plot_type == "RMP") {
-              idx <- as.integer(input$selected_student)
-              if (is.null(idx) || is.na(idx)) idx <- 1L
-              plot(r, type = "RMP", students = idx)
-            } else {
-              plot(r, type = input$plot_type)
-            }
+            plot(r, type = input$plot_type)
             NULL
           }
         )
       } else {
-        if (input$plot_type == "RMP") {
-          idx <- as.integer(input$selected_student)
-          if (is.null(idx) || is.na(idx)) idx <- 1L
-          plot(r, type = "RMP", students = idx)
-        } else {
-          plot(r, type = input$plot_type)
-        }
+        plot(r, type = input$plot_type)
         NULL
       }
     })
@@ -327,7 +317,7 @@ mod_lra_server <- function(id, formatted_data, i18n) {
           png(file, width = 800, height = 500)
           if (input$plot_type == "RMP") {
             idx <- as.integer(input$selected_student)
-            if (is.null(idx) || is.na(idx)) idx <- 1L
+            if (length(idx) == 0 || is.na(idx)) idx <- 1L
             plot(result(), type = "RMP", students = idx)
           } else {
             plot(result(), type = input$plot_type)
