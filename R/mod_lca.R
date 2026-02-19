@@ -10,7 +10,7 @@ mod_lca_ui <- function(id, i18n) {
   bslib::layout_sidebar(
     # ========== サイドバー ==========
     sidebar = bslib::sidebar(
-      width = 280,
+      width = 300,
       title = i18n$t("LCA"),
 
       sliderInput(
@@ -92,6 +92,7 @@ mod_lca_ui <- function(id, i18n) {
               "CMP (Class Membership Profile)" = "CMP"
             )
           ),
+          uiOutput(ns("item_selector_ui")),
           uiOutput(ns("student_selector_ui")),
           plotOutput(ns("plot"), height = "600px"),
           downloadButton(ns("dl_plot"), i18n$t("Download Plot"), class = "mt-2")
@@ -117,8 +118,9 @@ mod_lca_server <- function(id, formatted_data, i18n) {
       req(formatted_data())
       fd <- formatted_data()
 
-      # 二値データチェック
-      if (!is.null(fd$response.type) && fd$response.type != "binary") {
+      # 二値データチェック（IRT と同様に maxscore を使用）
+      maxscore <- fd$maxscore
+      if (!is.null(maxscore) && length(maxscore) > 0 && any(maxscore > 1)) {
         shiny::showNotification(
           i18n$t("LCA requires binary response data."),
           type = "warning", duration = 5
@@ -175,10 +177,10 @@ mod_lca_server <- function(id, formatted_data, i18n) {
       r <- result()
       ncls <- r$n_class
       df <- data.frame(
-        Class     = paste0("Class ", seq_len(ncls)),
-        TRP       = round(r$TRP, 3),
-        LCD       = as.integer(r$LCD),
-        LCD_pct   = round(as.integer(r$LCD) / sum(r$LCD) * 100, 1)
+        Class   = paste0("Class ", seq_len(ncls)),
+        TRP     = round(r$TRP, 3),
+        LCD     = as.integer(r$LCD),
+        LCD_pct = round(as.integer(r$LCD) / sum(r$LCD) * 100, 1)
       )
       colnames(df) <- c("Class", "TRP", "N", "N (%)")
       DT::datatable(df, rownames = FALSE,
@@ -186,7 +188,6 @@ mod_lca_server <- function(id, formatted_data, i18n) {
     })
 
     # 受検者クラス帰属テーブル
-    # Students は matrix → data.frame に変換してから使用
     output$table_students <- DT::renderDT({
       req(result())
       df <- as.data.frame(result()$Students)
@@ -198,19 +199,36 @@ mod_lca_server <- function(id, formatted_data, i18n) {
     })
 
     # 項目適合度テーブル
-    # ItemFitIndices は list（各要素が nItems 長のベクトル）→ data.frame に変換
     output$table_item_fit <- DT::renderDT({
       req(result())
       fit <- result()$ItemFitIndices
-      df <- as.data.frame(lapply(fit, as.numeric))
-      rownames(df) <- names(fit[[1]])
+      df <- tryCatch(
+        {
+          d <- as.data.frame(lapply(fit, as.numeric))
+          rownames(d) <- names(fit[[1]])
+          d
+        },
+        error = function(e) data.frame()
+      )
+      if (nrow(df) == 0) return(DT::datatable(data.frame()))
       dt <- DT::datatable(df, rownames = TRUE,
                           options = list(dom = "tip", pageLength = 20, scrollX = TRUE))
-      dt <- DT::formatRound(dt, columns = seq_len(ncol(df)), digits = 4)
-      dt
+      DT::formatRound(dt, columns = seq_len(ncol(df)), digits = 4)
     })
 
     # ========== プロット ==========
+
+    # IRP 選択時のみ項目セレクタを表示
+    output$item_selector_ui <- renderUI({
+      req(result(), input$plot_type == "IRP")
+      item_names <- rownames(result()$IRP)
+      selectInput(
+        session$ns("selected_item"),
+        label = i18n$t("Select Item"),
+        choices = setNames(seq_along(item_names), item_names),
+        selected = 1
+      )
+    })
 
     # CMP 選択時のみ受検者セレクタを表示
     output$student_selector_ui <- renderUI({
@@ -224,53 +242,50 @@ mod_lca_server <- function(id, formatted_data, i18n) {
       )
     })
 
+    # ggplot オブジェクトを返す（base plot が必要な場合は NULL を返す）
     current_plot <- reactive({
       req(result())
-
       r <- result()
 
-      if (requireNamespace("ggExametrika", quietly = TRUE)) {
-        tryCatch(
-          switch(input$plot_type,
-            "IRP" = ggExametrika::plotIRP_gg(r),
-            "TRP" = ggExametrika::plotTRP_gg(r),
-            "LCD" = ggExametrika::plotLCD_gg(r),
-            "CMP" = {
-              # plotCMP_gg は全受検者分のリストを返すため、選択した受検者を取り出す
-              all_plots <- ggExametrika::plotCMP_gg(r)
-              idx <- as.integer(input$selected_student)
-              if (is.null(idx) || is.na(idx)) idx <- 1L
-              all_plots[[idx]]
-            }
-          ),
-          error = function(e) {
-            # ggExametrika に未実装の場合は base plot で代替
-            if (input$plot_type == "CMP") {
-              idx <- as.integer(input$selected_student)
-              if (is.null(idx) || is.na(idx)) idx <- 1L
-              plot(r, type = "CMP", students = idx)
-            } else {
-              plot(r, type = input$plot_type)
-            }
-            NULL
+      if (!requireNamespace("ggExametrika", quietly = TRUE)) return(NULL)
+
+      tryCatch(
+        switch(input$plot_type,
+          "IRP" = {
+            plots <- ggExametrika::plotIRP_gg(r)
+            req(input$selected_item)
+            idx <- as.integer(input$selected_item)
+            plots[[idx]]
+          },
+          "TRP" = ggExametrika::plotTRP_gg(r),
+          "LCD" = ggExametrika::plotLCD_gg(r),
+          "CMP" = {
+            all_plots <- ggExametrika::plotCMP_gg(r)
+            req(input$selected_student)
+            idx <- as.integer(input$selected_student)
+            if (is.na(idx)) idx <- 1L
+            all_plots[[idx]]
           }
-        )
-      } else {
-        if (input$plot_type == "CMP") {
-          idx <- as.integer(input$selected_student)
-          if (is.null(idx) || is.na(idx)) idx <- 1L
-          plot(r, type = "CMP", students = idx)
-        } else {
-          plot(r, type = input$plot_type)
-        }
-        NULL
-      }
+        ),
+        error = function(e) NULL
+      )
     })
 
     output$plot <- renderPlot({
       req(result())
       p <- current_plot()
-      if (!is.null(p)) print(p)
+      if (!is.null(p)) {
+        print(p)
+      } else {
+        # ggExametrika 未使用 / エラー時は base plot にフォールバック
+        if (input$plot_type == "CMP") {
+          idx <- as.integer(input$selected_student)
+          if (is.null(idx) || length(idx) == 0 || is.na(idx)) idx <- 1L
+          plot(result(), type = "CMP", students = idx)
+        } else {
+          plot(result(), type = input$plot_type)
+        }
+      }
     })
 
     # ========== ダウンロード ==========
@@ -293,7 +308,7 @@ mod_lca_server <- function(id, formatted_data, i18n) {
           paste0("LCA_", input$plot_type, "_", Sys.Date(), ".png")
         }
       },
-      content  = function(file) {
+      content = function(file) {
         p <- current_plot()
         if (!is.null(p)) {
           ggplot2::ggsave(file, plot = p, width = 8, height = 5, dpi = 300)
@@ -301,7 +316,7 @@ mod_lca_server <- function(id, formatted_data, i18n) {
           png(file, width = 800, height = 500)
           if (input$plot_type == "CMP") {
             idx <- as.integer(input$selected_student)
-            if (is.null(idx) || is.na(idx)) idx <- 1L
+            if (is.null(idx) || length(idx) == 0 || is.na(idx)) idx <- 1L
             plot(result(), type = "CMP", students = idx)
           } else {
             plot(result(), type = input$plot_type)

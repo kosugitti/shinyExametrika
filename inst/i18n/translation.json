@@ -108,6 +108,7 @@
     {"en": "Class Summary", "ja": "クラスサマリー"},
     {"en": "Student Membership", "ja": "受検者クラス帰属"},
     {"en": "Item Fit", "ja": "項目適合度"},
-    {"en": "Select Student", "ja": "受検者を選択"}
+    {"en": "Select Student", "ja": "受検者を選択"},
+    {"en": "Select Item", "ja": "項目を選択"}
   ]
 }
