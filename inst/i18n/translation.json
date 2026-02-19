@@ -99,6 +99,16 @@
     {"en": "GRM requires ordinal data (more than 2 categories). Please use IRT for binary data.", "ja": "GRMは順序データ（3カテゴリ以上）が必要です。二値データにはIRTを使用してください。"},
     {"en": "All items have only 2 categories (binary data). Please use IRT for binary data.", "ja": "全ての項目が2カテゴリのみ（二値データ）です。二値データにはIRTを使用してください。"},
     {"en": "Running GRM analysis...", "ja": "GRM分析を実行中..."},
-    {"en": "Plot generation failed", "ja": "プロット生成に失敗しました"}
+    {"en": "Plot generation failed", "ja": "プロット生成に失敗しました"},
+
+    {"en": "LCA requires binary response data.", "ja": "LCA には二値データが必要です。"},
+    {"en": "Number of Classes", "ja": "クラス数"},
+    {"en": "Running LCA analysis...", "ja": "LCA 分析を実行中..."},
+    {"en": "Class Profiles (IRP)", "ja": "クラスプロファイル（IRP）"},
+    {"en": "Class Summary", "ja": "クラスサマリー"},
+    {"en": "Student Membership", "ja": "受検者クラス帰属"},
+    {"en": "Item Fit", "ja": "項目適合度"},
+    {"en": "Select Student", "ja": "受検者を選択"},
+    {"en": "Select Item", "ja": "項目を選択"}
   ]
 }
