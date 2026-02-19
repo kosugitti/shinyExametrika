@@ -101,6 +101,7 @@
     {"en": "Running GRM analysis...", "ja": "GRM分析を実行中..."},
     {"en": "Plot generation failed", "ja": "プロット生成に失敗しました"},
 
+    {"en": "LCA requires binary response data.", "ja": "LCA には二値データが必要です。"},
     {"en": "Number of Classes", "ja": "クラス数"},
     {"en": "Running LCA analysis...", "ja": "LCA 分析を実行中..."},
     {"en": "Class Profiles (IRP)", "ja": "クラスプロファイル（IRP）"},

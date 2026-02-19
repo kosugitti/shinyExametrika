@@ -93,7 +93,7 @@ mod_lca_ui <- function(id, i18n) {
             )
           ),
           uiOutput(ns("student_selector_ui")),
-          plotOutput(ns("plot"), height = "500px"),
+          plotOutput(ns("plot"), height = "600px"),
           downloadButton(ns("dl_plot"), i18n$t("Download Plot"), class = "mt-2")
         )
       )
@@ -117,8 +117,17 @@ mod_lca_server <- function(id, formatted_data, i18n) {
       req(formatted_data())
       fd <- formatted_data()
 
+      # 二値データチェック
+      if (!is.null(fd$response.type) && fd$response.type != "binary") {
+        shiny::showNotification(
+          i18n$t("LCA requires binary response data."),
+          type = "warning", duration = 5
+        )
+        return(NULL)
+      }
+
       withProgress(message = i18n$t("Running LCA analysis..."), value = 0.5, {
-        tryCatch(
+        r <- tryCatch(
           exametrika::LCA(fd, ncls = input$ncls),
           error = function(e) {
             shiny::showNotification(
@@ -128,6 +137,10 @@ mod_lca_server <- function(id, formatted_data, i18n) {
             NULL
           }
         )
+        if (!is.null(r)) {
+          shiny::showNotification(i18n$t("Analysis completed!"), type = "message", duration = 3)
+        }
+        r
       })
     })
 
