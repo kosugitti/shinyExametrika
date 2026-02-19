@@ -92,6 +92,13 @@
     {"en": "Ability Estimates", "ja": "能力推定値"},
     {"en": "Plots", "ja": "プロット"},
     {"en": "Plot Type", "ja": "プロットの種類"},
-    {"en": "ggExametrika package is required for plots.", "ja": "プロットには ggExametrika パッケージが必要です。"}
+    {"en": "ggExametrika package is required for plots.", "ja": "プロットには ggExametrika パッケージが必要です。"},
+
+    {"en": "Number of Classes", "ja": "クラス数"},
+    {"en": "Running LCA analysis...", "ja": "LCA 分析を実行中..."},
+    {"en": "Class Profiles (IRP)", "ja": "クラスプロファイル（IRP）"},
+    {"en": "Class Summary", "ja": "クラスサマリー"},
+    {"en": "Student Membership", "ja": "受検者クラス帰属"},
+    {"en": "Item Fit", "ja": "項目適合度"}
   ]
 }

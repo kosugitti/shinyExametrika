@@ -64,7 +64,7 @@ app_ui <- function(request) {
       bslib::nav_panel(
         title = i18n$t("LCA"),
         value = "tab_lca",
-        mod_placeholder_ui("lca", i18n)
+        mod_lca_ui("lca", i18n)
       ),
       bslib::nav_panel(
         title = i18n$t("LRA"),
