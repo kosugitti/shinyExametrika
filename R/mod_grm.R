@@ -220,29 +220,11 @@ mod_grm_server <- function(id, formatted_data, i18n) {
 
     # ========== テーブル出力 ==========
 
-    # 適合度指標
+    # 適合度指標（共通ヘルパー関数を使用）
     output$table_fit <- DT::renderDT({
       req(result())
 
-      fit <- result()$TestFitIndices
-      # data.frame / list 両方に対応して縦長テーブルに変換
-      fit_df <- tryCatch({
-        if (is.data.frame(fit)) {
-          data.frame(
-            Index = colnames(fit),
-            Value = as.numeric(fit[1, ]),
-            stringsAsFactors = FALSE
-          )
-        } else {
-          data.frame(
-            Index = names(fit),
-            Value = as.numeric(unlist(fit)),
-            stringsAsFactors = FALSE
-          )
-        }
-      }, error = function(e) {
-        data.frame(Index = "Error", Value = NA, stringsAsFactors = FALSE)
-      })
+      fit_df <- extract_fit_indices(result())
 
       dt <- DT::datatable(
         fit_df,
@@ -265,23 +247,24 @@ mod_grm_server <- function(id, formatted_data, i18n) {
       DT::formatRound(dt, columns = 1:ncol(params), digits = 3)
     })
 
-    # 能力推定値
+    # 能力推定値（共通ヘルパー関数を使用）
     output$table_ability <- DT::renderDT({
       req(result())
 
-      # GRMではEAP, MAP, PSDが別々のフィールド
-      ability <- data.frame(
-        EAP = result()$EAP,
-        MAP = result()$MAP,
-        PSD = result()$PSD
-      )
+      ability <- extract_ability(result())
+
+      # 数値列のみ丸め対象にする
+      numeric_cols <- names(ability)[vapply(ability, is.numeric, logical(1))]
 
       dt <- DT::datatable(
         ability,
         options = list(dom = 'tip', pageLength = 20),
         rownames = FALSE
       )
-      DT::formatRound(dt, columns = c("EAP", "MAP", "PSD"), digits = 3)
+      if (length(numeric_cols) > 0) {
+        dt <- DT::formatRound(dt, columns = numeric_cols, digits = 3)
+      }
+      dt
     })
 
     # ========== プロット ==========
@@ -306,18 +289,13 @@ mod_grm_server <- function(id, formatted_data, i18n) {
       }
     )
 
-    # 能力推定値CSV
+    # 能力推定値CSV（共通ヘルパー関数を使用）
     output$download_ability <- downloadHandler(
       filename = function() {
         paste0("GRM_ability_", Sys.Date(), ".csv")
       },
       content = function(file) {
-        # GRMではEAP, MAP, PSDが別々のフィールド
-        ability <- data.frame(
-          EAP = result()$EAP,
-          MAP = result()$MAP,
-          PSD = result()$PSD
-        )
+        ability <- extract_ability(result())
         utils::write.csv(ability, file, row.names = FALSE)
       }
     )

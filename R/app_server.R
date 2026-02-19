@@ -26,5 +26,6 @@ app_server <- function(input, output, session) {
   mod_ctt_server("ctt", formatted_data = formatted_data, i18n = i18n)
   mod_irt_server("irt", formatted_data = formatted_data, i18n = i18n)
   mod_grm_server("grm", formatted_data = formatted_data, i18n = i18n)
+  mod_lca_server("lca", formatted_data = formatted_data, i18n = i18n)
   mod_lra_server("lra", formatted_data = formatted_data, i18n = i18n)
 }

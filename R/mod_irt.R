@@ -207,17 +207,11 @@ mod_irt_server <- function(id, formatted_data, i18n) {
 
     # ========== テーブル出力 ==========
 
-    # 適合度指標
+    # 適合度指標（共通ヘルパー関数を使用）
     output$table_fit <- DT::renderDT({
       req(result())
 
-      fit <- result()$TestFitIndices
-      # リストをデータフレームに変換
-      fit_df <- data.frame(
-        Index = names(fit),
-        Value = unlist(fit),
-        stringsAsFactors = FALSE
-      )
+      fit_df <- extract_fit_indices(result())
 
       dt <- DT::datatable(
         fit_df,
@@ -240,18 +234,24 @@ mod_irt_server <- function(id, formatted_data, i18n) {
       DT::formatRound(dt, columns = 1:ncol(params), digits = 3)
     })
 
-    # 能力推定値
+    # 能力推定値（共通ヘルパー関数を使用）
     output$table_ability <- DT::renderDT({
       req(result())
 
-      ability <- result()$ability
+      ability <- extract_ability(result())
+
+      # 数値列のみ丸め対象にする
+      numeric_cols <- names(ability)[vapply(ability, is.numeric, logical(1))]
 
       dt <- DT::datatable(
         ability,
         options = list(dom = 'tip', pageLength = 20),
         rownames = FALSE
       )
-      DT::formatRound(dt, columns = c("EAP", "PSD"), digits = 3)
+      if (length(numeric_cols) > 0) {
+        dt <- DT::formatRound(dt, columns = numeric_cols, digits = 3)
+      }
+      dt
     })
 
     # ========== プロット ==========
@@ -272,13 +272,14 @@ mod_irt_server <- function(id, formatted_data, i18n) {
       }
     )
 
-    # 能力推定値CSV
+    # 能力推定値CSV（共通ヘルパー関数を使用）
     output$download_ability <- downloadHandler(
       filename = function() {
         paste0("IRT_ability_", Sys.Date(), ".csv")
       },
       content = function(file) {
-        utils::write.csv(result()$ability, file, row.names = FALSE)
+        ability <- extract_ability(result())
+        utils::write.csv(ability, file, row.names = FALSE)
       }
     )
 
