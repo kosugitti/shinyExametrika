@@ -117,6 +117,7 @@
     {"en": "Running LRA analysis...", "ja": "LRA 分析を実行中..."},
     {"en": "IRP (Item Reference Profile)", "ja": "IRP（項目参照プロファイル）"},
     {"en": "IRP Index", "ja": "IRP 指標"},
-    {"en": "Rank Summary", "ja": "ランクサマリー"}
+    {"en": "Rank Summary", "ja": "ランクサマリー"},
+    {"en": "Select Item", "ja": "項目を選択"}
   ]
 }
