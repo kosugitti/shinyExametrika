@@ -109,6 +109,15 @@
     {"en": "Student Membership", "ja": "受検者クラス帰属"},
     {"en": "Item Fit", "ja": "項目適合度"},
     {"en": "Select Student", "ja": "受検者を選択"},
+
+    {"en": "Number of Ranks", "ja": "ランク数"},
+    {"en": "Method", "ja": "推定方法"},
+    {"en": "Monotone Increasing Constraint", "ja": "単調増加制約"},
+    {"en": "LRA requires binary response data.", "ja": "LRA には二値データが必要です。"},
+    {"en": "Running LRA analysis...", "ja": "LRA 分析を実行中..."},
+    {"en": "IRP (Item Reference Profile)", "ja": "IRP（項目参照プロファイル）"},
+    {"en": "IRP Index", "ja": "IRP 指標"},
+    {"en": "Rank Summary", "ja": "ランクサマリー"},
     {"en": "Select Item", "ja": "項目を選択"}
   ]
 }

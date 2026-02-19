@@ -74,7 +74,7 @@ app_ui <- function(request) {
       bslib::nav_panel(
         title = i18n$t("LRA"),
         value = "tab_lra",
-        mod_placeholder_ui("lra", i18n)
+        mod_lra_ui("lra", i18n)
       ),
       bslib::nav_panel(
         title = i18n$t("Biclustering"),
