@@ -256,13 +256,32 @@ mod_lra_server <- function(id, formatted_data, i18n) {
       req(result())
       r <- result()
 
-      # RMP: ggExametrika::plotRMP_gg / plotCMP_gg はいずれも $Nclass を参照するため
-      # LRA オブジェクト（$Nrank）では動作しない → base plot を使用
+      # RMP: exametrika の plot() は 1 人指定時に次元エラーが出るバグがある。
+      # ggExametrika::plotRMP_gg も $Nclass を参照するため LRA では動作しない。
+      # → ggplot2 で手動描画する。
       if (input$plot_type == "RMP") {
         idx <- as.integer(input$selected_student)
         if (length(idx) == 0 || is.na(idx)) idx <- 1L
-        plot(r, type = "RMP", students = idx)
-        return(NULL)
+        nrank <- r$n_rank
+        membership <- as.numeric(r$Students[idx, seq_len(nrank)])
+        student_name <- rownames(r$Students)[idx]
+        df_rmp <- data.frame(
+          Rank       = seq_len(nrank),
+          Membership = membership
+        )
+        return(
+          ggplot2::ggplot(df_rmp, ggplot2::aes(x = Rank, y = Membership)) +
+            ggplot2::geom_point(size = 3) +
+            ggplot2::geom_line(linetype = "dashed") +
+            ggplot2::scale_x_continuous(breaks = seq_len(nrank)) +
+            ggplot2::scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.25)) +
+            ggplot2::labs(
+              title = paste("Rank Membership Profile,", student_name),
+              x = "Latent Rank",
+              y = "Membership"
+            ) +
+            ggplot2::theme_bw()
+        )
       }
 
       if (requireNamespace("ggExametrika", quietly = TRUE)) {
@@ -315,13 +334,7 @@ mod_lra_server <- function(id, formatted_data, i18n) {
           ggplot2::ggsave(file, plot = p, width = 8, height = 5, dpi = 300)
         } else {
           png(file, width = 800, height = 500)
-          if (input$plot_type == "RMP") {
-            idx <- as.integer(input$selected_student)
-            if (length(idx) == 0 || is.na(idx)) idx <- 1L
-            plot(result(), type = "RMP", students = idx)
-          } else {
-            plot(result(), type = input$plot_type)
-          }
+          plot(result(), type = input$plot_type)
           dev.off()
         }
       }
