@@ -5,6 +5,7 @@
     {"en": "Data", "ja": "データ"},
     {"en": "CTT", "ja": "CTT"},
     {"en": "IRT", "ja": "IRT"},
+    {"en": "GRM", "ja": "GRM"},
     {"en": "LCA", "ja": "LCA"},
     {"en": "LRA", "ja": "LRA"},
     {"en": "Biclustering", "ja": "Biclustering"},
@@ -92,6 +93,12 @@
     {"en": "Ability Estimates", "ja": "能力推定値"},
     {"en": "Plots", "ja": "プロット"},
     {"en": "Plot Type", "ja": "プロットの種類"},
-    {"en": "ggExametrika package is required for plots.", "ja": "プロットには ggExametrika パッケージが必要です。"}
+    {"en": "ggExametrika package is required for plots.", "ja": "プロットには ggExametrika パッケージが必要です。"},
+
+    {"en": "GRM analyzes ordinal response data using Graded Response Model.", "ja": "段階反応モデル（GRM）により順序データを分析します。"},
+    {"en": "GRM requires ordinal data (more than 2 categories). Please use IRT for binary data.", "ja": "GRMは順序データ（3カテゴリ以上）が必要です。二値データにはIRTを使用してください。"},
+    {"en": "All items have only 2 categories (binary data). Please use IRT for binary data.", "ja": "全ての項目が2カテゴリのみ（二値データ）です。二値データにはIRTを使用してください。"},
+    {"en": "Running GRM analysis...", "ja": "GRM分析を実行中..."},
+    {"en": "Plot generation failed", "ja": "プロット生成に失敗しました"}
   ]
 }
