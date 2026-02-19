@@ -92,6 +92,7 @@ mod_lca_ui <- function(id, i18n) {
               "CMP (Class Membership Profile)" = "CMP"
             )
           ),
+          uiOutput(ns("student_selector_ui")),
           plotOutput(ns("plot"), height = "500px"),
           downloadButton(ns("dl_plot"), i18n$t("Download Plot"), class = "mt-2")
         )
@@ -172,28 +173,43 @@ mod_lca_server <- function(id, formatted_data, i18n) {
     })
 
     # 受検者クラス帰属テーブル
+    # Students は matrix → data.frame に変換してから使用
     output$table_students <- DT::renderDT({
       req(result())
-      df <- result()$Students
-      num_cols <- names(df)[sapply(df, is.numeric) & names(df) != "Estimate"]
+      df <- as.data.frame(result()$Students)
+      membership_cols <- grep("^Membership", names(df), value = TRUE)
       dt <- DT::datatable(df, rownames = TRUE,
                           options = list(dom = "tip", pageLength = 20, scrollX = TRUE))
-      if (length(num_cols) > 0) dt <- DT::formatRound(dt, columns = num_cols, digits = 3)
+      if (length(membership_cols) > 0) dt <- DT::formatRound(dt, columns = membership_cols, digits = 3)
       dt
     })
 
     # 項目適合度テーブル
+    # ItemFitIndices は list（各要素が nItems 長のベクトル）→ data.frame に変換
     output$table_item_fit <- DT::renderDT({
       req(result())
-      df <- result()$ItemFitIndices
-      num_cols <- names(df)[sapply(df, is.numeric)]
+      fit <- result()$ItemFitIndices
+      df <- as.data.frame(lapply(fit, as.numeric))
+      rownames(df) <- names(fit[[1]])
       dt <- DT::datatable(df, rownames = TRUE,
                           options = list(dom = "tip", pageLength = 20, scrollX = TRUE))
-      if (length(num_cols) > 0) dt <- DT::formatRound(dt, columns = num_cols, digits = 4)
+      dt <- DT::formatRound(dt, columns = seq_len(ncol(df)), digits = 4)
       dt
     })
 
     # ========== プロット ==========
+
+    # CMP 選択時のみ受検者セレクタを表示
+    output$student_selector_ui <- renderUI({
+      req(result(), input$plot_type == "CMP")
+      student_names <- rownames(result()$Students)
+      selectInput(
+        session$ns("selected_student"),
+        label = i18n$t("Select Student"),
+        choices = setNames(seq_along(student_names), student_names),
+        selected = 1
+      )
+    })
 
     current_plot <- reactive({
       req(result())
@@ -206,16 +222,34 @@ mod_lca_server <- function(id, formatted_data, i18n) {
             "IRP" = ggExametrika::plotIRP_gg(r),
             "TRP" = ggExametrika::plotTRP_gg(r),
             "LCD" = ggExametrika::plotLCD_gg(r),
-            "CMP" = ggExametrika::plotCMP_gg(r)
+            "CMP" = {
+              # plotCMP_gg は全受検者分のリストを返すため、選択した受検者を取り出す
+              all_plots <- ggExametrika::plotCMP_gg(r)
+              idx <- as.integer(input$selected_student)
+              if (is.null(idx) || is.na(idx)) idx <- 1L
+              all_plots[[idx]]
+            }
           ),
           error = function(e) {
             # ggExametrika に未実装の場合は base plot で代替
-            plot(r, type = input$plot_type)
+            if (input$plot_type == "CMP") {
+              idx <- as.integer(input$selected_student)
+              if (is.null(idx) || is.na(idx)) idx <- 1L
+              plot(r, type = "CMP", students = idx)
+            } else {
+              plot(r, type = input$plot_type)
+            }
             NULL
           }
         )
       } else {
-        plot(r, type = input$plot_type)
+        if (input$plot_type == "CMP") {
+          idx <- as.integer(input$selected_student)
+          if (is.null(idx) || is.na(idx)) idx <- 1L
+          plot(r, type = "CMP", students = idx)
+        } else {
+          plot(r, type = input$plot_type)
+        }
         NULL
       }
     })
@@ -239,14 +273,26 @@ mod_lca_server <- function(id, formatted_data, i18n) {
     )
 
     output$dl_plot <- downloadHandler(
-      filename = function() paste0("LCA_", input$plot_type, "_", Sys.Date(), ".png"),
+      filename = function() {
+        if (input$plot_type == "CMP") {
+          paste0("LCA_CMP_student", input$selected_student, "_", Sys.Date(), ".png")
+        } else {
+          paste0("LCA_", input$plot_type, "_", Sys.Date(), ".png")
+        }
+      },
       content  = function(file) {
         p <- current_plot()
         if (!is.null(p)) {
           ggplot2::ggsave(file, plot = p, width = 8, height = 5, dpi = 300)
         } else {
           png(file, width = 800, height = 500)
-          plot(result(), type = input$plot_type)
+          if (input$plot_type == "CMP") {
+            idx <- as.integer(input$selected_student)
+            if (is.null(idx) || is.na(idx)) idx <- 1L
+            plot(result(), type = "CMP", students = idx)
+          } else {
+            plot(result(), type = input$plot_type)
+          }
           dev.off()
         }
       }
