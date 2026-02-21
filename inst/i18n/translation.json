@@ -118,6 +118,24 @@
     {"en": "IRP (Item Reference Profile)", "ja": "IRP（項目参照プロファイル）"},
     {"en": "IRP Index", "ja": "IRP 指標"},
     {"en": "Rank Summary", "ja": "ランクサマリー"},
-    {"en": "Select Item", "ja": "項目を選択"}
+    {"en": "Select Item", "ja": "項目を選択"},
+
+    {"en": "Number of Fields", "ja": "フィールド数"},
+    {"en": "Biclustering requires binary response data.", "ja": "Biclustering には二値データが必要です。"},
+    {"en": "Running Biclustering analysis...", "ja": "Biclustering 分析を実行中..."},
+    {"en": "FRP (Field Reference Profile)", "ja": "FRP（フィールド参照プロファイル）"},
+    {"en": "FRP Index", "ja": "FRP 指標"},
+    {"en": "Field Summary", "ja": "フィールドサマリー"},
+    {"en": "Field Analysis", "ja": "フィールド解析"},
+    {"en": "Select Field", "ja": "フィールドを選択"},
+    {"en": "GridSearch", "ja": "グリッドサーチ"},
+    {"en": "Max Classes", "ja": "最大クラス数"},
+    {"en": "Max Fields", "ja": "最大フィールド数"},
+    {"en": "Fit Index", "ja": "適合度指標"},
+    {"en": "Run GridSearch", "ja": "グリッドサーチを実行"},
+    {"en": "Running GridSearch...", "ja": "グリッドサーチを実行中..."},
+    {"en": "Optimal Classes", "ja": "最適クラス数"},
+    {"en": "Optimal Fields", "ja": "最適フィールド数"},
+    {"en": "GridSearch Index Matrix", "ja": "グリッドサーチ指標行列"}
   ]
 }

@@ -28,4 +28,5 @@ app_server <- function(input, output, session) {
   mod_grm_server("grm", formatted_data = formatted_data, i18n = i18n)
   mod_lca_server("lca", formatted_data = formatted_data, i18n = i18n)
   mod_lra_server("lra", formatted_data = formatted_data, i18n = i18n)
+  mod_biclustering_server("biclustering", formatted_data = formatted_data, i18n = i18n)
 }
