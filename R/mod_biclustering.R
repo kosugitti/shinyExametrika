@@ -448,9 +448,8 @@ mod_biclustering_server <- function(id, formatted_data, i18n) {
       tryCatch(
         switch(input$plot_type,
           "FRP" = {
-            plots <- ggExametrika::plotFRP_gg(r)
             idx <- as.integer(input$selected_field)
-            plots[[idx]]
+            ggExametrika::plotFRP_gg(r, fields = idx)
           },
           "TRP" = ggExametrika::plotTRP_gg(r),
           "Array" = ggExametrika::plotArray_gg(r),
@@ -476,6 +475,10 @@ mod_biclustering_server <- function(id, formatted_data, i18n) {
           idx <- as.integer(input$selected_student)
           if (is.null(idx) || length(idx) == 0 || is.na(idx)) idx <- 1L
           plot(result(), type = "CMP", students = idx)
+        } else if (input$plot_type == "FRP") {
+          idx <- as.integer(input$selected_field)
+          if (is.null(idx) || length(idx) == 0 || is.na(idx)) idx <- 1L
+          plot(result(), type = "FRP", fields = idx)
         } else {
           plot(result(), type = input$plot_type)
         }
