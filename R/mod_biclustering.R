@@ -114,14 +114,6 @@ mod_biclustering_ui <- function(id, i18n) {
         )
       ),
 
-      # --- Item Fit タブ ---
-      bslib::nav_panel(
-        title = i18n$t("Item Fit"),
-        bslib::card_body(
-          DT::DTOutput(ns("table_item_fit"))
-        )
-      ),
-
       # --- Plots タブ ---
       bslib::nav_panel(
         title = i18n$t("Plots"),
@@ -357,24 +349,6 @@ mod_biclustering_server <- function(id, formatted_data, i18n) {
       dt <- DT::datatable(df, rownames = TRUE,
                           options = list(dom = "tip", pageLength = 20, scrollX = TRUE))
       DT::formatRound(dt, columns = seq_len(ncol(df)), digits = 3)
-    })
-
-    # 項目適合度テーブル
-    output$table_item_fit <- DT::renderDT({
-      req(result())
-      fit <- result()$ItemFitIndices
-      df <- tryCatch(
-        {
-          d <- as.data.frame(lapply(fit, as.numeric))
-          rownames(d) <- names(fit[[1]])
-          d
-        },
-        error = function(e) data.frame()
-      )
-      if (nrow(df) == 0) return(DT::datatable(data.frame()))
-      dt <- DT::datatable(df, rownames = TRUE,
-                          options = list(dom = "tip", pageLength = 20, scrollX = TRUE))
-      DT::formatRound(dt, columns = seq_len(ncol(df)), digits = 4)
     })
 
     # ========== プロット ==========
