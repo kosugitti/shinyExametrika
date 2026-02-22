@@ -439,13 +439,16 @@ mod_biclustering_server <- function(id, formatted_data, i18n) {
         )
       }
 
+      # req() を tryCatch の外に置く（内側だと error handler に捕捉されてしまう）
+      if (input$plot_type == "FRP")  req(input$selected_field)
+      if (input$plot_type == "CMP")  req(input$selected_student)
+
       if (!requireNamespace("ggExametrika", quietly = TRUE)) return(NULL)
 
       tryCatch(
         switch(input$plot_type,
           "FRP" = {
             plots <- ggExametrika::plotFRP_gg(r)
-            req(input$selected_field)
             idx <- as.integer(input$selected_field)
             plots[[idx]]
           },
@@ -453,7 +456,6 @@ mod_biclustering_server <- function(id, formatted_data, i18n) {
           "Array" = ggExametrika::plotArray_gg(r),
           "CMP" = {
             all_plots <- ggExametrika::plotCMP_gg(r)
-            req(input$selected_student)
             idx <- as.integer(input$selected_student)
             if (is.na(idx)) idx <- 1L
             all_plots[[idx]]
