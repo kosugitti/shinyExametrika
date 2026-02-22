@@ -154,7 +154,7 @@ mod_biclustering_ui <- function(id, i18n) {
               radioButtons(
                 ns("gs_index"),
                 label = i18n$t("Fit Index"),
-                choices = c("BIC", "AIC"),
+                choices = c("BIC", "AIC", "loglik"),
                 selected = "BIC",
                 inline = FALSE
               )
