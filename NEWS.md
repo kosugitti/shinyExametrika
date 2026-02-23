@@ -2,6 +2,13 @@
 
 ## Changes
 
+### CI の GitHub 版パッケージインストール対応（2026-02-23）
+
+- `DESCRIPTION` に `Remotes` フィールドを追加: exametrika と ggExametrika を GitHub リポジトリからインストールするよう指定
+  - exametrika >= 1.9.0 は CRAN 未公開のため、CI で GitHub 版が必要
+  - ggExametrika も CRAN 未公開のため同様に指定
+  - `r-lib/actions/setup-r-dependencies@v2` が `Remotes` を自動的に読み取る
+
 ### plotRMP_gg 回避コード解消（2026-02-23）
 
 - `R/mod_lra.R`: RMP プロットの手動 ggplot2 描画コードを `ggExametrika::plotRMP_gg()` 呼び出しに置換
