@@ -1,19 +1,19 @@
-#' GRM モジュール UI
+#' GRM Module UI
 #'
-#' @param id モジュールの名前空間 ID
-#' @param i18n shiny.i18n Translator オブジェクト
+#' @param id Module namespace ID
+#' @param i18n shiny.i18n Translator object
 #'
 #' @noRd
 mod_grm_ui <- function(id, i18n) {
   ns <- NS(id)
 
   bslib::layout_sidebar(
-    # ========== サイドバー ==========
+    # ========== Sidebar ==========
     sidebar = bslib::sidebar(
       width = 300,
       title = i18n$t("GRM"),
 
-      # モデル説明
+      # Model description
       tags$p(
         class = "text-muted small",
         i18n$t("GRM analyzes ordinal response data using Graded Response Model.")
@@ -21,7 +21,7 @@ mod_grm_ui <- function(id, i18n) {
 
       tags$hr(),
 
-      # 実行ボタン
+      # Run button
       actionButton(
         ns("btn_run"),
         label = i18n$t("Run Analysis"),
@@ -30,22 +30,22 @@ mod_grm_ui <- function(id, i18n) {
       )
     ),
 
-    # ========== メインパネル ==========
+    # ========== Main Panel ==========
     bslib::navset_card_tab(
       id = ns("main_tabs"),
 
-      # --- Results タブ ---
+      # --- Results tab ---
       bslib::nav_panel(
         title = i18n$t("Results"),
         bslib::card_body(
-          # 適合度指標セクション
+          # Fit indices section
           tags$div(
             class = "mb-5",
             tags$h5(i18n$t("Fit Indices"), class = "mt-3 mb-3"),
             DT::DTOutput(ns("table_fit"))
           ),
 
-          # 項目パラメータセクション
+          # Item parameters section
           tags$div(
             class = "mb-5",
             tags$h5(i18n$t("Item Parameters"), class = "mt-3 mb-3"),
@@ -53,7 +53,7 @@ mod_grm_ui <- function(id, i18n) {
             downloadButton(ns("download_params"), i18n$t("Download CSV"), class = "mt-3 mb-2")
           ),
 
-          # 能力推定値セクション
+          # Ability estimates section
           tags$div(
             class = "mb-5",
             tags$h5(i18n$t("Ability Estimates"), class = "mt-3 mb-3"),
@@ -63,7 +63,7 @@ mod_grm_ui <- function(id, i18n) {
         )
       ),
 
-      # --- Plots タブ ---
+      # --- Plots tab ---
       bslib::nav_panel(
         title = i18n$t("Plots"),
         bslib::card_body(
@@ -71,14 +71,14 @@ mod_grm_ui <- function(id, i18n) {
             ns("plot_type"),
             label = i18n$t("Plot Type"),
             choices = c(
-              # TODO: ggExametrika に plotICRF_gg 実装後に有効化する
+              # TODO: Enable after plotICRF_gg is implemented in ggExametrika
               # "ICRF (Item Category Response Function)" = "ICRF",
               "IIC (Item Information Curve)" = "IIC",
               "TIC (Test Information Curve)" = "TIC"
             )
           ),
 
-          # アイテム選択UI（ICRF/IICの場合のみ表示）
+          # Item selection UI (shown only for ICRF/IIC)
           uiOutput(ns("item_selection_ui")),
 
           plotOutput(ns("plot"), height = "600px"),
@@ -90,25 +90,25 @@ mod_grm_ui <- function(id, i18n) {
 }
 
 
-#' GRM モジュール サーバ
+#' GRM Module Server
 #'
-#' @param id モジュールの名前空間 ID
-#' @param formatted_data リアクティブな dataFormat() 結果
-#' @param i18n shiny.i18n Translator オブジェクト
+#' @param id Module namespace ID
+#' @param formatted_data Reactive dataFormat() result
+#' @param i18n shiny.i18n Translator object
 #'
 #' @noRd
 mod_grm_server <- function(id, formatted_data, i18n) {
   moduleServer(id, function(input, output, session) {
 
-    # ========== リアクティブ値 ==========
+    # ========== Reactive values ==========
 
-    # GRM分析結果
+    # GRM analysis result
     result <- eventReactive(input$btn_run, {
       req(formatted_data())
 
       fd <- formatted_data()
 
-      # 順序データチェック（response.typeを確認）
+      # Ordinal data validation (check response.type)
       if (!is.null(fd$response.type) && fd$response.type == "binary") {
         shiny::showNotification(
           i18n$t("GRM requires ordinal data (more than 2 categories). Please use IRT for binary data."),
@@ -118,7 +118,7 @@ mod_grm_server <- function(id, formatted_data, i18n) {
         return(NULL)
       }
 
-      # categoriesチェック（データ整合性）
+      # Categories validation (data integrity)
       if (!is.null(fd$categories) && length(fd$categories) > 0) {
         if (all(fd$categories == 2)) {
           shiny::showNotification(
@@ -130,17 +130,17 @@ mod_grm_server <- function(id, formatted_data, i18n) {
         }
       }
 
-      # プログレスバー表示
+      # Show progress bar
       withProgress(message = i18n$t("Running GRM analysis..."), value = 0, {
         incProgress(0.3, detail = i18n$t("Estimating parameters..."))
 
-        # GRM実行（exametrikaオブジェクト全体を渡す）
+        # Run GRM (pass entire exametrika object)
         result <- tryCatch(
           exametrika::GRM(fd),
           error = function(e) {
             error_msg <- e$message
-            # 特定のエラーに対する追加情報
-            if (grepl("subscript|添え字", error_msg)) {
+            # Additional info for specific errors
+            if (grepl("subscript", error_msg)) {
               error_msg <- paste(
                 error_msg,
                 "\n\nNote: Some sample datasets (e.g., J15S3810) may have data format issues.",
@@ -161,12 +161,12 @@ mod_grm_server <- function(id, formatted_data, i18n) {
       })
     })
 
-    # ========== アイテム選択UI（動的） ==========
+    # ========== Item selection UI (dynamic) ==========
 
     output$item_selection_ui <- renderUI({
       req(result())
 
-      # IICの場合のみアイテム選択UIを表示
+      # Show item selection UI only for IIC
       if (input$plot_type == "IIC") {
         item_names <- rownames(result()$params)
 
@@ -176,14 +176,14 @@ mod_grm_server <- function(id, formatted_data, i18n) {
             session$ns("selected_items"),
             label = i18n$t("Select Items to Plot"),
             choices = setNames(seq_along(item_names), item_names),
-            selected = seq_along(item_names),  # デフォルトは全選択
+            selected = seq_along(item_names),  # all selected by default
             inline = TRUE
           )
         )
       }
     })
 
-    # ========== プロット生成ヘルパー ==========
+    # ========== Plot generation helper ==========
 
     current_plot <- reactive({
       req(result())
@@ -218,9 +218,9 @@ mod_grm_server <- function(id, formatted_data, i18n) {
       })
     })
 
-    # ========== テーブル出力 ==========
+    # ========== Table output ==========
 
-    # 適合度指標（共通ヘルパー関数を使用）
+    # Fit indices (using common helper function)
     output$table_fit <- DT::renderDT({
       req(result())
 
@@ -234,7 +234,7 @@ mod_grm_server <- function(id, formatted_data, i18n) {
       DT::formatRound(dt, columns = "Value", digits = 4)
     })
 
-    # 項目パラメータ
+    # Item parameters
     output$table_params <- DT::renderDT({
       req(result())
 
@@ -247,13 +247,13 @@ mod_grm_server <- function(id, formatted_data, i18n) {
       DT::formatRound(dt, columns = 1:ncol(params), digits = 3)
     })
 
-    # 能力推定値（共通ヘルパー関数を使用）
+    # Ability estimates (using common helper function)
     output$table_ability <- DT::renderDT({
       req(result())
 
       ability <- extract_ability(result())
 
-      # 数値列のみ丸め対象にする
+      # Round numeric columns only
       numeric_cols <- names(ability)[vapply(ability, is.numeric, logical(1))]
 
       dt <- DT::datatable(
@@ -267,7 +267,7 @@ mod_grm_server <- function(id, formatted_data, i18n) {
       dt
     })
 
-    # ========== プロット ==========
+    # ========== Plots ==========
 
     output$plot <- renderPlot({
       p <- current_plot()
@@ -277,9 +277,9 @@ mod_grm_server <- function(id, formatted_data, i18n) {
       p
     })
 
-    # ========== ダウンロード ==========
+    # ========== Downloads ==========
 
-    # パラメータCSV
+    # Parameters CSV
     output$download_params <- downloadHandler(
       filename = function() {
         paste0("GRM_parameters_", Sys.Date(), ".csv")
@@ -289,7 +289,7 @@ mod_grm_server <- function(id, formatted_data, i18n) {
       }
     )
 
-    # 能力推定値CSV（共通ヘルパー関数を使用）
+    # Ability estimates CSV (using common helper function)
     output$download_ability <- downloadHandler(
       filename = function() {
         paste0("GRM_ability_", Sys.Date(), ".csv")
@@ -300,7 +300,7 @@ mod_grm_server <- function(id, formatted_data, i18n) {
       }
     )
 
-    # プロットPNG
+    # Plot PNG
     output$download_plot <- downloadHandler(
       filename = function() {
         paste0("GRM_", input$plot_type, "_", Sys.Date(), ".png")

@@ -1,5 +1,5 @@
-# testthat テストランナー
-# このファイルは devtools::test() や R CMD check で自動的に呼ばれる
+# testthat test runner
+# This file is called automatically by devtools::test() and R CMD check
 
 library(testthat)
 library(shinyExametrika)

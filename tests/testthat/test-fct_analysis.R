@@ -1,7 +1,7 @@
-# fct_analysis.R のユニットテスト
-# 共通ヘルパー関数のテスト
+# Unit tests for fct_analysis.R
+# Tests for common helper functions
 #
-# 注: safe_field / extract_fit_indices は非エクスポート関数のため ::: でアクセス
+# Note: safe_field / extract_fit_indices are non-exported functions, accessed via :::
 
 test_that("safe_field returns new name when available", {
   obj <- list(n_class = 5, Nclass = 3)

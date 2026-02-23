@@ -5,7 +5,7 @@
 #' @import shiny
 #' @noRd
 app_ui <- function(request) {
-  # --- 翻訳オブジェクトの初期化 ---
+  # --- Initialize translator object ---
   i18n <- shiny.i18n::Translator$new(
     translation_json_path = app_sys("i18n/translation.json")
   )
@@ -24,7 +24,7 @@ app_ui <- function(request) {
         primary = "#2c3e50"
       ),
 
-      # --- 言語切替 ---
+      # --- Language switch ---
       header = tags$div(
         class = "d-flex justify-content-end pe-3 pt-1",
         shinyWidgets::radioGroupButtons(
@@ -36,21 +36,21 @@ app_ui <- function(request) {
         )
       ),
 
-      # --- データ読み込みタブ ---
+      # --- Data upload tab ---
       bslib::nav_panel(
         title = i18n$t("Data"),
         value = "tab_data",
         mod_data_upload_ui("data_upload", i18n)
       ),
 
-      # --- 記述統計タブ ---
+      # --- Descriptives tab ---
       bslib::nav_panel(
         title = i18n$t("Descriptives"),
         value = "tab_descriptives",
         mod_descriptives_ui("descriptives", i18n)
       ),
 
-      # --- 分析タブ ---
+      # --- Analysis tabs ---
       bslib::nav_panel(
         title = i18n$t("CTT"),
         value = "tab_ctt",
@@ -109,7 +109,7 @@ golem_add_external_resources <- function() {
       path = app_sys("app/www"),
       app_title = "shinyExametrika"
     ),
-    # --- shiny.i18n: 言語切替用 JS ---
+    # --- shiny.i18n: Language switch JS ---
     shiny.i18n::usei18n(
       shiny.i18n::Translator$new(
         translation_json_path = app_sys("i18n/translation.json")

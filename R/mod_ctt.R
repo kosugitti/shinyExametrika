@@ -1,14 +1,14 @@
-#' CTT 分析モジュール UI
+#' CTT Analysis Module UI
 #'
-#' @param id モジュールの名前空間 ID
-#' @param i18n shiny.i18n Translator オブジェクト
+#' @param id Module namespace ID
+#' @param i18n shiny.i18n Translator object
 #'
 #' @noRd
 mod_ctt_ui <- function(id, i18n) {
   ns <- NS(id)
 
   bslib::layout_sidebar(
-    # --- サイドバー ---
+    # --- Sidebar ---
     sidebar = bslib::sidebar(
       width = 280,
       title = i18n$t("CTT"),
@@ -29,7 +29,7 @@ mod_ctt_ui <- function(id, i18n) {
 
       tags$hr(),
 
-      # Reliability と ReliabilityExcludingItem を別々にダウンロード
+      # Download Reliability and ReliabilityExcludingItem separately
       downloadButton(
         ns("dl_reliability"),
         label = i18n$t("Download CSV (Reliability)"),
@@ -42,11 +42,11 @@ mod_ctt_ui <- function(id, i18n) {
       )
     ),
 
-    # --- メインパネル ---
+    # --- Main panel ---
     bslib::navset_card_tab(
       id = ns("result_tabs"),
 
-      # 信頼性係数タブ
+      # Reliability coefficients tab
       bslib::nav_panel(
         title = i18n$t("Reliability"),
         bslib::card_body(
@@ -55,7 +55,7 @@ mod_ctt_ui <- function(id, i18n) {
         )
       ),
 
-      # 項目削除時の信頼性タブ
+      # Reliability if item deleted tab
       bslib::nav_panel(
         title = i18n$t("Reliability if Item Deleted"),
         bslib::card_body(
@@ -67,26 +67,26 @@ mod_ctt_ui <- function(id, i18n) {
 }
 
 
-#' CTT 分析モジュール Server
+#' CTT Analysis Module Server
 #'
-#' @param id モジュールの名前空間 ID
-#' @param formatted_data reactive: exametrika の dataFormat() 結果
-#' @param i18n shiny.i18n Translator オブジェクト
+#' @param id Module namespace ID
+#' @param formatted_data reactive: result of exametrika dataFormat()
+#' @param i18n shiny.i18n Translator object
 #'
 #' @noRd
 mod_ctt_server <- function(id, formatted_data, i18n) {
   moduleServer(id, function(input, output, session) {
 
-    # --- CTT 分析結果 ---
+    # --- CTT analysis result ---
     ctt_result <- reactiveVal(NULL)
 
-    # --- 分析実行 ---
+    # --- Run analysis ---
     observeEvent(input$btn_run, {
       req(formatted_data())
 
       fd <- formatted_data()
 
-      # binary データのみ CTT 対応
+      # CTT supports binary data only
       if (!is.null(fd$response.type) && fd$response.type != "binary") {
         showNotification(
           i18n$t("CTT requires binary response data."),
@@ -109,7 +109,7 @@ mod_ctt_server <- function(id, formatted_data, i18n) {
       })
     })
 
-    # --- 信頼性係数: サマリー value_box ---
+    # --- Reliability coefficients: summary value_box ---
     output$reliability_summary <- renderUI({
       req(ctt_result())
       rel <- ctt_result()$Reliability
@@ -142,7 +142,7 @@ mod_ctt_server <- function(id, formatted_data, i18n) {
       )
     })
 
-    # --- 信頼性係数テーブル ---
+    # --- Reliability coefficients table ---
     output$reliability_table <- DT::renderDT({
       req(ctt_result())
       df <- ctt_result()$Reliability
@@ -159,11 +159,11 @@ mod_ctt_server <- function(id, formatted_data, i18n) {
         DT::formatRound(columns = i18n$t("Value"), digits = 4)
     })
 
-    # --- 項目削除時の信頼性テーブル ---
+    # --- Reliability if item deleted table ---
     output$item_deleted_table <- DT::renderDT({
       req(ctt_result())
       df <- ctt_result()$ReliabilityExcludingItem
-      # 数値列を自動検出して丸める
+      # Detect and round numeric columns
       num_cols <- names(df)[sapply(df, is.numeric)]
       dt <- DT::datatable(
         df,
@@ -177,7 +177,7 @@ mod_ctt_server <- function(id, formatted_data, i18n) {
       dt
     })
 
-    # --- CSV ダウンロード: Reliability ---
+    # --- CSV download: Reliability ---
     output$dl_reliability <- downloadHandler(
       filename = function() paste0("CTT_Reliability_", Sys.Date(), ".csv"),
       content  = function(file) {
@@ -186,7 +186,7 @@ mod_ctt_server <- function(id, formatted_data, i18n) {
       }
     )
 
-    # --- CSV ダウンロード: ReliabilityExcludingItem ---
+    # --- CSV download: ReliabilityExcludingItem ---
     output$dl_item_deleted <- downloadHandler(
       filename = function() paste0("CTT_ReliabilityExcludingItem_", Sys.Date(), ".csv"),
       content  = function(file) {

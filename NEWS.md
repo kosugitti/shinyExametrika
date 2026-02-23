@@ -2,65 +2,91 @@
 
 ## Changes
 
-### CI の GitHub 版パッケージインストール対応（2026-02-23）
+### shinyapps.io deployment support (2026-02-23)
 
-- `DESCRIPTION` に `Remotes` フィールドを追加: exametrika と ggExametrika を GitHub リポジトリからインストールするよう指定
-  - exametrika >= 1.9.0 は CRAN 未公開のため、CI で GitHub 版が必要
-  - ggExametrika も CRAN 未公開のため同様に指定
-  - `r-lib/actions/setup-r-dependencies@v2` が `Remotes` を自動的に読み取る
+- Created `app.R` deployment entry point for shinyapps.io
+  - Sources R/ files directly instead of using `pkgload::load_all()` to avoid rsconnect 1.7.0 package source detection issues with golem-structured apps
+  - Overrides `app_sys()` to use local `inst/` directory path
+  - Loads required libraries explicitly (shiny, golem, bslib, exametrika, ggExametrika, etc.)
+- Successfully deployed to shinyapps.io: https://kosugitti.shinyapps.io/shinyExametrika/
+  - Account: kosugitti (free plan)
+  - All 9 tabs operational: Data, Descriptives, CTT, IRT, GRM, LCA, LRA, Biclustering, IRM
+  - EN/JA language switch functional
+- Installed `rsconnect` package (v1.7.0) for deployment management
+- Note: DESCRIPTION/NAMESPACE files are excluded from the shinyapps.io deployment bundle to prevent rsconnect from treating the golem app as a package dependency
 
-### plotRMP_gg 回避コード解消（2026-02-23）
+### Remove non-ASCII characters for CRAN compliance (2026-02-23)
 
-- `R/mod_lra.R`: RMP プロットの手動 ggplot2 描画コードを `ggExametrika::plotRMP_gg()` 呼び出しに置換
-  - ggExametrika v0.0.29 で `$n_rank` / `$n_class` 対応が完了し、LRA オブジェクトで正常動作するようになった
-  - base plot フォールバックに RMP 個別受検者指定を追加
-- `R/mod_biclustering.R`（feature/mod-biclustering ブランチ）: 同様に RMP の手動描画を `plotRMP_gg()` に置換
-  - CMP/RMP の受検者セレクタ `req()` 条件を統一
-  - base plot フォールバックの CMP/RMP 分岐を統一
+- Replaced all Japanese comments in R/ files with English equivalents (14 files, ~300 lines)
+  - Roxygen documentation (`#'`): all translated to English
+  - Section separator comments (`#`): all translated to English
+  - Inline code comments: all translated to English
+- Fixed `grepl()` pattern in `R/mod_grm.R` to remove non-ASCII characters from the regex
+- Rewrote NEWS.md entirely in English (was fully in Japanese)
+- Replaced em dashes (U+2014) with `--` in README.md
+- Translated Japanese comments in tests/ to English
+- Verified: DESCRIPTION, NAMESPACE, man/ were already clean
+- All changes confirmed: zero non-ASCII characters remain in package source
 
-### CI / テスト環境整備（2026-02-23）
+### CI support for GitHub-hosted package installation (2026-02-23)
 
-- `.github/workflows/R-CMD-check.yaml` を新規追加: GitHub Actions による R CMD check 自動実行
-  - push（main / develop）および PR 時に自動実行
-  - macOS-latest + ubuntu-latest（release / devel）の3環境でチェック
-  - r-lib/actions v2 を使用
-- `tests/testthat.R` を新規追加: testthat テストランナー
-- `tests/testthat/test-golem-recommended.R` を新規追加: golem 推奨の基本テスト
-  - app_ui / app_server / app_sys / golem-config の存在・型チェック
-- `tests/testthat/test-fct_analysis.R` を新規追加: 共通ヘルパー関数のユニットテスト
-  - safe_field: 新名称優先 / 旧名称フォールバック / 未定義時 NULL
-  - extract_fit_indices: ModelFit オブジェクト / data.frame 入力の処理
+- Added `Remotes` field to `DESCRIPTION`: specifies installation of exametrika and ggExametrika from GitHub repositories
+  - exametrika >= 1.9.0 is not yet on CRAN, so the GitHub version is needed for CI
+  - ggExametrika is also not on CRAN; specified similarly
+  - `r-lib/actions/setup-r-dependencies@v2` reads `Remotes` automatically
 
-### LCA / LRA モジュール追加（2026-02-20）
+### plotRMP_gg workaround removal (2026-02-23)
 
-- `R/mod_lca.R` を新規追加: LCA（潜在クラス分析）モジュール
-  - サイドバー: クラス数スライダー（2-10）+ 実行ボタン
-  - Results タブ: 適合度指標 / クラスプロファイル(IRP) / クラスサマリー / 受検者クラス帰属
-  - Item Fit タブ: 項目適合度指標テーブル
-  - Plots タブ: IRP（項目選択付き）/ TRP / LCD / CMP（受検者選択付き）
-  - CSV ダウンロード（IRP, Students）+ プロット PNG ダウンロード
-  - ggExametrika 優先、base plot フォールバック対応
-- `R/mod_lra.R` を新規追加: LRA（潜在ランク分析）モジュール
-  - サイドバー: ランク数スライダー / 推定方法（GTM/SOM）/ 単調増加制約チェック
-  - Results タブ: 適合度指標 / IRP テーブル / IRP Index / ランクサマリー / 受検者ランク帰属
-  - Item Fit タブ: 項目適合度指標テーブル
-  - Plots タブ: IRP（項目選択付き）/ TRP / LRD / RMP（受検者選択付き、ggplot2 手動描画）
-  - RMP は exametrika / ggExametrika 双方のバグを回避するため ggplot2 で手動描画
-- `R/app_ui.R`: LCA / LRA タブを placeholder から実モジュールに切り替え
-- `R/app_server.R`: mod_lca_server / mod_lra_server を追加
-- `inst/i18n/translation.json`: LCA / LRA 関連の翻訳キーを追加
+- `R/mod_lra.R`: replaced manual ggplot2 rendering code for RMP plots with `ggExametrika::plotRMP_gg()` call
+  - ggExametrika v0.0.29 completed `$n_rank` / `$n_class` support, enabling correct operation with LRA objects
+  - Added individual student selection for RMP in base plot fallback
+- `R/mod_biclustering.R` (feature/mod-biclustering branch): similarly replaced manual RMP rendering with `plotRMP_gg()`
+  - Unified `req()` conditions for CMP/RMP student selector
+  - Unified CMP/RMP branching in base plot fallback
 
-- CLAUDE.md に NEWS.md 記録ルールを追加（全ての変更を NEWS.md に記録する恒久ルール）
-- `R/fct_analysis.R` を新規作成: 分析結果からの共通ヘルパー関数を追加
-  - `extract_ability()`: IRT（$ability data.frame）と GRM（$EAP/$MAP/$PSD 個別ベクトル）の両形式に対応した能力推定値抽出関数
-  - `extract_fit_indices()`: TestFitIndices の named list / data.frame 両形式に対応した適合度指標抽出関数
-- `R/mod_irt.R`: TestFitIndices 表示に `is.data.frame()` 分岐 + `tryCatch()` による防御的コードを追加（GRM モジュールと同等の堅牢性に強化）。能力推定値の表示・ダウンロードを共通ヘルパー関数 `extract_ability()` に統一
-- `R/mod_grm.R`: 適合度指標・能力推定値の表示・ダウンロードを共通ヘルパー関数 `extract_fit_indices()` / `extract_ability()` に統一（ロジックの重複を解消）
+### CI / test environment setup (2026-02-23)
 
-### exametrika v1.9.0 返り値構造統一への追従（2026-02-19）
+- `.github/workflows/R-CMD-check.yaml` newly added: automated R CMD check via GitHub Actions
+  - Runs automatically on push (main / develop) and on pull requests
+  - Checks on 3 environments: macOS-latest + ubuntu-latest (release / devel)
+  - Uses r-lib/actions v2
+- `tests/testthat.R` newly added: testthat test runner
+- `tests/testthat/test-golem-recommended.R` newly added: golem-recommended basic tests
+  - Checks existence and type of app_ui / app_server / app_sys / golem-config
+- `tests/testthat/test-fct_analysis.R` newly added: unit tests for common helper functions
+  - safe_field: new name priority / old name fallback / NULL when undefined
+  - extract_fit_indices: handling of ModelFit object / data.frame input
+
+### LCA / LRA module addition (2026-02-20)
+
+- `R/mod_lca.R` newly added: LCA (Latent Class Analysis) module
+  - Sidebar: class count slider (2-10) + run button
+  - Results tab: fit indices / class profile (IRP) / class summary / student class membership
+  - Item Fit tab: item fit indices table
+  - Plots tab: IRP (with item selection) / TRP / LCD / CMP (with student selection)
+  - CSV download (IRP, Students) + plot PNG download
+  - ggExametrika preferred, base plot fallback supported
+- `R/mod_lra.R` newly added: LRA (Latent Rank Analysis) module
+  - Sidebar: rank slider / estimation method (GTM/SOM) / monotone increasing constraint checkbox
+  - Results tab: fit indices / IRP table / IRP Index / rank summary / student rank membership
+  - Item Fit tab: item fit indices table
+  - Plots tab: IRP (with item selection) / TRP / LRD / RMP (with student selection, manual ggplot2 rendering)
+  - RMP is manually rendered in ggplot2 to work around bugs in both exametrika and ggExametrika
+- `R/app_ui.R`: switched LCA / LRA tabs from placeholder to actual modules
+- `R/app_server.R`: added mod_lca_server / mod_lra_server
+- `inst/i18n/translation.json`: added translation keys for LCA / LRA
+
+- Added NEWS.md recording rule to CLAUDE.md (permanent rule to record all changes in NEWS.md)
+- `R/fct_analysis.R` newly created: added common helper functions for analysis results
+  - `extract_ability()`: ability estimate extraction function supporting both IRT (`$ability` data.frame) and GRM (`$EAP`/`$MAP`/`$PSD` individual vectors) formats
+  - `extract_fit_indices()`: fit indices extraction function supporting both TestFitIndices named list and data.frame formats
+- `R/mod_irt.R`: added `is.data.frame()` branching + `tryCatch()` defensive code for TestFitIndices display (strengthened to same robustness as GRM module). Unified ability estimate display/download to common helper function `extract_ability()`
+- `R/mod_grm.R`: unified fit indices and ability estimate display/download to common helper functions `extract_fit_indices()` / `extract_ability()` (eliminated logic duplication)
+
+### Following unified return value structure of exametrika v1.9.0 (2026-02-19)
 
 - `R/fct_analysis.R`:
-  - `extract_fit_indices()` を ModelFit クラス（16フィールド）に明示的に対応。`inherits(fit, "ModelFit")` による判定を追加。BINET 旧名 `MG_FitIndices` へのフォールバック付き
-  - `extract_ability()` に LCA/LRA/Biclustering 形式（`$Students` data.frame）のパターンを追加。将来の Phase 2/3 モジュール実装に対応
-  - `safe_field()` ヘルパー関数を新規追加: snake_case 新名称を優先し旧名称にフォールバックする汎用フィールド取得関数（n_class/Nclass, n_field/Nfield, n_rank/Nrank, n_cycle/N_Cycle 等）
-  - ファイル冒頭に「新モジュール実装時のルール」コメントを追加（snake_case 名称使用、ModelFit 前提、BINET は TestFitIndices でアクセス、log_lik 追加、Students の Estimate 列）
+  - Explicitly adapted `extract_fit_indices()` to ModelFit class (16 fields). Added `inherits(fit, "ModelFit")` check. Includes fallback to BINET legacy name `MG_FitIndices`
+  - Added LCA/LRA/Biclustering format (`$Students` data.frame) pattern to `extract_ability()`. Supports future Phase 2/3 module implementation
+  - `safe_field()` helper function newly added: generic field accessor that prioritizes snake_case new names and falls back to old names (n_class/Nclass, n_field/Nfield, n_rank/Nrank, n_cycle/N_Cycle, etc.)
+  - Added "rules for new module implementation" comment at the top of the file (use snake_case names, assume ModelFit, access BINET via TestFitIndices, add log_lik, Estimate column in Students)

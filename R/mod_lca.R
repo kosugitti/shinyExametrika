@@ -1,14 +1,14 @@
-#' LCA モジュール UI
+#' LCA Module UI
 #'
-#' @param id モジュールの名前空間 ID
-#' @param i18n shiny.i18n Translator オブジェクト
+#' @param id Module namespace ID
+#' @param i18n shiny.i18n Translator object
 #'
 #' @noRd
 mod_lca_ui <- function(id, i18n) {
   ns <- NS(id)
 
   bslib::layout_sidebar(
-    # ========== サイドバー ==========
+    # ========== Sidebar ==========
     sidebar = bslib::sidebar(
       width = 300,
       title = i18n$t("LCA"),
@@ -29,23 +29,23 @@ mod_lca_ui <- function(id, i18n) {
       )
     ),
 
-    # ========== メインパネル ==========
+    # ========== Main Panel ==========
     bslib::navset_card_tab(
       id = ns("main_tabs"),
 
-      # --- Results タブ ---
+      # --- Results Tab ---
       bslib::nav_panel(
         title = i18n$t("Results"),
         bslib::card_body(
 
-          # 適合度指標
+          # Fit Indices
           tags$div(
             class = "mb-5",
             tags$h5(i18n$t("Fit Indices"), class = "mt-3 mb-3"),
             DT::DTOutput(ns("table_fit"))
           ),
 
-          # クラスプロファイル（IRP）
+          # Class Profiles (IRP)
           tags$div(
             class = "mb-5",
             tags$h5(i18n$t("Class Profiles (IRP)"), class = "mt-3 mb-3"),
@@ -53,14 +53,14 @@ mod_lca_ui <- function(id, i18n) {
             downloadButton(ns("dl_irp"), i18n$t("Download CSV"), class = "mt-3 mb-2")
           ),
 
-          # クラスサマリー（TRP / LCD）
+          # Class Summary (TRP / LCD)
           tags$div(
             class = "mb-5",
             tags$h5(i18n$t("Class Summary"), class = "mt-3 mb-3"),
             DT::DTOutput(ns("table_class_summary"))
           ),
 
-          # 受検者クラス帰属
+          # Student Class Membership
           tags$div(
             class = "mb-5",
             tags$h5(i18n$t("Student Membership"), class = "mt-3 mb-3"),
@@ -70,7 +70,7 @@ mod_lca_ui <- function(id, i18n) {
         )
       ),
 
-      # --- Item Fit タブ ---
+      # --- Item Fit Tab ---
       bslib::nav_panel(
         title = i18n$t("Item Fit"),
         bslib::card_body(
@@ -78,7 +78,7 @@ mod_lca_ui <- function(id, i18n) {
         )
       ),
 
-      # --- Plots タブ ---
+      # --- Plots Tab ---
       bslib::nav_panel(
         title = i18n$t("Plots"),
         bslib::card_body(
@@ -103,22 +103,22 @@ mod_lca_ui <- function(id, i18n) {
 }
 
 
-#' LCA モジュール サーバ
+#' LCA Module Server
 #'
-#' @param id モジュールの名前空間 ID
-#' @param formatted_data リアクティブな dataFormat() 結果
-#' @param i18n shiny.i18n Translator オブジェクト
+#' @param id Module namespace ID
+#' @param formatted_data Reactive dataFormat() result
+#' @param i18n shiny.i18n Translator object
 #'
 #' @noRd
 mod_lca_server <- function(id, formatted_data, i18n) {
   moduleServer(id, function(input, output, session) {
 
-    # ========== 分析実行 ==========
+    # ========== Run Analysis ==========
     result <- eventReactive(input$btn_run, {
       req(formatted_data())
       fd <- formatted_data()
 
-      # 二値データチェック（IRT と同様に maxscore を使用）
+      # Binary data validation (using maxscore, same as IRT)
       maxscore <- fd$maxscore
       if (!is.null(maxscore) && length(maxscore) > 0 && any(maxscore > 1)) {
         shiny::showNotification(
@@ -148,9 +148,9 @@ mod_lca_server <- function(id, formatted_data, i18n) {
       })
     })
 
-    # ========== テーブル出力 ==========
+    # ========== Table Output ==========
 
-    # 適合度指標（共通ヘルパー関数を使用）
+    # Fit Indices (using shared helper function)
     output$table_fit <- DT::renderDT({
       req(result())
       fit_df <- extract_fit_indices(result())
@@ -159,7 +159,7 @@ mod_lca_server <- function(id, formatted_data, i18n) {
       DT::formatRound(dt, columns = "Value", digits = 4)
     })
 
-    # IRP テーブル（行: 項目、列: クラス）
+    # IRP Table (rows: items, columns: classes)
     output$table_irp <- DT::renderDT({
       req(result())
       irp <- as.data.frame(result()$IRP)
@@ -168,7 +168,7 @@ mod_lca_server <- function(id, formatted_data, i18n) {
         DT::formatRound(columns = seq_len(ncol(irp)), digits = 3)
     })
 
-    # クラスサマリー（TRP: クラス平均得点, LCD: クラス人数）
+    # Class Summary (TRP: class mean scores, LCD: class counts)
     output$table_class_summary <- DT::renderDT({
       req(result())
       r <- result()
@@ -184,7 +184,7 @@ mod_lca_server <- function(id, formatted_data, i18n) {
                     options = list(dom = "t", pageLength = 15))
     })
 
-    # 受検者クラス帰属テーブル
+    # Student Class Membership Table
     output$table_students <- DT::renderDT({
       req(result())
       df <- as.data.frame(result()$Students)
@@ -195,7 +195,7 @@ mod_lca_server <- function(id, formatted_data, i18n) {
       dt
     })
 
-    # 項目適合度テーブル
+    # Item Fit Table
     output$table_item_fit <- DT::renderDT({
       req(result())
       fit <- result()$ItemFitIndices
@@ -213,9 +213,9 @@ mod_lca_server <- function(id, formatted_data, i18n) {
       DT::formatRound(dt, columns = seq_len(ncol(df)), digits = 4)
     })
 
-    # ========== プロット ==========
+    # ========== Plots ==========
 
-    # IRP 選択時のみ項目セレクタを表示
+    # Show item selector only when IRP is selected
     output$item_selector_ui <- renderUI({
       req(result(), input$plot_type == "IRP")
       item_names <- rownames(result()$IRP)
@@ -227,7 +227,7 @@ mod_lca_server <- function(id, formatted_data, i18n) {
       )
     })
 
-    # CMP 選択時のみ受検者セレクタを表示
+    # Show student selector only when CMP is selected
     output$student_selector_ui <- renderUI({
       req(result(), input$plot_type == "CMP")
       student_names <- rownames(result()$Students)
@@ -239,7 +239,7 @@ mod_lca_server <- function(id, formatted_data, i18n) {
       )
     })
 
-    # ggplot オブジェクトを返す（base plot が必要な場合は NULL を返す）
+    # Returns a ggplot object (returns NULL if base plot is needed)
     current_plot <- reactive({
       req(result())
       r <- result()
@@ -274,7 +274,7 @@ mod_lca_server <- function(id, formatted_data, i18n) {
       if (!is.null(p)) {
         print(p)
       } else {
-        # ggExametrika 未使用 / エラー時は base plot にフォールバック
+        # Fallback to base plot when ggExametrika is unused or on error
         if (input$plot_type == "CMP") {
           idx <- as.integer(input$selected_student)
           if (is.null(idx) || length(idx) == 0 || is.na(idx)) idx <- 1L
@@ -285,7 +285,7 @@ mod_lca_server <- function(id, formatted_data, i18n) {
       }
     })
 
-    # ========== ダウンロード ==========
+    # ========== Downloads ==========
 
     output$dl_irp <- downloadHandler(
       filename = function() paste0("LCA_IRP_", Sys.Date(), ".csv"),

@@ -1,7 +1,7 @@
-#' プレースホルダーモジュール UI（未実装タブ用）
+#' Placeholder module UI (for unimplemented tabs)
 #'
-#' @param id モジュールの名前空間 ID
-#' @param i18n shiny.i18n Translator オブジェクト
+#' @param id Module namespace ID
+#' @param i18n shiny.i18n Translator object
 #'
 #' @noRd
 mod_placeholder_ui <- function(id, i18n) {

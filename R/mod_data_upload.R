@@ -1,19 +1,19 @@
-#' データ読み込みモジュール UI
+#' Data Upload Module UI
 #'
-#' @param id モジュールの名前空間 ID
-#' @param i18n shiny.i18n Translator オブジェクト
+#' @param id Module namespace ID
+#' @param i18n shiny.i18n Translator object
 #'
 #' @noRd
 mod_data_upload_ui <- function(id, i18n) {
   ns <- NS(id)
 
   bslib::layout_sidebar(
-    # --- サイドバー: 入力設定 ---
+    # --- Sidebar: input settings ---
     sidebar = bslib::sidebar(
       width = 350,
       title = i18n$t("Data Upload"),
 
-      # ファイルアップロード
+      # File upload
       fileInput(
         ns("file_upload"),
         label = i18n$t("Upload CSV File"),
@@ -23,7 +23,7 @@ mod_data_upload_ui <- function(id, i18n) {
 
       tags$hr(),
 
-      # サンプルデータ選択
+      # Sample data selection
       tags$p(i18n$t("Or use sample data"), class = "text-muted"),
       selectInput(
         ns("sample_data"),
@@ -44,7 +44,7 @@ mod_data_upload_ui <- function(id, i18n) {
 
       tags$hr(),
 
-      # データ整形オプション
+      # Data formatting options
       tags$h6(i18n$t("Settings"), class = "fw-bold"),
 
       selectInput(
@@ -74,7 +74,7 @@ mod_data_upload_ui <- function(id, i18n) {
         placeholder = i18n$t("e.g., -9, 99, NA")
       ),
 
-      # 整形実行ボタン
+      # Format button
       actionButton(
         ns("btn_format"),
         label = i18n$t("Format Data"),
@@ -83,11 +83,11 @@ mod_data_upload_ui <- function(id, i18n) {
       )
     ),
 
-    # --- メインパネル: プレビュー ---
+    # --- Main panel: preview ---
     bslib::navset_card_tab(
       id = ns("data_tabs"),
 
-      # 元データタブ
+      # Raw data tab
       bslib::nav_panel(
         title = i18n$t("Raw Data"),
         bslib::card_body(
@@ -96,7 +96,7 @@ mod_data_upload_ui <- function(id, i18n) {
         )
       ),
 
-      # 整形済みデータタブ
+      # Formatted data tab
       bslib::nav_panel(
         title = i18n$t("Formatted Data"),
         bslib::card_body(
@@ -109,22 +109,22 @@ mod_data_upload_ui <- function(id, i18n) {
 }
 
 
-#' データ読み込みモジュール Server
+#' Data Upload Module Server
 #'
-#' @param id モジュールの名前空間 ID
-#' @param i18n shiny.i18n Translator オブジェクト
+#' @param id Module namespace ID
+#' @param i18n shiny.i18n Translator object
 #'
-#' @return reactive: exametrika の dataFormat() 結果
+#' @return reactive: result of exametrika dataFormat()
 #' @noRd
 mod_data_upload_server <- function(id, i18n) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # --- リアクティブ値 ---
+    # --- Reactive values ---
     raw_data <- reactiveVal(NULL)
     formatted_data <- reactiveVal(NULL)
 
-    # --- CSVファイルアップロード ---
+    # --- CSV file upload ---
     observeEvent(input$file_upload, {
       req(input$file_upload)
       tryCatch({
@@ -144,7 +144,7 @@ mod_data_upload_server <- function(id, i18n) {
       })
     })
 
-    # --- サンプルデータ選択 ---
+    # --- Sample data selection ---
     observeEvent(input$sample_data, {
       req(input$sample_data != "")
       tryCatch({
@@ -152,14 +152,14 @@ mod_data_upload_server <- function(id, i18n) {
         utils::data(list = input$sample_data, package = "exametrika", envir = env)
         df <- get(input$sample_data, envir = env)
 
-        # サンプルデータはすでに exametrikaData 形式
-        # Raw Data タブ: 元の値を表示（ordinal は Q、binary は U）
+        # Sample data is already in exametrikaData format
+        # Raw Data tab: display original values (ordinal uses Q, binary uses U)
         raw_df <- as.data.frame(if (!is.null(df$Q)) df$Q else df$U)
         if (!is.null(df$ID)) raw_df <- cbind(ID = df$ID, raw_df)
         if (!is.null(df$ItemLabel)) colnames(raw_df)[seq_along(df$ItemLabel) + (!is.null(df$ID))] <- df$ItemLabel
         raw_data(raw_df)
 
-        # Formatted Data はそのまま設定（Format Data ボタン不要）
+        # Set Formatted Data directly (no Format Data button needed)
         formatted_data(df)
         showNotification(i18n$t("Data loaded successfully!"), type = "message")
       }, error = function(err) {
@@ -170,24 +170,24 @@ mod_data_upload_server <- function(id, i18n) {
       })
     })
 
-    # --- データ整形 ---
+    # --- Data formatting ---
     observeEvent(input$btn_format, {
       req(raw_data())
 
       tryCatch({
         df <- raw_data()
 
-        # 欠損値コード
+        # Missing value code
         na_arg <- NULL
         if (nchar(trimws(input$na_code)) > 0) {
           na_arg <- as.numeric(trimws(input$na_code))
         }
 
-        # 回答タイプ
+        # Response type
         resp_type <- if (input$response_type == "auto") NULL else input$response_type
 
-        # dataFormat() 実行
-        # id=NULL を渡すとエラーになるため、do.call() で引数を動的に構築する
+        # Execute dataFormat()
+        # Passing id=NULL causes an error, so build arguments dynamically with do.call()
         fmt_args <- list(
           df,
           na = na_arg,
@@ -206,7 +206,7 @@ mod_data_upload_server <- function(id, i18n) {
       })
     })
 
-    # --- 元データ: サマリー ---
+    # --- Raw data: summary ---
     output$raw_summary <- renderUI({
       req(raw_data())
       df <- raw_data()
@@ -233,7 +233,7 @@ mod_data_upload_server <- function(id, i18n) {
       )
     })
 
-    # --- 元データ: テーブル ---
+    # --- Raw data: table ---
     output$raw_table <- DT::renderDT({
       req(raw_data())
       DT::datatable(
@@ -246,7 +246,7 @@ mod_data_upload_server <- function(id, i18n) {
       )
     })
 
-    # --- 整形済みデータ: サマリー ---
+    # --- Formatted data: summary ---
     output$formatted_summary <- renderUI({
       req(formatted_data())
       fd <- formatted_data()
@@ -288,12 +288,12 @@ mod_data_upload_server <- function(id, i18n) {
       )
     })
 
-    # --- 整形済みデータ: テーブル ---
+    # --- Formatted data: table ---
     output$formatted_table <- DT::renderDT({
       req(formatted_data())
       fd <- formatted_data()
 
-      # 表示用の行列を取得（binary: U, ordinal/nominal/rated: Q）
+      # Get matrix for display (binary: U, ordinal/nominal/rated: Q)
       display_df <- as.data.frame(if (!is.null(fd$U)) fd$U else fd$Q)
       if (!is.null(fd$ID)) {
         display_df <- cbind(ID = fd$ID, display_df)
@@ -312,7 +312,7 @@ mod_data_upload_server <- function(id, i18n) {
       )
     })
 
-    # --- 整形済みデータを返す ---
+    # --- Return formatted data ---
     return(reactive({ formatted_data() }))
   })
 }

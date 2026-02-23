@@ -1,14 +1,14 @@
-#' Biclustering モジュール UI
+#' Biclustering Module UI
 #'
-#' @param id モジュールの名前空間 ID
-#' @param i18n shiny.i18n Translator オブジェクト
+#' @param id Module namespace ID
+#' @param i18n shiny.i18n Translator object
 #'
 #' @noRd
 mod_biclustering_ui <- function(id, i18n) {
   ns <- NS(id)
 
   bslib::layout_sidebar(
-    # ========== サイドバー ==========
+    # ========== Sidebar ==========
     sidebar = bslib::sidebar(
       width = 300,
       title = i18n$t("Biclustering"),
@@ -52,23 +52,23 @@ mod_biclustering_ui <- function(id, i18n) {
       )
     ),
 
-    # ========== メインパネル ==========
+    # ========== Main Panel ==========
     bslib::navset_card_tab(
       id = ns("main_tabs"),
 
-      # --- Results タブ ---
+      # --- Results tab ---
       bslib::nav_panel(
         title = i18n$t("Results"),
         bslib::card_body(
 
-          # 適合度指標
+          # Fit indices
           tags$div(
             class = "mb-5",
             tags$h5(i18n$t("Fit Indices"), class = "mt-3 mb-3"),
             DT::DTOutput(ns("table_fit"))
           ),
 
-          # FRP テーブル
+          # FRP table
           tags$div(
             class = "mb-5",
             tags$h5(i18n$t("FRP (Field Reference Profile)"), class = "mt-3 mb-3"),
@@ -76,28 +76,28 @@ mod_biclustering_ui <- function(id, i18n) {
             downloadButton(ns("dl_frp"), i18n$t("Download CSV"), class = "mt-3 mb-2")
           ),
 
-          # FRP Index テーブル
+          # FRP Index table
           tags$div(
             class = "mb-5",
             tags$h5(i18n$t("FRP Index"), class = "mt-3 mb-3"),
             DT::DTOutput(ns("table_frp_index"))
           ),
 
-          # クラスサマリー（TRP / LCD）
+          # Class summary (TRP / LCD)
           tags$div(
             class = "mb-5",
             tags$h5(i18n$t("Class Summary"), class = "mt-3 mb-3"),
             DT::DTOutput(ns("table_class_summary"))
           ),
 
-          # フィールドサマリー（LFD）
+          # Field summary (LFD)
           tags$div(
             class = "mb-5",
             tags$h5(i18n$t("Field Summary"), class = "mt-3 mb-3"),
             DT::DTOutput(ns("table_field_summary"))
           ),
 
-          # 受検者クラス帰属
+          # Student class membership
           tags$div(
             class = "mb-5",
             tags$h5(i18n$t("Student Membership"), class = "mt-3 mb-3"),
@@ -105,7 +105,7 @@ mod_biclustering_ui <- function(id, i18n) {
             downloadButton(ns("dl_students"), i18n$t("Download CSV"), class = "mt-3 mb-2")
           ),
 
-          # 項目フィールド解析
+          # Item field analysis
           tags$div(
             class = "mb-5",
             tags$h5(i18n$t("Field Analysis"), class = "mt-3 mb-3"),
@@ -114,7 +114,7 @@ mod_biclustering_ui <- function(id, i18n) {
         )
       ),
 
-      # --- Plots タブ ---
+      # --- Plots tab ---
       bslib::nav_panel(
         title = i18n$t("Plots"),
         bslib::card_body(
@@ -126,7 +126,7 @@ mod_biclustering_ui <- function(id, i18n) {
         )
       ),
 
-      # --- GridSearch タブ ---
+      # --- GridSearch tab ---
       bslib::nav_panel(
         title = i18n$t("GridSearch"),
         bslib::card_body(
@@ -177,22 +177,22 @@ mod_biclustering_ui <- function(id, i18n) {
 }
 
 
-#' Biclustering モジュール サーバ
+#' Biclustering Module Server
 #'
-#' @param id モジュールの名前空間 ID
-#' @param formatted_data リアクティブな dataFormat() 結果
-#' @param i18n shiny.i18n Translator オブジェクト
+#' @param id Module namespace ID
+#' @param formatted_data Reactive dataFormat() result
+#' @param i18n shiny.i18n Translator object
 #'
 #' @noRd
 mod_biclustering_server <- function(id, formatted_data, i18n) {
   moduleServer(id, function(input, output, session) {
 
-    # ========== 分析実行 ==========
+    # ========== Run Analysis ==========
     result <- eventReactive(input$btn_run, {
       req(formatted_data())
       fd <- formatted_data()
 
-      # 二値データチェック（maxscore を使用）
+      # Binary data validation (using maxscore)
       maxscore <- fd$maxscore
       if (!is.null(maxscore) && length(maxscore) > 0 && any(maxscore > 1)) {
         shiny::showNotification(
@@ -228,7 +228,7 @@ mod_biclustering_server <- function(id, formatted_data, i18n) {
       })
     })
 
-    # ========== GridSearch 実行 ==========
+    # ========== Run GridSearch ==========
     gs_result <- eventReactive(input$btn_gridsearch, {
       req(formatted_data())
       fd <- formatted_data()
@@ -267,9 +267,9 @@ mod_biclustering_server <- function(id, formatted_data, i18n) {
       })
     })
 
-    # ========== テーブル出力 ==========
+    # ========== Table Output ==========
 
-    # 適合度指標（共通ヘルパー関数を使用）
+    # Fit indices (using shared helper function)
     output$table_fit <- DT::renderDT({
       req(result())
       fit_df <- extract_fit_indices(result())
@@ -278,7 +278,7 @@ mod_biclustering_server <- function(id, formatted_data, i18n) {
       DT::formatRound(dt, columns = "Value", digits = 4)
     })
 
-    # FRP テーブル（行: フィールド、列: クラス）
+    # FRP table (rows: fields, columns: classes)
     output$table_frp <- DT::renderDT({
       req(result())
       frp <- as.data.frame(result()$FRP)
@@ -287,7 +287,7 @@ mod_biclustering_server <- function(id, formatted_data, i18n) {
         DT::formatRound(columns = seq_len(ncol(frp)), digits = 3)
     })
 
-    # FRP Index テーブル（Alpha, A, Beta, B, Gamma, C）
+    # FRP Index table (Alpha, A, Beta, B, Gamma, C)
     output$table_frp_index <- DT::renderDT({
       req(result())
       df <- result()$FRPIndex
@@ -296,7 +296,7 @@ mod_biclustering_server <- function(id, formatted_data, i18n) {
         DT::formatRound(columns = seq_len(ncol(df)), digits = 3)
     })
 
-    # クラスサマリー（TRP + LCD）
+    # Class summary (TRP + LCD)
     output$table_class_summary <- DT::renderDT({
       req(result())
       r <- result()
@@ -312,7 +312,7 @@ mod_biclustering_server <- function(id, formatted_data, i18n) {
                     options = list(dom = "t", pageLength = 15))
     })
 
-    # フィールドサマリー（LFD）
+    # Field summary (LFD)
     output$table_field_summary <- DT::renderDT({
       req(result())
       r <- result()
@@ -327,7 +327,7 @@ mod_biclustering_server <- function(id, formatted_data, i18n) {
                     options = list(dom = "t", pageLength = 15))
     })
 
-    # 受検者クラス帰属テーブル（Students は matrix → data.frame）
+    # Student class membership table (Students: matrix -> data.frame)
     output$table_students <- DT::renderDT({
       req(result())
       df <- as.data.frame(result()$Students)
@@ -338,7 +338,7 @@ mod_biclustering_server <- function(id, formatted_data, i18n) {
       dt
     })
 
-    # 項目フィールド解析テーブル（FieldAnalysis）
+    # Item field analysis table (FieldAnalysis)
     output$table_field_analysis <- DT::renderDT({
       req(result())
       df <- tryCatch(
@@ -351,9 +351,9 @@ mod_biclustering_server <- function(id, formatted_data, i18n) {
       DT::formatRound(dt, columns = seq_len(ncol(df)), digits = 3)
     })
 
-    # ========== プロット ==========
+    # ========== Plots ==========
 
-    # 分析結果の method に応じてプロットタイプを切り替え
+    # Switch plot types based on the analysis method used
     output$plot_type_ui <- renderUI({
       req(result())
       method_used <- result()$model
@@ -382,7 +382,7 @@ mod_biclustering_server <- function(id, formatted_data, i18n) {
       )
     })
 
-    # FRP 選択時のみフィールドセレクタを表示
+    # Show field selector only when FRP is selected
     output$field_selector_ui <- renderUI({
       req(result(), input$plot_type == "FRP")
       nfld <- result()$n_field
@@ -395,7 +395,7 @@ mod_biclustering_server <- function(id, formatted_data, i18n) {
       )
     })
 
-    # CMP/RMP 選択時のみ受検者セレクタを表示
+    # Show student selector only when CMP/RMP is selected
     output$student_selector_ui <- renderUI({
       req(result(), input$plot_type %in% c("CMP", "RMP"))
       student_names <- rownames(result()$Students)
@@ -407,12 +407,12 @@ mod_biclustering_server <- function(id, formatted_data, i18n) {
       )
     })
 
-    # ggplot オブジェクトを返す（base plot が必要な場合は NULL を返す）
+    # Return ggplot object (returns NULL when base plot fallback is needed)
     current_plot <- reactive({
       req(result(), input$plot_type)
       r <- result()
 
-      # req() を tryCatch の外に置く（内側だと error handler に捕捉されてしまう）
+      # Place req() outside tryCatch (inside it would be caught by the error handler)
       if (input$plot_type == "FRP")  req(input$selected_field)
       if (input$plot_type %in% c("CMP", "RMP"))  req(input$selected_student)
 
@@ -433,7 +433,7 @@ mod_biclustering_server <- function(id, formatted_data, i18n) {
             all_plots[[idx]]
           },
           "RMP" = {
-            # ggExametrika v0.0.29 で plotRMP_gg が Biclustering に対応
+            # plotRMP_gg supports Biclustering since ggExametrika v0.0.29
             all_plots <- ggExametrika::plotRMP_gg(r)
             idx <- as.integer(input$selected_student)
             if (is.na(idx)) idx <- 1L
@@ -450,7 +450,7 @@ mod_biclustering_server <- function(id, formatted_data, i18n) {
       if (!is.null(p)) {
         print(p)
       } else {
-        # base plot フォールバック
+        # Base plot fallback
         if (input$plot_type %in% c("CMP", "RMP")) {
           idx <- as.integer(input$selected_student)
           if (is.null(idx) || length(idx) == 0 || is.na(idx)) idx <- 1L
@@ -465,9 +465,9 @@ mod_biclustering_server <- function(id, formatted_data, i18n) {
       }
     })
 
-    # ========== GridSearch 出力 ==========
+    # ========== GridSearch Output ==========
 
-    # 最適パラメータの表示
+    # Display optimal parameters
     output$gs_result_ui <- renderUI({
       req(gs_result())
       gs <- gs_result()
@@ -479,7 +479,7 @@ mod_biclustering_server <- function(id, formatted_data, i18n) {
       )
     })
 
-    # GridSearch 指標行列テーブル
+    # GridSearch index matrix table
     output$table_gs_matrix <- DT::renderDT({
       req(gs_result())
       df <- as.data.frame(gs_result()$index_matrix)
@@ -488,7 +488,7 @@ mod_biclustering_server <- function(id, formatted_data, i18n) {
       DT::formatRound(dt, columns = seq_len(ncol(df)), digits = 1)
     })
 
-    # ========== ダウンロード ==========
+    # ========== Downloads ==========
 
     output$dl_frp <- downloadHandler(
       filename = function() paste0("Biclustering_FRP_", Sys.Date(), ".csv"),

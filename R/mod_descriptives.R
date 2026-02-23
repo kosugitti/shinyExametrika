@@ -1,7 +1,7 @@
-#' Descriptives モジュール UI
+#' Descriptives Module UI
 #'
-#' @param id モジュールの名前空間 ID
-#' @param i18n shiny.i18n Translator オブジェクト
+#' @param id Module namespace ID
+#' @param i18n shiny.i18n Translator object
 #'
 #' @noRd
 mod_descriptives_ui <- function(id, i18n) {
@@ -51,11 +51,11 @@ mod_descriptives_ui <- function(id, i18n) {
 }
 
 
-#' Descriptives モジュール Server
+#' Descriptives Module Server
 #'
-#' @param id モジュールの名前空間 ID
-#' @param formatted_data reactive: exametrika の dataFormat() 結果
-#' @param i18n shiny.i18n Translator オブジェクト
+#' @param id Module namespace ID
+#' @param formatted_data reactive: result of exametrika dataFormat()
+#' @param i18n shiny.i18n Translator object
 #'
 #' @noRd
 mod_descriptives_server <- function(id, formatted_data, i18n) {
@@ -84,8 +84,8 @@ mod_descriptives_server <- function(id, formatted_data, i18n) {
       })
     })
 
-    # TestStatistics を data.frame に変換するヘルパー
-    # binary/ordinal でフィールドが異なるため names(ts) を動的に走査する
+    # Helper to convert TestStatistics to data.frame
+    # Fields differ between binary/ordinal, so dynamically scan names(ts)
     test_stats_df <- reactive({
       req(desc_result())
       ts <- desc_result()$test
@@ -97,7 +97,7 @@ mod_descriptives_server <- function(id, formatted_data, i18n) {
         if (length(val) == 1) {
           data.frame(Statistic = nm, Value = as.numeric(val))
         } else {
-          # 名前付きベクトル（Stanine 等）は展開して複数行に
+          # Named vector (e.g. Stanine) -- expand to multiple rows
           labels <- if (!is.null(names(val))) {
             paste0(nm, " (", names(val), ")")
           } else {
@@ -110,8 +110,8 @@ mod_descriptives_server <- function(id, formatted_data, i18n) {
       do.call(rbind, Filter(Negate(is.null), rows))
     })
 
-    # ItemStatistics を data.frame に変換するヘルパー
-    # binary/ordinal でフィールドが異なるため存在確認しながら動的に構築する
+    # Helper to convert ItemStatistics to data.frame
+    # Fields differ between binary/ordinal, so build dynamically with existence checks
     item_stats_df <- reactive({
       req(desc_result())
       is_r <- desc_result()$item
@@ -122,11 +122,11 @@ mod_descriptives_server <- function(id, formatted_data, i18n) {
         stringsAsFactors = FALSE
       )
 
-      # CRR, ODDs は binary のみ
+      # CRR, ODDs are binary only
       if (!is.null(is_r$CRR))  df$CRR  <- round(drop(is_r$CRR),  3)
       if (!is.null(is_r$ODDs)) df$ODDs <- round(drop(is_r$ODDs), 3)
 
-      # Threshold: binary は n×1 行列（1列）、ordinal は n×(cat-1) 行列（複数列）
+      # Threshold: binary is n x 1 matrix (1 column), ordinal is n x (cat-1) matrix (multiple columns)
       if (!is.null(is_r$Threshold)) {
         thr <- is_r$Threshold
         if (ncol(thr) == 1) {
@@ -144,7 +144,7 @@ mod_descriptives_server <- function(id, formatted_data, i18n) {
       df
     })
 
-    # --- Test Statistics テーブル ---
+    # --- Test Statistics table ---
     output$test_stats_table <- DT::renderDT({
       req(test_stats_df())
       DT::datatable(
@@ -159,10 +159,10 @@ mod_descriptives_server <- function(id, formatted_data, i18n) {
         DT::formatRound("Value", digits = 4)
     })
 
-    # --- Item Statistics テーブル ---
+    # --- Item Statistics table ---
     output$item_stats_table <- DT::renderDT({
       req(item_stats_df())
-      # 数値列のみ丸める
+      # Round numeric columns only
       df <- item_stats_df()
       num_cols <- names(df)[sapply(df, is.numeric)]
       dt <- DT::datatable(
@@ -177,7 +177,7 @@ mod_descriptives_server <- function(id, formatted_data, i18n) {
       dt
     })
 
-    # --- CSV ダウンロード ---
+    # --- CSV download ---
     output$dl_test_csv <- downloadHandler(
       filename = function() paste0("test_statistics_", Sys.Date(), ".csv"),
       content  = function(file) utils::write.csv(test_stats_df(), file, row.names = FALSE)

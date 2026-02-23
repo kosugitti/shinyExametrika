@@ -1,14 +1,14 @@
-#' LRA モジュール UI
+#' LRA Module UI
 #'
-#' @param id モジュールの名前空間 ID
-#' @param i18n shiny.i18n Translator オブジェクト
+#' @param id Module namespace ID
+#' @param i18n shiny.i18n Translator object
 #'
 #' @noRd
 mod_lra_ui <- function(id, i18n) {
   ns <- NS(id)
 
   bslib::layout_sidebar(
-    # ========== サイドバー ==========
+    # ========== Sidebar ==========
     sidebar = bslib::sidebar(
       width = 300,
       title = i18n$t("LRA"),
@@ -43,23 +43,23 @@ mod_lra_ui <- function(id, i18n) {
       )
     ),
 
-    # ========== メインパネル ==========
+    # ========== Main Panel ==========
     bslib::navset_card_tab(
       id = ns("main_tabs"),
 
-      # --- Results タブ ---
+      # --- Results Tab ---
       bslib::nav_panel(
         title = i18n$t("Results"),
         bslib::card_body(
 
-          # 適合度指標
+          # Fit Indices
           tags$div(
             class = "mb-5",
             tags$h5(i18n$t("Fit Indices"), class = "mt-3 mb-3"),
             DT::DTOutput(ns("table_fit"))
           ),
 
-          # IRP テーブル
+          # IRP Table
           tags$div(
             class = "mb-5",
             tags$h5(i18n$t("IRP (Item Reference Profile)"), class = "mt-3 mb-3"),
@@ -67,21 +67,21 @@ mod_lra_ui <- function(id, i18n) {
             downloadButton(ns("dl_irp"), i18n$t("Download CSV"), class = "mt-3 mb-2")
           ),
 
-          # IRP Index テーブル
+          # IRP Index Table
           tags$div(
             class = "mb-5",
             tags$h5(i18n$t("IRP Index"), class = "mt-3 mb-3"),
             DT::DTOutput(ns("table_irp_index"))
           ),
 
-          # ランクサマリー（TRP / LRD）
+          # Rank Summary (TRP / LRD)
           tags$div(
             class = "mb-5",
             tags$h5(i18n$t("Rank Summary"), class = "mt-3 mb-3"),
             DT::DTOutput(ns("table_rank_summary"))
           ),
 
-          # 受検者ランク帰属
+          # Student Rank Membership
           tags$div(
             class = "mb-5",
             tags$h5(i18n$t("Student Membership"), class = "mt-3 mb-3"),
@@ -91,7 +91,7 @@ mod_lra_ui <- function(id, i18n) {
         )
       ),
 
-      # --- Item Fit タブ ---
+      # --- Item Fit Tab ---
       bslib::nav_panel(
         title = i18n$t("Item Fit"),
         bslib::card_body(
@@ -99,7 +99,7 @@ mod_lra_ui <- function(id, i18n) {
         )
       ),
 
-      # --- Plots タブ ---
+      # --- Plots Tab ---
       bslib::nav_panel(
         title = i18n$t("Plots"),
         bslib::card_body(
@@ -124,22 +124,22 @@ mod_lra_ui <- function(id, i18n) {
 }
 
 
-#' LRA モジュール サーバ
+#' LRA Module Server
 #'
-#' @param id モジュールの名前空間 ID
-#' @param formatted_data リアクティブな dataFormat() 結果
-#' @param i18n shiny.i18n Translator オブジェクト
+#' @param id Module namespace ID
+#' @param formatted_data Reactive dataFormat() result
+#' @param i18n shiny.i18n Translator object
 #'
 #' @noRd
 mod_lra_server <- function(id, formatted_data, i18n) {
   moduleServer(id, function(input, output, session) {
 
-    # ========== 分析実行 ==========
+    # ========== Run Analysis ==========
     result <- eventReactive(input$btn_run, {
       req(formatted_data())
       fd <- formatted_data()
 
-      # 二値データチェック（IRT と同様に maxscore を使用）
+      # Binary data validation (using maxscore, same as IRT)
       maxscore <- fd$maxscore
       if (!is.null(maxscore) && length(maxscore) > 0 && any(maxscore > 1)) {
         shiny::showNotification(
@@ -169,9 +169,9 @@ mod_lra_server <- function(id, formatted_data, i18n) {
       })
     })
 
-    # ========== テーブル出力 ==========
+    # ========== Table Output ==========
 
-    # 適合度指標（共通ヘルパー関数を使用）
+    # Fit Indices (using shared helper function)
     output$table_fit <- DT::renderDT({
       req(result())
       fit_df <- extract_fit_indices(result())
@@ -180,7 +180,7 @@ mod_lra_server <- function(id, formatted_data, i18n) {
       DT::formatRound(dt, columns = "Value", digits = 4)
     })
 
-    # IRP テーブル（行: 項目、列: ランク）
+    # IRP Table (rows: items, columns: ranks)
     output$table_irp <- DT::renderDT({
       req(result())
       irp <- as.data.frame(result()$IRP)
@@ -189,7 +189,7 @@ mod_lra_server <- function(id, formatted_data, i18n) {
         DT::formatRound(columns = seq_len(ncol(irp)), digits = 3)
     })
 
-    # IRP Index テーブル（Alpha, A, Beta, B, Gamma, C）
+    # IRP Index Table (Alpha, A, Beta, B, Gamma, C)
     output$table_irp_index <- DT::renderDT({
       req(result())
       df <- result()$IRPIndex
@@ -198,7 +198,7 @@ mod_lra_server <- function(id, formatted_data, i18n) {
         DT::formatRound(columns = seq_len(ncol(df)), digits = 3)
     })
 
-    # ランクサマリー（TRP + LRD）
+    # Rank Summary (TRP + LRD)
     output$table_rank_summary <- DT::renderDT({
       req(result())
       r <- result()
@@ -214,7 +214,7 @@ mod_lra_server <- function(id, formatted_data, i18n) {
                     options = list(dom = "t", pageLength = 15))
     })
 
-    # 受検者ランク帰属テーブル（Students は matrix → data.frame 変換）
+    # Student Rank Membership Table (Students: matrix to data.frame conversion)
     output$table_students <- DT::renderDT({
       req(result())
       df <- as.data.frame(result()$Students)
@@ -225,7 +225,7 @@ mod_lra_server <- function(id, formatted_data, i18n) {
       dt
     })
 
-    # 項目適合度テーブル（ItemFitIndices: 各要素が nItems 長ベクトルのリスト）
+    # Item Fit Table (ItemFitIndices: list of nItems-length vectors)
     output$table_item_fit <- DT::renderDT({
       req(result())
       fit <- result()$ItemFitIndices
@@ -243,9 +243,9 @@ mod_lra_server <- function(id, formatted_data, i18n) {
       DT::formatRound(dt, columns = seq_len(ncol(df)), digits = 4)
     })
 
-    # ========== プロット ==========
+    # ========== Plots ==========
 
-    # IRP 選択時のみ項目セレクタを表示
+    # Show item selector only when IRP is selected
     output$item_selector_ui <- renderUI({
       req(result(), input$plot_type == "IRP")
       item_names <- rownames(result()$IRP)
@@ -257,7 +257,7 @@ mod_lra_server <- function(id, formatted_data, i18n) {
       )
     })
 
-    # RMP 選択時のみ受検者セレクタを表示
+    # Show student selector only when RMP is selected
     output$student_selector_ui <- renderUI({
       req(result(), input$plot_type == "RMP")
       student_names <- rownames(result()$Students)
@@ -269,12 +269,12 @@ mod_lra_server <- function(id, formatted_data, i18n) {
       )
     })
 
-    # ggplot オブジェクトを返す（base plot が必要な場合は NULL を返す）
+    # Returns a ggplot object (returns NULL if base plot is needed)
     current_plot <- reactive({
       req(result())
       r <- result()
 
-      # req() を tryCatch の外に置く（内側だと error handler に捕捉されてしまう）
+      # Place req() outside tryCatch (inside it would be captured by the error handler)
       if (input$plot_type == "IRP") req(input$selected_item)
       if (input$plot_type == "RMP") req(input$selected_student)
 
@@ -290,7 +290,7 @@ mod_lra_server <- function(id, formatted_data, i18n) {
           "TRP" = ggExametrika::plotTRP_gg(r),
           "LRD" = ggExametrika::plotLRD_gg(r),
           "RMP" = {
-            # ggExametrika v0.0.29 で plotRMP_gg が LRA に対応
+            # plotRMP_gg supports LRA since ggExametrika v0.0.29
             all_plots <- ggExametrika::plotRMP_gg(r)
             idx <- as.integer(input$selected_student)
             if (is.na(idx)) idx <- 1L
@@ -307,7 +307,7 @@ mod_lra_server <- function(id, formatted_data, i18n) {
       if (!is.null(p)) {
         print(p)
       } else {
-        # ggExametrika 未使用 / エラー時は base plot にフォールバック
+        # Fallback to base plot when ggExametrika is unused or on error
         if (input$plot_type == "RMP") {
           idx <- as.integer(input$selected_student)
           if (is.null(idx) || length(idx) == 0 || is.na(idx)) idx <- 1L
@@ -318,7 +318,7 @@ mod_lra_server <- function(id, formatted_data, i18n) {
       }
     })
 
-    # ========== ダウンロード ==========
+    # ========== Downloads ==========
 
     output$dl_irp <- downloadHandler(
       filename = function() paste0("LRA_IRP_", Sys.Date(), ".csv"),

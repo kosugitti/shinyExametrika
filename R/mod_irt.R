@@ -1,19 +1,19 @@
-#' IRT モジュール UI
+#' IRT Module UI
 #'
-#' @param id モジュールの名前空間 ID
-#' @param i18n shiny.i18n Translator オブジェクト
+#' @param id Module namespace ID
+#' @param i18n shiny.i18n Translator object
 #'
 #' @noRd
 mod_irt_ui <- function(id, i18n) {
   ns <- NS(id)
 
   bslib::layout_sidebar(
-    # ========== サイドバー ==========
+    # ========== Sidebar ==========
     sidebar = bslib::sidebar(
       width = 300,
       title = i18n$t("IRT"),
 
-      # モデル選択
+      # Model selection
       radioButtons(
         ns("model"),
         label = i18n$t("IRT Model"),
@@ -27,7 +27,7 @@ mod_irt_ui <- function(id, i18n) {
 
       tags$hr(),
 
-      # 実行ボタン
+      # Run button
       actionButton(
         ns("btn_run"),
         label = i18n$t("Run Analysis"),
@@ -36,22 +36,22 @@ mod_irt_ui <- function(id, i18n) {
       )
     ),
 
-    # ========== メインパネル ==========
+    # ========== Main Panel ==========
     bslib::navset_card_tab(
       id = ns("main_tabs"),
 
-      # --- Results タブ ---
+      # --- Results tab ---
       bslib::nav_panel(
         title = i18n$t("Results"),
         bslib::card_body(
-          # 適合度指標セクション
+          # Fit indices section
           tags$div(
             class = "mb-5",
             tags$h5(i18n$t("Fit Indices"), class = "mt-3 mb-3"),
             DT::DTOutput(ns("table_fit"))
           ),
 
-          # 項目パラメータセクション
+          # Item parameters section
           tags$div(
             class = "mb-5",
             tags$h5(i18n$t("Item Parameters"), class = "mt-3 mb-3"),
@@ -59,7 +59,7 @@ mod_irt_ui <- function(id, i18n) {
             downloadButton(ns("download_params"), i18n$t("Download CSV"), class = "mt-3 mb-2")
           ),
 
-          # 能力推定値セクション
+          # Ability estimates section
           tags$div(
             class = "mb-5",
             tags$h5(i18n$t("Ability Estimates"), class = "mt-3 mb-3"),
@@ -69,7 +69,7 @@ mod_irt_ui <- function(id, i18n) {
         )
       ),
 
-      # --- Plots タブ ---
+      # --- Plots tab ---
       bslib::nav_panel(
         title = i18n$t("Plots"),
         bslib::card_body(
@@ -84,7 +84,7 @@ mod_irt_ui <- function(id, i18n) {
             )
           ),
 
-          # アイテム選択UI（ICC/IICの場合のみ表示）
+          # Item selection UI (shown only for ICC/IIC)
           uiOutput(ns("item_selection_ui")),
 
           plotOutput(ns("plot"), height = "600px"),
@@ -96,26 +96,26 @@ mod_irt_ui <- function(id, i18n) {
 }
 
 
-#' IRT モジュール サーバ
+#' IRT Module Server
 #'
-#' @param id モジュールの名前空間 ID
-#' @param formatted_data リアクティブな dataFormat() 結果
-#' @param i18n shiny.i18n Translator オブジェクト
+#' @param id Module namespace ID
+#' @param formatted_data Reactive dataFormat() result
+#' @param i18n shiny.i18n Translator object
 #'
 #' @noRd
 mod_irt_server <- function(id, formatted_data, i18n) {
   moduleServer(id, function(input, output, session) {
 
-    # ========== リアクティブ値 ==========
+    # ========== Reactive values ==========
 
-    # IRT分析結果
+    # IRT analysis result
     result <- eventReactive(input$btn_run, {
       req(formatted_data())
 
       fd <- formatted_data()
       model_num <- as.numeric(input$model)
 
-      # 二値データチェック
+      # Binary data validation
       maxscore <- fd$maxscore
       if (!is.null(maxscore) && length(maxscore) > 0 && any(maxscore > 1)) {
         shiny::showNotification(
@@ -126,11 +126,11 @@ mod_irt_server <- function(id, formatted_data, i18n) {
         return(NULL)
       }
 
-      # プログレスバー表示
+      # Show progress bar
       withProgress(message = i18n$t("Running IRT analysis..."), value = 0, {
         incProgress(0.3, detail = i18n$t("Estimating parameters..."))
 
-        # IRT実行（exametrikaオブジェクト全体を渡す）
+        # Run IRT (pass entire exametrika object)
         result <- tryCatch(
           exametrika::IRT(fd, model = model_num),
           error = function(e) {
@@ -148,12 +148,12 @@ mod_irt_server <- function(id, formatted_data, i18n) {
       })
     })
 
-    # ========== アイテム選択UI（動的） ==========
+    # ========== Item selection UI (dynamic) ==========
 
     output$item_selection_ui <- renderUI({
       req(result())
 
-      # ICC/IICの場合のみアイテム選択UIを表示
+      # Show item selection UI only for ICC/IIC
       if (input$plot_type %in% c("ICC", "IIC")) {
         item_names <- rownames(result()$params)
 
@@ -163,14 +163,14 @@ mod_irt_server <- function(id, formatted_data, i18n) {
             session$ns("selected_items"),
             label = i18n$t("Select Items to Plot"),
             choices = setNames(seq_along(item_names), item_names),
-            selected = seq_along(item_names),  # デフォルトは全選択
+            selected = seq_along(item_names),  # all selected by default
             inline = TRUE
           )
         )
       }
     })
 
-    # ========== プロット生成ヘルパー ==========
+    # ========== Plot generation helper ==========
 
     current_plot <- reactive({
       req(result())
@@ -205,9 +205,9 @@ mod_irt_server <- function(id, formatted_data, i18n) {
       )
     })
 
-    # ========== テーブル出力 ==========
+    # ========== Table output ==========
 
-    # 適合度指標（共通ヘルパー関数を使用）
+    # Fit indices (using common helper function)
     output$table_fit <- DT::renderDT({
       req(result())
 
@@ -221,7 +221,7 @@ mod_irt_server <- function(id, formatted_data, i18n) {
       DT::formatRound(dt, columns = "Value", digits = 4)
     })
 
-    # 項目パラメータ
+    # Item parameters
     output$table_params <- DT::renderDT({
       req(result())
 
@@ -234,13 +234,13 @@ mod_irt_server <- function(id, formatted_data, i18n) {
       DT::formatRound(dt, columns = 1:ncol(params), digits = 3)
     })
 
-    # 能力推定値（共通ヘルパー関数を使用）
+    # Ability estimates (using common helper function)
     output$table_ability <- DT::renderDT({
       req(result())
 
       ability <- extract_ability(result())
 
-      # 数値列のみ丸め対象にする
+      # Round numeric columns only
       numeric_cols <- names(ability)[vapply(ability, is.numeric, logical(1))]
 
       dt <- DT::datatable(
@@ -254,15 +254,15 @@ mod_irt_server <- function(id, formatted_data, i18n) {
       dt
     })
 
-    # ========== プロット ==========
+    # ========== Plots ==========
 
     output$plot <- renderPlot({
       current_plot()
     })
 
-    # ========== ダウンロード ==========
+    # ========== Downloads ==========
 
-    # パラメータCSV
+    # Parameters CSV
     output$download_params <- downloadHandler(
       filename = function() {
         paste0("IRT_parameters_", Sys.Date(), ".csv")
@@ -272,7 +272,7 @@ mod_irt_server <- function(id, formatted_data, i18n) {
       }
     )
 
-    # 能力推定値CSV（共通ヘルパー関数を使用）
+    # Ability estimates CSV (using common helper function)
     output$download_ability <- downloadHandler(
       filename = function() {
         paste0("IRT_ability_", Sys.Date(), ".csv")
@@ -283,7 +283,7 @@ mod_irt_server <- function(id, formatted_data, i18n) {
       }
     )
 
-    # プロットPNG
+    # Plot PNG
     output$download_plot <- downloadHandler(
       filename = function() {
         paste0("IRT_", input$plot_type, "_", Sys.Date(), ".png")

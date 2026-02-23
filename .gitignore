@@ -18,5 +18,8 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Deployment
+rsconnect/
+
 # Claude
 .claude/

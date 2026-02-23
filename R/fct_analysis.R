@@ -1,64 +1,64 @@
 # =============================================================================
-# fct_analysis.R — 分析結果処理の共通ヘルパー関数群
+# fct_analysis.R -- Common helper functions for analysis result processing
 # =============================================================================
 #
-# 【新モジュール実装時のルール（exametrika v1.9.0 準拠）】
+# [Rules for implementing new modules (compliant with exametrika v1.9.0)]
 #
-# 1. フィールド名は必ず snake_case 新名称を使用する:
-#    - n_class（旧 Nclass）, n_field（旧 Nfield）, n_rank（旧 Nrank）
-#    - n_cycle（旧 N_Cycle / em_cycle / EM_Cycle）
-#    - 旧名称へのフォールバックが必要な場合は safe_field() を使う
+# 1. Always use snake_case new names for field names:
+#    - n_class (legacy: Nclass), n_field (legacy: Nfield), n_rank (legacy: Nrank)
+#    - n_cycle (legacy: N_Cycle / em_cycle / EM_Cycle)
+#    - Use safe_field() when fallback to legacy names is needed
 #
-# 2. TestFitIndices は 16 フィールド + ModelFit クラスを前提とする:
+# 2. TestFitIndices assumes 16 fields + ModelFit class:
 #    - model_log_like, bench_log_like, null_log_like, model_Chi_sq,
 #      null_Chi_sq, model_df, null_df, NFI, RFI, IFI, TLI, CFI,
 #      RMSEA, AIC, CAIC, BIC
-#    - extract_fit_indices() でアクセスすること
+#    - Access via extract_fit_indices()
 #
-# 3. BINET は TestFitIndices でアクセスする（旧 MG_FitIndices は非推奨）
+# 3. BINET uses TestFitIndices (legacy MG_FitIndices is deprecated)
 #
-# 4. 全関数のトップレベルに log_lik が追加されている（result$log_lik）
+# 4. log_lik is added at the top level of all functions (result$log_lik)
 #
-# 5. Biclustering nominal/ordinal の Students に Estimate 列が追加
+# 5. Estimate column added to Students in Biclustering nominal/ordinal
 #
 # =============================================================================
 
-#' 分析結果からの能力推定値・所属推定値抽出ヘルパー
+#' Helper to extract ability estimates / membership estimates from analysis results
 #'
-#' exametrika の分析結果オブジェクトから能力推定値（または所属推定値）を
-#' 統一的な data.frame として抽出する。
+#' Extracts ability estimates (or membership estimates) from an exametrika
+#' analysis result object as a consistent data.frame.
 #'
-#' 対応する出力形式:
-#' - IRT: `$ability` data.frame（列: ID, EAP, PSD）
-#' - GRM: `$EAP`, `$MAP`, `$PSD` 個別ベクトル
-#' - LCA/LRA/Biclustering: `$Students` data.frame（所属クラス・確率を含む）
+#' Supported output formats:
+#' - IRT: `$ability` data.frame (columns: ID, EAP, PSD)
+#' - GRM: `$EAP`, `$MAP`, `$PSD` as individual vectors
+#' - LCA/LRA/Biclustering: `$Students` data.frame (includes class membership and probabilities)
 #'
-#' @param result exametrika の分析結果オブジェクト
+#' @param result An exametrika analysis result object
 #'
-#' @return data.frame。分析手法に応じた列を持つ。
-#'   抽出失敗時は EAP = NA, PSD = NA の 1 行 data.frame を返す。
+#' @return data.frame with columns depending on the analysis method.
+#'   Returns a 1-row data.frame with EAP = NA, PSD = NA on extraction failure.
 #'
 #' @details
-#' exametrika v1.9.0 以降のフィールド名規則:
-#' - n_class（旧 Nclass）, n_field（旧 Nfield）, n_rank（旧 Nrank）を使用
-#' - Students に Estimate 列が追加されている（Biclustering nominal/ordinal）
+#' Field naming convention since exametrika v1.9.0:
+#' - Uses n_class (legacy: Nclass), n_field (legacy: Nfield), n_rank (legacy: Nrank)
+#' - Estimate column added to Students (Biclustering nominal/ordinal)
 #'
-#' 新モジュール実装時は必ず snake_case 新名称を使用すること。
-#' 旧名称が必要な場合は `result$n_class %||% result$Nclass` でフォールバックする。
+#' Always use snake_case new names when implementing new modules.
+#' Use `result$n_class %||% result$Nclass` for fallback to legacy names when needed.
 #'
 #' @examples
 #' \dontrun{
-#' # IRT の場合
+#' # IRT case
 #' result_irt <- exametrika::IRT(fd, model = 2)
 #' ability_df <- extract_ability(result_irt)
 #' # -> data.frame with columns: ID, EAP, PSD
 #'
-#' # GRM の場合
+#' # GRM case
 #' result_grm <- exametrika::GRM(fd)
 #' ability_df <- extract_ability(result_grm)
 #' # -> data.frame with columns: EAP, MAP, PSD
 #'
-#' # LCA/LRA/Biclustering の場合
+#' # LCA/LRA/Biclustering case
 #' result_lca <- exametrika::LCA(fd, ncls = 3)
 #' students_df <- extract_ability(result_lca)
 #' # -> result$Students data.frame
@@ -71,16 +71,16 @@ extract_ability <- function(result) {
   }
 
   tryCatch({
-    # ========== パターン 1: IRT 形式（$ability が data.frame） ==========
+    # ========== Pattern 1: IRT format ($ability is a data.frame) ==========
     if (!is.null(result$ability) && is.data.frame(result$ability)) {
       return(result$ability)
     }
 
-    # ========== パターン 2: GRM 形式（$EAP/$MAP/$PSD が個別ベクトル） ==========
+    # ========== Pattern 2: GRM format ($EAP/$MAP/$PSD as individual vectors) ==========
     if (!is.null(result$EAP) && is.numeric(result$EAP)) {
       df <- data.frame(EAP = result$EAP, stringsAsFactors = FALSE)
 
-      # MAP は GRM にはあるが IRT にはない場合がある
+      # MAP exists in GRM but may not exist in IRT
       if (!is.null(result$MAP) && is.numeric(result$MAP)) {
         df$MAP <- result$MAP
       }
@@ -89,20 +89,20 @@ extract_ability <- function(result) {
         df$PSD <- result$PSD
       }
 
-      # 列の並び順を整える（EAP, MAP, PSD の順）
+      # Reorder columns (EAP, MAP, PSD order)
       col_order <- intersect(c("EAP", "MAP", "PSD"), colnames(df))
       df <- df[, col_order, drop = FALSE]
 
       return(df)
     }
 
-    # ========== パターン 3: LCA/LRA/Biclustering 形式（$Students） ==========
+    # ========== Pattern 3: LCA/LRA/Biclustering format ($Students) ==========
     if (!is.null(result$Students) && is.data.frame(result$Students)) {
       return(result$Students)
     }
 
-    # ========== パターン 4: 未知の形式 ==========
-    # 将来の拡張に備え、警告を出して空の data.frame を返す
+    # ========== Pattern 4: Unknown format ==========
+    # For future extensibility, emit a warning and return an empty data.frame
     warning("extract_ability: unsupported result format. ",
             "Class: ", paste(class(result), collapse = ", "))
     data.frame(EAP = NA_real_, PSD = NA_real_, stringsAsFactors = FALSE)
@@ -114,24 +114,24 @@ extract_ability <- function(result) {
 }
 
 
-#' 分析結果から snake_case フィールドを安全に取得するヘルパー
+#' Helper to safely retrieve snake_case fields from analysis results
 #'
-#' exametrika v1.9.0 以降の snake_case 名を優先し、
-#' 旧名称にフォールバックする。
+#' Prioritizes snake_case names from exametrika v1.9.0 and later,
+#' with fallback to legacy names.
 #'
-#' @param result exametrika の分析結果オブジェクト
-#' @param new_name snake_case の新フィールド名（例: "n_class"）
-#' @param old_name PascalCase の旧フィールド名（例: "Nclass"）
-#' @param default フィールドが見つからない場合のデフォルト値
+#' @param result An exametrika analysis result object
+#' @param new_name The snake_case new field name (e.g., "n_class")
+#' @param old_name The PascalCase legacy field name (e.g., "Nclass")
+#' @param default Default value if the field is not found
 #'
-#' @return フィールドの値。見つからない場合は default。
+#' @return The field value, or default if not found.
 #'
 #' @details
-#' 対応表（新名 / 旧名）:
-#' - n_class / Nclass（LCA, LDLRA, BINET, Biclustering）
-#' - n_field / Nfield（LDB, BINET, Biclustering）
-#' - n_rank / Nrank（LRA, LDB）
-#' - n_cycle / N_Cycle（IRM, Biclustering nominal/ordinal）
+#' Mapping table (new name / legacy name):
+#' - n_class / Nclass (LCA, LDLRA, BINET, Biclustering)
+#' - n_field / Nfield (LDB, BINET, Biclustering)
+#' - n_rank / Nrank (LRA, LDB)
+#' - n_cycle / N_Cycle (IRM, Biclustering nominal/ordinal)
 #'
 #' @noRd
 safe_field <- function(result, new_name, old_name, default = NULL) {
@@ -139,25 +139,25 @@ safe_field <- function(result, new_name, old_name, default = NULL) {
 }
 
 
-#' 分析結果から適合度指標を統一的に抽出するヘルパー
+#' Helper to extract fit indices consistently from analysis results
 #'
-#' exametrika の分析結果オブジェクトから TestFitIndices を
-#' 統一的な data.frame（Index, Value の 2 列）として抽出する。
+#' Extracts TestFitIndices from an exametrika analysis result object
+#' as a consistent data.frame with two columns (Index, Value).
 #'
-#' exametrika v1.9.0 以降、TestFitIndices は ModelFit クラス（16フィールド）に
-#' 統一されている。旧バージョンの named list / data.frame 形式にもフォールバック対応する。
+#' Since exametrika v1.9.0, TestFitIndices is unified as the ModelFit class
+#' (16 fields). Also supports fallback to legacy named list / data.frame formats.
 #'
-#' @param result exametrika の分析結果オブジェクト
+#' @param result An exametrika analysis result object
 #'
-#' @return data.frame（列: Index, Value）
+#' @return data.frame (columns: Index, Value)
 #'
 #' @details
-#' exametrika v1.9.0 の ModelFit クラスは以下の 16 フィールドを持つ:
+#' The ModelFit class in exametrika v1.9.0 has the following 16 fields:
 #' model_log_like, bench_log_like, null_log_like, model_Chi_sq, null_Chi_sq,
 #' model_df, null_df, NFI, RFI, IFI, TLI, CFI, RMSEA, AIC, CAIC, BIC
 #'
-#' BINET の旧名 MG_FitIndices は TestFitIndices に統一された。
-#' 新モジュール実装時は必ず TestFitIndices でアクセスすること。
+#' The legacy BINET name MG_FitIndices has been unified to TestFitIndices.
+#' Always access via TestFitIndices when implementing new modules.
 #'
 #' @noRd
 extract_fit_indices <- function(result) {
@@ -165,7 +165,7 @@ extract_fit_indices <- function(result) {
     return(data.frame(Index = "N/A", Value = NA_real_, stringsAsFactors = FALSE))
   }
 
-  # TestFitIndices を取得（BINET 旧名 MG_FitIndices へのフォールバック付き）
+  # Retrieve TestFitIndices (with fallback to BINET legacy name MG_FitIndices)
   fit <- result$TestFitIndices %||% result$MG_FitIndices
 
   if (is.null(fit)) {
@@ -173,7 +173,7 @@ extract_fit_indices <- function(result) {
   }
 
   tryCatch({
-    # ModelFit クラス（v1.9.0 統一形式）: is.list == TRUE, is.data.frame == FALSE
+    # ModelFit class (v1.9.0 unified format): is.list == TRUE, is.data.frame == FALSE
     if (inherits(fit, "ModelFit") || (is.list(fit) && !is.data.frame(fit))) {
       data.frame(
         Index = names(fit),
@@ -181,7 +181,7 @@ extract_fit_indices <- function(result) {
         stringsAsFactors = FALSE
       )
     } else if (is.data.frame(fit)) {
-      # 旧形式フォールバック: data.frame 形式
+      # Legacy format fallback: data.frame format
       data.frame(
         Index = colnames(fit),
         Value = as.numeric(fit[1, ]),

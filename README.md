@@ -2,7 +2,7 @@
 
 A Shiny GUI application for the [exametrika](https://github.com/kosugitti/exametrika) R package.
 
-Perform psychometric analyses — CTT, IRT, LCA, LRA, Biclustering, and more — without writing code.
+Perform psychometric analyses -- CTT, IRT, LCA, LRA, Biclustering, and more -- without writing code.
 
 ## Features
 
@@ -47,8 +47,8 @@ This project is under active development.
 
 ## Related Packages
 
-- [exametrika](https://github.com/kosugitti/exametrika) — Psychometric analysis engine
-- [ggExametrika](https://github.com/kosugitti/ggExametrika) — ggplot2 visualization for exametrika
+- [exametrika](https://github.com/kosugitti/exametrika) -- Psychometric analysis engine
+- [ggExametrika](https://github.com/kosugitti/ggExametrika) -- ggplot2 visualization for exametrika
 
 ## License
 
