@@ -2,6 +2,15 @@
 
 ## Changes
 
+### plotRMP_gg 回避コード解消（2026-02-23）
+
+- `R/mod_lra.R`: RMP プロットの手動 ggplot2 描画コードを `ggExametrika::plotRMP_gg()` 呼び出しに置換
+  - ggExametrika v0.0.29 で `$n_rank` / `$n_class` 対応が完了し、LRA オブジェクトで正常動作するようになった
+  - base plot フォールバックに RMP 個別受検者指定を追加
+- `R/mod_biclustering.R`（feature/mod-biclustering ブランチ）: 同様に RMP の手動描画を `plotRMP_gg()` に置換
+  - CMP/RMP の受検者セレクタ `req()` 条件を統一
+  - base plot フォールバックの CMP/RMP 分岐を統一
+
 ### CI / テスト環境整備（2026-02-23）
 
 - `.github/workflows/R-CMD-check.yaml` を新規追加: GitHub Actions による R CMD check 自動実行
