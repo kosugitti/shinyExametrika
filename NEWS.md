@@ -2,6 +2,20 @@
 
 ## Changes
 
+### Guide page addition (2026-02-24)
+
+- `R/mod_guide.R` newly added: Guide page module (UI-only, no server logic)
+  - Hero section with welcome message and app description
+  - Getting Started section with 4-step walkthrough (Load Data, Format Data, Run Analysis, View Results)
+  - Explicitly explains where the "Run Analysis" button is located (blue button with play icon in the left sidebar) and that analysis does NOT start automatically
+  - Screen Layout section with ASCII diagram showing the sidebar/main-area two-panel structure
+  - Available Analysis Methods section listing all supported methods (CTT, IRT, GRM, LCA, LRA, Biclustering) with data type badges, plus IRM as coming soon
+  - Tips section with practical advice for new users
+  - Reference to Shojima (2022) textbook
+- `R/app_ui.R`: added Guide tab as the first tab in the navigation bar (landing page)
+- `inst/i18n/translation.json`: added 60+ translation keys for the guide page (English and Japanese)
+- Full i18n support: all guide text is translatable via the EN/JA language toggle
+
 ### shinyapps.io deployment support (2026-02-23)
 
 - Created `app.R` deployment entry point for shinyapps.io

@@ -136,6 +136,86 @@
     {"en": "Running GridSearch...", "ja": "グリッドサーチを実行中..."},
     {"en": "Optimal Classes", "ja": "最適クラス数"},
     {"en": "Optimal Fields", "ja": "最適フィールド数"},
-    {"en": "GridSearch Index Matrix", "ja": "グリッドサーチ指標行列"}
+    {"en": "GridSearch Index Matrix", "ja": "グリッドサーチ指標行列"},
+
+    {"en": "Guide", "ja": "ガイド"},
+
+    {"en": "Welcome to shinyExametrika", "ja": "shinyExametrika へようこそ"},
+    {"en": "A web-based GUI for test data analysis powered by the exametrika R package. No coding required -- just upload your data and run analyses interactively.", "ja": "exametrika R パッケージによるテストデータ分析の Web GUI です。コーディング不要 -- データをアップロードして、対話的に分析を実行できます。"},
+
+    {"en": "Getting Started", "ja": "はじめに"},
+    {"en": "Follow these 4 steps to run your first analysis:", "ja": "以下の 4 ステップで分析を実行できます:"},
+
+    {"en": "Step 1: Load Your Data", "ja": "ステップ 1: データを読み込む"},
+    {"en": "Click the \"Data\" tab in the navigation bar at the top. In the left sidebar, either upload a CSV file or select one of the built-in sample datasets.", "ja": "画面上部のナビゲーションバーで「データ」タブをクリックします。左側のサイドバーで、CSV ファイルをアップロードするか、内蔵のサンプルデータを選択してください。"},
+    {"en": "Upload your own CSV/TSV file using the file upload area", "ja": "ファイルアップロード欄から CSV/TSV ファイルをアップロード"},
+    {"en": "Or choose a built-in sample dataset from the dropdown (e.g., \"J15S500\" for 15 items, 500 examinees)", "ja": "またはドロップダウンから内蔵サンプルデータを選択（例:「J15S500」= 15 項目、500 名）"},
+    {"en": "The data preview will appear in the main area on the right", "ja": "右側のメインエリアにデータプレビューが表示されます"},
+
+    {"en": "Step 2: Format the Data", "ja": "ステップ 2: データを整形する"},
+    {"en": "Still on the Data tab, configure the formatting options in the left sidebar, then click the \"Format Data\" button to prepare your data for analysis.", "ja": "データタブの左側サイドバーで整形オプションを設定し、「データを整形」ボタンをクリックして分析用にデータを準備します。"},
+    {"en": "Set the Response Type (Auto-detect, Binary, Ordinal, etc.)", "ja": "回答タイプを設定（自動検出、二値、順序など）"},
+    {"en": "Specify whether the first column contains IDs", "ja": "先頭列が ID 列かどうかを指定"},
+    {"en": "Enter a missing value code if applicable (e.g., 99), then click \"Format Data\"", "ja": "欠損値コードがあれば入力（例: 99）し、「データを整形」をクリック"},
+
+    {"en": "Step 3: Choose an Analysis Tab and Run", "ja": "ステップ 3: 分析タブを選んで実行する"},
+    {"en": "Click an analysis tab (e.g., CTT, IRT, LCA) in the navigation bar. Each analysis tab has a left sidebar for parameter settings and a \"Run Analysis\" button. Set the parameters, then click the blue \"Run Analysis\" button at the top of the sidebar to start the analysis.", "ja": "ナビゲーションバーで分析タブ（例: CTT、IRT、LCA）をクリックします。各分析タブでは、左側のサイドバーにパラメータ設定と「分析を実行」ボタンがあります。パラメータを設定した後、サイドバー上部にある青い「分析を実行」ボタンを押すと分析が開始されます。"},
+    {"en": "Each analysis tab shows a left sidebar with parameter settings (e.g., model type, number of classes)", "ja": "各分析タブの左サイドバーにパラメータ設定が表示されます（例: モデルタイプ、クラス数）"},
+    {"en": "After setting parameters, click the blue \"Run Analysis\" button (with a play icon) at the top of the sidebar", "ja": "パラメータ設定後、サイドバー上部の青い「分析を実行」ボタン（再生アイコン付き）をクリック"},
+    {"en": "A progress bar will appear while the analysis runs -- please wait for it to complete", "ja": "分析中はプログレスバーが表示されます -- 完了までお待ちください"},
+
+    {"en": "Step 4: View Results and Download", "ja": "ステップ 4: 結果を確認・ダウンロードする"},
+    {"en": "After the analysis completes, results appear in the main area on the right. Use the tabs within the results panel to switch between tables, plots, and other outputs.", "ja": "分析完了後、右側のメインエリアに結果が表示されます。結果パネル内のタブを切り替えて、テーブル・プロット・その他の出力を確認できます。"},
+    {"en": "Results are organized into sub-tabs: Results, Plots, Item Fit, etc.", "ja": "結果はサブタブに分かれています: 結果、プロット、項目適合度など"},
+    {"en": "Download tables as CSV or plots as PNG using the download buttons in the sidebar", "ja": "サイドバーのダウンロードボタンで、テーブルを CSV、プロットを PNG として保存できます"},
+    {"en": "Switch between items or students using the selection controls in the plot tab", "ja": "プロットタブの選択コントロールで項目や受検者を切り替えられます"},
+
+    {"en": "Screen Layout", "ja": "画面構成"},
+    {"en": "All analysis tabs follow a consistent two-panel layout:", "ja": "すべての分析タブは統一的な2パネルレイアウトで構成されています:"},
+
+    {"en": "Data Tab", "ja": "データタブ"},
+    {"en": "Left sidebar: File upload, sample data selection, formatting options (Response Type, ID Column, Missing Value Code), and the \"Format Data\" button. Right main area: Data preview table showing raw and formatted data with summary statistics.", "ja": "左サイドバー: ファイルアップロード、サンプルデータ選択、整形オプション（回答タイプ、ID列、欠損値コード）、「データを整形」ボタン。右メインエリア: 元データ・整形済みデータのプレビューテーブルと概要統計量。"},
+
+    {"en": "Analysis Tabs (CTT, IRT, GRM, LCA, LRA, Biclustering)", "ja": "分析タブ（CTT, IRT, GRM, LCA, LRA, Biclustering）"},
+    {"en": "Left sidebar: Analysis description, parameter controls (model selection, sliders for class/rank/field counts), the blue \"Run Analysis\" button, and download buttons. Right main area: Result sub-tabs containing fit indices tables, parameter estimates, plots with item/student selectors, and downloadable outputs.", "ja": "左サイドバー: 分析の説明、パラメータ設定（モデル選択、クラス数/ランク数/フィールド数のスライダー）、青い「分析を実行」ボタン、ダウンロードボタン。右メインエリア: 適合度指標テーブル、パラメータ推定値、項目/受検者選択付きプロット、ダウンロード可能な出力を含む結果サブタブ。"},
+    {"en": "+-------------------------------+\n|  [Sidebar]  |  [Main Area]    |\n|             |                 |\n|  Parameters |  Results Tab    |\n|  - Model    |  - Fit Indices  |\n|  - Classes  |  - Parameters   |\n|  - ...      |  - Plots        |\n|             |                 |\n| [Run Analy] |  Plots Tab      |\n| [Download]  |  - Item select  |\n|             |  - Plot output  |\n+-------------------------------+", "ja": "+-------------------------------+\n|[サイドバー] |[メインエリア]   |\n|             |                 |\n| パラメータ  |  結果タブ       |\n|  - モデル   |  - 適合度指標   |\n|  - クラス数 |  - パラメータ   |\n|  - ...      |  - プロット     |\n|             |                 |\n|[分析を実行] |  プロットタブ   |\n|[ダウンロード]| - 項目選択     |\n|             |  - プロット出力 |\n+-------------------------------+"},
+
+    {"en": "About the Run Button", "ja": "実行ボタンについて"},
+    {"en": "Analysis does NOT start automatically. You must click the \"Run Analysis\" button in the left sidebar after setting your parameters. The button is blue with a play icon and spans the full width of the sidebar.", "ja": "分析は自動では開始されません。パラメータ設定後、左サイドバーの「分析を実行」ボタンをクリックする必要があります。ボタンは青色で再生アイコン付き、サイドバーの全幅に表示されています。"},
+
+    {"en": "Available Analysis Methods", "ja": "利用可能な分析手法"},
+    {"en": "shinyExametrika currently supports the following test data analysis methods:", "ja": "shinyExametrika は現在、以下のテストデータ分析手法に対応しています:"},
+
+    {"en": "Basic Analysis", "ja": "基本分析"},
+    {"en": "Classical Test Theory", "ja": "古典的テスト理論"},
+    {"en": "Reliability coefficients (Alpha, Omega) and item-level analysis.", "ja": "信頼性係数（Alpha, Omega）と項目レベルの分析。"},
+    {"en": "Item Response Theory", "ja": "項目反応理論"},
+    {"en": "2PL/3PL/4PL models for ability estimation and item characteristic curves.", "ja": "2PL/3PL/4PL モデルによる能力推定と項目特性曲線。"},
+    {"en": "Graded Response Model", "ja": "段階反応モデル"},
+    {"en": "IRT model for ordinal (polytomous) response data.", "ja": "順序（多値）回答データのための IRT モデル。"},
+    {"en": "Binary data", "ja": "二値データ"},
+    {"en": "Ordinal data", "ja": "順序データ"},
+
+    {"en": "Latent Structure Analysis", "ja": "潜在構造分析"},
+    {"en": "Latent Class Analysis", "ja": "潜在クラス分析"},
+    {"en": "Classify examinees into latent classes based on response patterns.", "ja": "回答パターンに基づいて受検者を潜在クラスに分類。"},
+    {"en": "Latent Rank Analysis", "ja": "潜在ランク分析"},
+    {"en": "Rank examinees on an ordinal latent scale with item reference profiles.", "ja": "項目参照プロファイルにより受検者を順序潜在尺度上でランク付け。"},
+    {"en": "Simultaneously cluster examinees and items into classes and fields.", "ja": "受検者と項目を同時にクラスとフィールドにクラスタリング。"},
+    {"en": "Infinite Relational Model", "ja": "無限関係モデル"},
+    {"en": "Nonparametric Bayesian approach to automatically determine optimal cluster structure.", "ja": "最適なクラスタ構造を自動決定するノンパラメトリックベイズアプローチ。"},
+    {"en": "Coming Soon", "ja": "近日公開"},
+
+    {"en": "Reference: Shojima, K. (2022). Test Data Engineering: Latent Rank Analysis, Biclustering, and Bayesian Network. Springer.", "ja": "参考文献: Shojima, K. (2022). Test Data Engineering: Latent Rank Analysis, Biclustering, and Bayesian Network. Springer."},
+
+    {"en": "Tips", "ja": "ヒント"},
+    {"en": "Sample data: ", "ja": "サンプルデータ: "},
+    {"en": "Try the built-in sample datasets first to explore each analysis method before using your own data.", "ja": "自分のデータを使う前に、内蔵のサンプルデータで各分析手法を試してみてください。"},
+    {"en": "Data requirements: ", "ja": "データ要件: "},
+    {"en": "CTT, IRT, LCA, LRA, and Biclustering require binary (0/1) data. GRM accepts ordinal data with 3 or more categories.", "ja": "CTT, IRT, LCA, LRA, Biclustering は二値（0/1）データが必要です。GRM は 3 カテゴリ以上の順序データに対応しています。"},
+    {"en": "Language switch: ", "ja": "言語切り替え: "},
+    {"en": "Use the EN/JA toggle in the top-right corner to switch the interface language at any time.", "ja": "画面右上の EN/JA トグルでいつでもインターフェース言語を切り替えられます。"},
+    {"en": "Large datasets: ", "ja": "大規模データ: "},
+    {"en": "For large datasets, analysis may take longer. A progress bar will show the computation status.", "ja": "大規模データの場合、分析に時間がかかることがあります。プログレスバーで計算状況を確認できます。"}
   ]
 }

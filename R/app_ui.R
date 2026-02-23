@@ -36,6 +36,13 @@ app_ui <- function(request) {
         )
       ),
 
+      # --- Guide tab (landing page) ---
+      bslib::nav_panel(
+        title = i18n$t("Guide"),
+        value = "tab_guide",
+        mod_guide_ui("guide", i18n)
+      ),
+
       # --- Data upload tab ---
       bslib::nav_panel(
         title = i18n$t("Data"),
