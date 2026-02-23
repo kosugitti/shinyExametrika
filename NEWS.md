@@ -2,6 +2,19 @@
 
 ## Changes
 
+### CI / テスト環境整備（2026-02-23）
+
+- `.github/workflows/R-CMD-check.yaml` を新規追加: GitHub Actions による R CMD check 自動実行
+  - push（main / develop）および PR 時に自動実行
+  - macOS-latest + ubuntu-latest（release / devel）の3環境でチェック
+  - r-lib/actions v2 を使用
+- `tests/testthat.R` を新規追加: testthat テストランナー
+- `tests/testthat/test-golem-recommended.R` を新規追加: golem 推奨の基本テスト
+  - app_ui / app_server / app_sys / golem-config の存在・型チェック
+- `tests/testthat/test-fct_analysis.R` を新規追加: 共通ヘルパー関数のユニットテスト
+  - safe_field: 新名称優先 / 旧名称フォールバック / 未定義時 NULL
+  - extract_fit_indices: ModelFit オブジェクト / data.frame 入力の処理
+
 ### LCA / LRA モジュール追加（2026-02-20）
 
 - `R/mod_lca.R` を新規追加: LCA（潜在クラス分析）モジュール
