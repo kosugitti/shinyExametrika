@@ -412,36 +412,9 @@ mod_biclustering_server <- function(id, formatted_data, i18n) {
       req(result(), input$plot_type)
       r <- result()
 
-      # RMP: LRA と同様の手動描画（plotRMP_gg は $Nclass 参照でエラー）
-      if (input$plot_type == "RMP") {
-        req(input$selected_student)
-        idx <- as.integer(input$selected_student)
-        if (is.na(idx)) idx <- 1L
-        ncls <- r$n_class
-        membership <- as.numeric(r$Students[idx, seq_len(ncls)])
-        student_name <- rownames(r$Students)[idx]
-        df_rmp <- data.frame(
-          Rank       = seq_len(ncls),
-          Membership = membership
-        )
-        return(
-          ggplot2::ggplot(df_rmp, ggplot2::aes(x = Rank, y = Membership)) +
-            ggplot2::geom_point(size = 3) +
-            ggplot2::geom_line(linetype = "dashed") +
-            ggplot2::scale_x_continuous(breaks = seq_len(ncls)) +
-            ggplot2::scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.25)) +
-            ggplot2::labs(
-              title = paste("Rank Membership Profile,", student_name),
-              x = "Latent Rank",
-              y = "Membership"
-            ) +
-            ggplot2::theme_bw()
-        )
-      }
-
       # req() を tryCatch の外に置く（内側だと error handler に捕捉されてしまう）
       if (input$plot_type == "FRP")  req(input$selected_field)
-      if (input$plot_type == "CMP")  req(input$selected_student)
+      if (input$plot_type %in% c("CMP", "RMP"))  req(input$selected_student)
 
       if (!requireNamespace("ggExametrika", quietly = TRUE)) return(NULL)
 
@@ -458,6 +431,13 @@ mod_biclustering_server <- function(id, formatted_data, i18n) {
             idx <- as.integer(input$selected_student)
             if (is.na(idx)) idx <- 1L
             all_plots[[idx]]
+          },
+          "RMP" = {
+            # ggExametrika v0.0.29 で plotRMP_gg が Biclustering に対応
+            all_plots <- ggExametrika::plotRMP_gg(r)
+            idx <- as.integer(input$selected_student)
+            if (is.na(idx)) idx <- 1L
+            all_plots[[idx]]
           }
         ),
         error = function(e) NULL
@@ -471,10 +451,10 @@ mod_biclustering_server <- function(id, formatted_data, i18n) {
         print(p)
       } else {
         # base plot フォールバック
-        if (input$plot_type == "CMP") {
+        if (input$plot_type %in% c("CMP", "RMP")) {
           idx <- as.integer(input$selected_student)
           if (is.null(idx) || length(idx) == 0 || is.na(idx)) idx <- 1L
-          plot(result(), type = "CMP", students = idx)
+          plot(result(), type = input$plot_type, students = idx)
         } else if (input$plot_type == "FRP") {
           idx <- as.integer(input$selected_field)
           if (is.null(idx) || length(idx) == 0 || is.na(idx)) idx <- 1L
