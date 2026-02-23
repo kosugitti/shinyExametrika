@@ -274,34 +274,9 @@ mod_lra_server <- function(id, formatted_data, i18n) {
       req(result())
       r <- result()
 
-      # RMP: exametrika / ggExametrika 両方にバグがあるため ggplot2 で手動描画
-      # - plot(r, type="RMP", students=1) → 単一受検者で matrix→vector になり params[i,] が失敗
-      # - plotRMP_gg は内部で $Nclass を参照するため LRA オブジェクトで動作しない
-      if (input$plot_type == "RMP") {
-        req(input$selected_student)
-        idx <- as.integer(input$selected_student)
-        if (is.na(idx)) idx <- 1L
-        nrank <- r$n_rank
-        membership <- as.numeric(r$Students[idx, seq_len(nrank)])
-        student_name <- rownames(r$Students)[idx]
-        df_rmp <- data.frame(
-          Rank       = seq_len(nrank),
-          Membership = membership
-        )
-        return(
-          ggplot2::ggplot(df_rmp, ggplot2::aes(x = Rank, y = Membership)) +
-            ggplot2::geom_point(size = 3) +
-            ggplot2::geom_line(linetype = "dashed") +
-            ggplot2::scale_x_continuous(breaks = seq_len(nrank)) +
-            ggplot2::scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.25)) +
-            ggplot2::labs(
-              title = paste("Rank Membership Profile,", student_name),
-              x = "Latent Rank",
-              y = "Membership"
-            ) +
-            ggplot2::theme_bw()
-        )
-      }
+      # req() を tryCatch の外に置く（内側だと error handler に捕捉されてしまう）
+      if (input$plot_type == "IRP") req(input$selected_item)
+      if (input$plot_type == "RMP") req(input$selected_student)
 
       if (!requireNamespace("ggExametrika", quietly = TRUE)) return(NULL)
 
@@ -309,12 +284,18 @@ mod_lra_server <- function(id, formatted_data, i18n) {
         switch(input$plot_type,
           "IRP" = {
             plots <- ggExametrika::plotIRP_gg(r)
-            req(input$selected_item)
             idx <- as.integer(input$selected_item)
             plots[[idx]]
           },
           "TRP" = ggExametrika::plotTRP_gg(r),
-          "LRD" = ggExametrika::plotLRD_gg(r)
+          "LRD" = ggExametrika::plotLRD_gg(r),
+          "RMP" = {
+            # ggExametrika v0.0.29 で plotRMP_gg が LRA に対応
+            all_plots <- ggExametrika::plotRMP_gg(r)
+            idx <- as.integer(input$selected_student)
+            if (is.na(idx)) idx <- 1L
+            all_plots[[idx]]
+          }
         ),
         error = function(e) NULL
       )
@@ -327,7 +308,13 @@ mod_lra_server <- function(id, formatted_data, i18n) {
         print(p)
       } else {
         # ggExametrika 未使用 / エラー時は base plot にフォールバック
-        plot(result(), type = input$plot_type)
+        if (input$plot_type == "RMP") {
+          idx <- as.integer(input$selected_student)
+          if (is.null(idx) || length(idx) == 0 || is.na(idx)) idx <- 1L
+          plot(result(), type = "RMP", students = idx)
+        } else {
+          plot(result(), type = input$plot_type)
+        }
       }
     })
 
