@@ -8,7 +8,7 @@
   - Parameters: `gamma_c` (concentration parameter for classes) and `gamma_f` (concentration parameter for fields), both defaulting to 1.0
   - Calls `exametrika::Biclustering_IRM()` which automatically determines the optimal number of classes and fields via the Chinese Restaurant Process
   - Results tab: discovered structure summary (n_class / n_field), fit indices, FRP, FRP Index, class summary, field summary, student membership, field analysis
-  - Plots tab: FRP, TRP, Array, CMP with ggExametrika support and base plot fallback
+  - Plots tab: FRP, TRP, Array with ggExametrika support and base plot fallback (CMP/RMP not supported by IRM)
   - CSV download for FRP and student membership; PNG download for plots
 - `R/app_ui.R`: replaced `mod_placeholder_ui` with `mod_irm_ui` for the IRM tab
 - `R/app_server.R`: added `mod_irm_server` call
