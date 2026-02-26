@@ -28,6 +28,7 @@ Imports:
     waiter
 Suggests:
     ggExametrika,
+    ggplot2,
     testthat (>= 3.0.0)
 Remotes:
     kosugitti/exametrika,

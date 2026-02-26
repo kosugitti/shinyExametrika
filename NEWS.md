@@ -2,6 +2,12 @@
 
 ## Changes
 
+### Fix: add ggplot2 to Suggests (2026-02-26)
+
+- Added `ggplot2` to `Suggests` in DESCRIPTION to resolve R CMD check WARNING
+  - `ggplot2::ggsave()` is used in 5 modules (IRT, GRM, LCA, LRA, Biclustering) for plot download
+  - These calls are conditional (only when ggExametrika is available), so `Suggests` is appropriate
+
 ### Guide page addition (2026-02-24)
 
 - `R/mod_guide.R` newly added: Guide page module (UI-only, no server logic)
