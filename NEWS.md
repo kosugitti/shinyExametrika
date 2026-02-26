@@ -2,6 +2,18 @@
 
 ## Changes
 
+### IRM module implementation (2026-02-26)
+
+- `R/mod_irm.R` newly added: Infinite Relational Model (IRM) analysis module
+  - Parameters: `gamma_c` (concentration parameter for classes) and `gamma_f` (concentration parameter for fields), both defaulting to 1.0
+  - Calls `exametrika::Biclustering_IRM()` which automatically determines the optimal number of classes and fields via the Chinese Restaurant Process
+  - Results tab: discovered structure summary (n_class / n_field), fit indices, FRP, FRP Index, class summary, field summary, student membership, field analysis
+  - Plots tab: FRP, TRP, Array with ggExametrika support and base plot fallback (CMP/RMP not supported by IRM)
+  - CSV download for FRP and student membership; PNG download for plots
+- `R/app_ui.R`: replaced `mod_placeholder_ui` with `mod_irm_ui` for the IRM tab
+- `R/app_server.R`: added `mod_irm_server` call
+- `inst/i18n/translation.json`: added 9 IRM-specific translation keys (EN/JA)
+
 ### Fix: add ggplot2 to Suggests (2026-02-26)
 
 - Added `ggplot2` to `Suggests` in DESCRIPTION to resolve R CMD check WARNING
