@@ -1,14 +1,17 @@
 # shinyExametrika — プロジェクト CLAUDE.md
 
+**最終更新: 2026-02-26**
+
 ## プロジェクト概要
 
 exametrika パッケージの Shiny GUI アプリケーション。
 コードを書かずにテストデータ分析（CTT, IRT, LCA, LRA, Biclustering 等）を実行・可視化できる Web アプリを提供する。
 
+- **バージョン**: 0.0.0.9000（開発版）
 - **開発者**: 小杉（kosugitti）+ 学生チーム（分担開発）
 - **関連パッケージ**:
-  - [exametrika](https://github.com/kosugitti/exametrika) — 小杉が開発する心理測定パッケージ（v1.9.0）
-  - [ggExametrika](https://github.com/kosugitti/ggExametrika) — 学生が開発する ggplot2 可視化パッケージ（v0.0.20）
+  - [exametrika](https://github.com/kosugitti/exametrika) — 小杉が開発する心理測定パッケージ（v1.9.0、main にpush済み、CRAN投稿準備中）
+  - [ggExametrika](https://github.com/kosugitti/ggExametrika) — 学生が開発する ggplot2 可視化パッケージ（v0.0.34、CRAN投稿準備中）
 - **参考書籍**: Shojima (2022) "Test Data Engineering"
 
 ---
@@ -26,35 +29,39 @@ shinyExametrika/
 ├── R/
 │   ├── app_config.R          # golem 設定
 │   ├── app_server.R          # メインサーバ
-│   ├── app_ui.R              # メイン UI
+│   ├── app_ui.R              # メイン UI（bslib ベース）
 │   ├── run_app.R             # アプリ起動関数
+│   ├── mod_guide.R           # ガイドページモジュール（ランディングタブ）
 │   ├── mod_data_upload.R     # データ読み込みモジュール
+│   ├── mod_descriptives.R    # 記述統計モジュール
 │   ├── mod_ctt.R             # CTT 分析モジュール
 │   ├── mod_irt.R             # IRT 分析モジュール
+│   ├── mod_grm.R             # GRM 分析モジュール
 │   ├── mod_lca.R             # LCA 分析モジュール
 │   ├── mod_lra.R             # LRA 分析モジュール
 │   ├── mod_biclustering.R    # Biclustering 分析モジュール
-│   ├── mod_irm.R             # IRM 分析モジュール
-│   ├── mod_bnm.R             # BNM 分析モジュール（Phase 2）
-│   ├── mod_ldlra.R           # LDLRA 分析モジュール（Phase 3）
-│   ├── mod_ldb.R             # LDB 分析モジュール（Phase 3）
-│   ├── mod_binet.R           # BINET 分析モジュール（Phase 3）
-│   ├── fct_analysis.R        # 分析ヘルパー関数
-│   ├── fct_i18n.R            # 多言語対応ヘルパー
-│   └── utils_*.R             # ユーティリティ関数群
+│   ├── mod_placeholder.R     # プレースホルダーモジュール（未実装タブ用）
+│   └── fct_analysis.R        # 分析ヘルパー関数（safe_field, extract_fit_indices 等）
 ├── inst/
 │   ├── app/www/              # CSS, JS, 画像等の静的アセット
 │   ├── golem-config.yml      # golem 設定ファイル
-│   └── i18n/                 # 翻訳ファイル（JSON）
-│       ├── en.json
-│       └── ja.json
+│   └── i18n/
+│       └── translation.json  # 翻訳ファイル（shiny.i18n 形式、EN/JA 統合）
 ├── tests/
+│   ├── testthat.R            # testthat テストランナー
 │   └── testthat/
-├── data-raw/                 # サンプルデータ生成スクリプト
-├── dev/                      # golem 開発用スクリプト
+│       ├── test-golem-recommended.R  # golem 基本テスト
+│       └── test-fct_analysis.R       # ヘルパー関数ユニットテスト
+├── dev/                      # golem 開発用スクリプト + サンプルデータ
 │   ├── 01_start.R
 │   ├── 02_dev.R
-│   └── 03_deploy.R
+│   ├── 03_deploy.R
+│   ├── run_dev.R
+│   ├── sample01.csv          # 二値テストデータ（100人 × 20項目）
+│   └── sample02.csv          # 多値テストデータ（150人 × 15項目）
+├── .github/workflows/
+│   └── R-CMD-check.yaml      # GitHub Actions CI（macOS + Ubuntu）
+├── app.R                     # shinyapps.io デプロイ用エントリポイント
 ├── man/
 ├── .gitignore
 ├── CLAUDE.md                 # このファイル
@@ -62,13 +69,22 @@ shinyExametrika/
 └── README.md
 ```
 
-### UI 構成
+### UI 構成（全10タブ）
 
-- **ナビゲーション**: タブベース（shinydashboard または bslib）
-  - データ読み込みタブ
-  - 分析タブ（分析手法ごとにサブタブ）
-  - 結果表示タブ（テーブル + プロット）
+- **ナビゲーション**: bslib の `page_navbar` によるタブベースナビゲーション
+  1. Guide（ランディングページ — 使い方ガイド）
+  2. Data（データ読み込み・フォーマット）
+  3. Descriptives（記述統計）
+  4. CTT（古典的テスト理論）
+  5. IRT（項目応答理論 2PL/3PL/4PL）
+  6. GRM（段階反応モデル — 多値 IRT）
+  7. LCA（潜在クラス分析）
+  8. LRA（潜在ランク分析）
+  9. Biclustering（バイクラスタリング / ランクラスタリング）
+  10. IRM（プレースホルダー — 未実装）
 - **言語切替**: shiny.i18n による日英切替（ヘッダーにトグル配置）
+- **翻訳キー数**: 188キー（inst/i18n/translation.json、EN/JA 統合ファイル）
+- **デプロイ先**: shinyapps.io（https://kosugitti.shinyapps.io/shinyExametrika/）
 
 ### 各分析モジュールの共通構造
 
@@ -84,41 +100,70 @@ shinyExametrika/
 
 ## 開発フェーズ
 
-### Phase 0: プロジェクト基盤（現在）
+### Phase 0: プロジェクト基盤 — 完了
 
-- [ ] golem プロジェクト初期化
-- [ ] 依存パッケージのセットアップ
-- [ ] CI/CD 設定（GitHub Actions）
-- [ ] i18n 基盤の構築
-- [ ] データ読み込みモジュール（CSV / サンプルデータ）
+- [x] golem プロジェクト初期化
+- [x] 依存パッケージのセットアップ
+- [x] CI/CD 設定（GitHub Actions: R-CMD-check.yaml）
+- [x] i18n 基盤の構築（shiny.i18n, translation.json）
+- [x] データ読み込みモジュール（CSV / サンプルデータ）
+- [x] ガイドページ（mod_guide.R — ランディングタブ）
 
-### Phase 1: 基本分析
+### Phase 1: 基本分析 — 完了
 
-- [ ] CTT モジュール
-- [ ] IRT モジュール（2PL / 3PL / 4PL）
-- [ ] GRM モジュール（多値 IRT）
+- [x] Descriptives モジュール（記述統計）
+- [x] CTT モジュール
+- [x] IRT モジュール（2PL / 3PL / 4PL）
+- [x] GRM モジュール（多値 IRT）
 
-### Phase 2: 潜在構造分析
+### Phase 2: 潜在構造分析 — 進行中
 
-- [ ] LCA モジュール
-- [ ] LRA モジュール
-- [ ] Biclustering モジュール
-- [ ] IRM モジュール
+- [x] LCA モジュール
+- [x] LRA モジュール
+- [x] Biclustering モジュール
+- [ ] IRM モジュール（現在プレースホルダー）
 - [ ] GridSearch 統合
 
-### Phase 3: ネットワーク・局所依存モデル
+### Phase 3: ネットワーク・局所依存モデル — 未着手
 
 - [ ] BNM モジュール（DAG 入力 UI 含む）
 - [ ] LDLRA モジュール
 - [ ] LDB モジュール
 - [ ] BINET モジュール
 
-### Phase 4: 仕上げ
+### Phase 4: 仕上げ — 一部着手
 
 - [ ] UI/UX 改善
 - [ ] ドキュメント・ヘルプ統合
-- [ ] デプロイ対応
+- [x] デプロイ対応（shinyapps.io デプロイ済み）
 - [ ] パフォーマンス最適化
+
+---
+
+## 今後の TODO
+
+### 短期（Phase 2 完了に向けて）
+
+- [ ] IRM モジュールの実装（`mod_placeholder.R` → `mod_irm.R` に置換）
+  - `Biclustering_IRM()` のラッパー。CRP パラメータ（gamma_c, gamma_f）の入力 UI
+  - 計算コストが高いため `withProgress()` + タイムアウト対策が必須
+- [ ] GridSearch 統合（Biclustering モジュール内 or 独立タブ）
+
+### 中期（Phase 3）
+
+- [ ] BNM モジュール（DAG 入力 UI が最大の課題。隣接行列 CSV アップロード or インタラクティブ DAG エディタ）
+- [ ] LDLRA モジュール
+- [ ] LDB モジュール
+- [ ] BINET モジュール
+- ggExametrika の DAG 可視化（plotGraph_gg）が BNM は対応済み、LDLRA は基本実装済み、LDB/BINET は未実装
+
+### CRAN 準備
+
+- [ ] R CMD check WARNING/NOTE の修正
+- [ ] README に shinyapps.io URL とスクリーンショットを追記
+- [ ] CRAN 登録は exametrika と ggExametrika の CRAN 公開後（依存パッケージが CRAN にないと登録不可）
+  - exametrika v1.9.0 CRAN 投稿 → ggExametrika CRAN 投稿 → shinyExametrika CRAN 投稿の順
+  - Remotes フィールドは CRAN 投稿時に削除する必要がある
 
 ---
 
@@ -152,31 +197,35 @@ shinyExametrika/
 
 - UI テキストはすべて翻訳キーで管理する（ハードコードしない）
 - 翻訳ファイルは `inst/i18n/` に JSON 形式で配置する
-- 新しい UI テキストを追加したら、en.json と ja.json の両方を更新する
+- 新しい UI テキストを追加したら、translation.json の EN/JA 両方を更新する
 
 ---
 
 ## 依存パッケージ
 
-### 必須
+### Imports（DESCRIPTION の Imports フィールド）
 
 | パッケージ | 用途 |
 |-----------|------|
 | shiny | Shiny フレームワーク |
 | golem | アプリ構造管理 |
+| config | golem 設定管理 |
 | exametrika (>= 1.9.0) | 分析エンジン |
-| ggExametrika | ggplot2 ベース可視化 |
 | shiny.i18n | 多言語対応 |
 | bslib | モダン UI コンポーネント |
 | DT | インタラクティブテーブル |
+| shinyjs | JavaScript 操作 |
+| shinyWidgets | 拡張 UI ウィジェット |
+| waiter | ローディング画面 |
 
-### 推奨
+### Suggests
 
 | パッケージ | 用途 |
 |-----------|------|
-| shinyjs | JavaScript 操作 |
-| waiter | ローディング画面 |
-| shinyWidgets | 拡張 UI ウィジェット |
+| ggExametrika | ggplot2 ベース可視化（なくても base plot フォールバックで動作） |
+| testthat (>= 3.0.0) | テスト |
+
+**注意**: exametrika v1.9.0 は CRAN 未公開（v1.8.1 が CRAN 最新）、ggExametrika も CRAN 未公開のため、`Remotes` フィールドで GitHub インストールを指定している。両パッケージの CRAN 公開後に Remotes を削除し、バージョン制約を追加する予定。
 
 ---
 
@@ -298,10 +347,41 @@ BINET(U, ncls = 13, nfld = 12, conf = NULL, adj_file = NULL, ...)
 
 ---
 
+## CI / テスト構成
+
+### GitHub Actions
+
+- ワークフロー: `.github/workflows/R-CMD-check.yaml`
+- トリガー: push（main / develop）および pull request
+- マトリクス: macOS-latest (release) + Ubuntu-latest (release / devel) の3環境
+- 現状: **失敗中**（2026-02-26 時点）。exametrika v1.9.0 が CRAN 未公開のため、CI 環境でのインストールに問題がある可能性あり
+
+### テストファイル
+
+| ファイル | 内容 |
+|---------|------|
+| `tests/testthat/test-golem-recommended.R` | golem 基本テスト（app_ui / app_server / app_sys / golem-config の存在確認） |
+| `tests/testthat/test-fct_analysis.R` | ヘルパー関数のユニットテスト（safe_field, extract_fit_indices） |
+
+### ローカルテスト・ビルド確認
+
+```bash
+cd ~/Dropbox/Git/shinyExametrika
+Rscript -e "devtools::document()"
+Rscript -e "devtools::test()"
+Rscript -e "devtools::check()"
+Rscript -e "shinyExametrika::run_app()"  # アプリの動作確認
+```
+
+---
+
 ## デプロイ
 
-デプロイ先は未定。まずローカルで動作するものを作り、後で決定する。
-候補: shinyapps.io / Shiny Server（研究室サーバ） / shinylive（GitHub Pages）
+- **shinyapps.io**: デプロイ済み（https://kosugitti.shinyapps.io/shinyExametrika/）
+  - アカウント: kosugitti（free plan）
+  - `app.R` がデプロイ用エントリポイント（golem 構造を直接 source する方式）
+  - rsconnect v1.7.0 使用
+- **その他候補**: Shiny Server（研究室サーバ） / shinylive（GitHub Pages）— 未対応
 
 ---
 
@@ -315,11 +395,40 @@ BINET(U, ncls = 13, nfld = 12, conf = NULL, adj_file = NULL, ...)
 
 ---
 
+## 現在のリポジトリ状態（2026-02-26 時点）
+
+### ブランチ
+
+- `main` と `develop` は完全同期済み（差分なし）
+- feature ブランチは全てマージ済み・削除済み（ローカル・リモートとも）
+
+### GitHub Issues / PR
+
+- Open Issues: 0
+- Open PR: 0
+- 全 9 PR が MERGED 済み（#1 data-format 〜 #9 mod-biclustering）
+
+### CI
+
+- GitHub Actions: R-CMD-check（macOS-latest + ubuntu-latest release/devel の 3 環境）
+- `.github/workflows/R-CMD-check.yaml`
+
+### テスト
+
+- testthat: 2 テストファイル
+  - `test-golem-recommended.R`: golem 基本テスト（app_ui, app_server, app_sys, golem-config の存在と型）
+  - `test-fct_analysis.R`: ヘルパー関数ユニットテスト（safe_field, extract_fit_indices）
+
+---
+
 ## メモ・注意点
 
 - exametrika の分析は計算コストが高いものがある（特に GridSearch, BNM_GA, IRM）。UI にプログレスバーを表示し、タイムアウト対策を入れること
 - exametrika v1.8.0 以降、出力オブジェクトのフィールド名が snake_case に移行中（`n_class`, `n_field` 等）。新しい名前を使うこと
-- ggExametrika は開発中（v0.0.20）。未実装プロットがある場合は exametrika の `plot()` にフォールバックする
+- ggExametrika は開発中（v0.0.34）。未実装プロットがある場合は exametrika の `plot()` にフォールバックする
+- shinyapps.io にデプロイ済み。`app.R` を変更する場合は `R/` の変更と整合性を保つこと
+- R/ のコードには非 ASCII 文字（日本語コメント含む）を入れないこと（CRAN コンプライアンス対応済み）
+- README.md の Phase 2 の Status 記載が「LCA, LRA done」のまま。Biclustering 完了分を含め更新が必要（次回作業時）
 
 ---
 
