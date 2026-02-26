@@ -91,7 +91,7 @@ app_ui <- function(request) {
       bslib::nav_panel(
         title = i18n$t("IRM"),
         value = "tab_irm",
-        mod_placeholder_ui("irm", i18n)
+        mod_irm_ui("irm", i18n)
       )
     )
   )
