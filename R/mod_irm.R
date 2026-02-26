@@ -169,7 +169,8 @@ mod_irm_server <- function(id, formatted_data, i18n) {
           exametrika::Biclustering_IRM(
             fd,
             gamma_c = gamma_c,
-            gamma_f = gamma_f
+            gamma_f = gamma_f,
+            verbose = FALSE
           ),
           error = function(e) {
             shiny::showNotification(
