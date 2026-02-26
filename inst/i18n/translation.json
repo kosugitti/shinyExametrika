@@ -147,6 +147,8 @@
     {"en": "Running IRM analysis...", "ja": "IRM 分析を実行中..."},
     {"en": "Discovered Classes", "ja": "発見されたクラス数"},
     {"en": "Discovered Fields", "ja": "発見されたフィールド数"},
+    {"en": "Random Seed", "ja": "乱数シード"},
+    {"en": "Set a random seed for reproducibility of IRM results.", "ja": "IRM の結果を再現するための乱数シードを設定します。"},
 
     {"en": "Guide", "ja": "ガイド"},
 

@@ -2,6 +2,16 @@
 
 ## Changes
 
+### IRM seed UI exposure (2026-02-26)
+
+- `R/mod_irm.R`: added random seed input field to IRM module UI
+  - `numericInput` for seed value (default: 123, range: 1-99999) placed between concentration parameters and the help text
+  - Server passes `seed` argument directly to `exametrika::Biclustering_IRM()` (which calls `set.seed()` internally)
+  - Falls back to 123 if seed is NULL or NA
+- `inst/i18n/translation.json`: added 2 translation keys for seed UI (EN/JA)
+  - "Random Seed" / "乱数シード"
+  - "Set a random seed for reproducibility of IRM results." / "IRM の結果を再現するための乱数シードを設定します。"
+
 ### IRM module implementation (2026-02-26)
 
 - `R/mod_irm.R` newly added: Infinite Relational Model (IRM) analysis module

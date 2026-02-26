@@ -25,9 +25,19 @@ mod_irm_ui <- function(id, i18n) {
         value = 1.0, min = 0.1, max = 10, step = 0.1
       ),
 
+      numericInput(
+        ns("seed"),
+        label = i18n$t("Random Seed"),
+        value = 123, min = 1, max = 99999, step = 1
+      ),
+
       tags$small(
         class = "text-muted d-block mb-3",
         i18n$t("IRM automatically determines the optimal number of classes and fields.")
+      ),
+      tags$small(
+        class = "text-muted d-block mb-3",
+        i18n$t("Set a random seed for reproducibility of IRM results.")
       ),
 
       tags$hr(),
@@ -163,6 +173,11 @@ mod_irm_server <- function(id, formatted_data, i18n) {
         return(NULL)
       }
 
+      # Get seed value (default to 123 if not specified or invalid)
+      seed_val <- input$seed
+      if (is.null(seed_val) || is.na(seed_val)) seed_val <- 123L
+      seed_val <- as.integer(seed_val)
+
       withProgress(message = i18n$t("Running IRM analysis..."), value = 0, {
         incProgress(0.3, detail = i18n$t("Estimating parameters..."))
         r <- tryCatch(
@@ -170,6 +185,7 @@ mod_irm_server <- function(id, formatted_data, i18n) {
             fd,
             gamma_c = gamma_c,
             gamma_f = gamma_f,
+            seed = seed_val,
             verbose = FALSE
           ),
           error = function(e) {
