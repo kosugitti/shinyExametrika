@@ -138,6 +138,16 @@
     {"en": "Optimal Fields", "ja": "最適フィールド数"},
     {"en": "GridSearch Index Matrix", "ja": "グリッドサーチ指標行列"},
 
+    {"en": "Concentration Parameter (Classes)", "ja": "集中パラメータ（クラス）"},
+    {"en": "Concentration Parameter (Fields)", "ja": "集中パラメータ（フィールド）"},
+    {"en": "IRM automatically determines the optimal number of classes and fields.", "ja": "IRM はクラス数とフィールド数を自動的に決定します。"},
+    {"en": "IRM requires binary response data.", "ja": "IRM には二値データが必要です。"},
+    {"en": "Concentration Parameter (Classes) must be a positive number.", "ja": "集中パラメータ（クラス）は正の数を指定してください。"},
+    {"en": "Concentration Parameter (Fields) must be a positive number.", "ja": "集中パラメータ（フィールド）は正の数を指定してください。"},
+    {"en": "Running IRM analysis...", "ja": "IRM 分析を実行中..."},
+    {"en": "Discovered Classes", "ja": "発見されたクラス数"},
+    {"en": "Discovered Fields", "ja": "発見されたフィールド数"},
+
     {"en": "Guide", "ja": "ガイド"},
 
     {"en": "Welcome to shinyExametrika", "ja": "shinyExametrika へようこそ"},
