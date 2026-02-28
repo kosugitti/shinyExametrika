@@ -1,6 +1,6 @@
 # shinyExametrika — プロジェクト CLAUDE.md
 
-**最終更新: 2026-02-26**
+**最終更新: 2026-02-28**
 
 ## プロジェクト概要
 
@@ -10,7 +10,7 @@ exametrika パッケージの Shiny GUI アプリケーション。
 - **バージョン**: 0.0.0.9000（開発版）
 - **開発者**: 小杉（kosugitti）+ 学生チーム（分担開発）
 - **関連パッケージ**:
-  - [exametrika](https://github.com/kosugitti/exametrika) — 小杉が開発する心理測定パッケージ（v1.9.0、main にpush済み、CRAN投稿準備中）
+  - [exametrika](https://github.com/kosugitti/exametrika) — 小杉が開発する心理測定パッケージ（v1.10.0 CRAN投稿準備中、v1.9.0はスキップ）
   - [ggExametrika](https://github.com/kosugitti/ggExametrika) — 学生が開発する ggplot2 可視化パッケージ（v0.0.34、CRAN投稿準備中）
 - **参考書籍**: Shojima (2022) "Test Data Engineering"
 
@@ -117,7 +117,7 @@ shinyExametrika/
 - [x] IRT モジュール（2PL / 3PL / 4PL）
 - [x] GRM モジュール（多値 IRT）
 
-### Phase 2: 潜在構造分析 — 進行中
+### Phase 2: 潜在構造分析 — ほぼ完了（GridSearch統合のみ残り）
 
 - [x] LCA モジュール
 - [x] LRA モジュール
@@ -147,7 +147,7 @@ shinyExametrika/
 
 - [x] IRM モジュールの実装（PR #10 でマージ済み、2026-02-26）
 - [ ] IRM タイムアウト機構の導入（計算コスト高、今後の改善候補）
-- [ ] IRM seed UI の公開（再現性のための乱数シード指定）
+- [x] IRM seed UI の公開（再現性のための乱数シード指定、2026-02-26 実装済み）
 - [ ] GridSearch 統合（Biclustering モジュール内 or 独立タブ）
 
 ### 中期（Phase 3）
@@ -163,7 +163,7 @@ shinyExametrika/
 - [ ] R CMD check WARNING/NOTE の修正
 - [ ] README に shinyapps.io URL とスクリーンショットを追記
 - [ ] CRAN 登録は exametrika と ggExametrika の CRAN 公開後（依存パッケージが CRAN にないと登録不可）
-  - exametrika v1.9.0 CRAN 投稿 → ggExametrika CRAN 投稿 → shinyExametrika CRAN 投稿の順
+  - exametrika v1.10.0 CRAN 投稿 → ggExametrika CRAN 投稿 → shinyExametrika CRAN 投稿の順
   - Remotes フィールドは CRAN 投稿時に削除する必要がある
 
 ---
@@ -211,7 +211,7 @@ shinyExametrika/
 | shiny | Shiny フレームワーク |
 | golem | アプリ構造管理 |
 | config | golem 設定管理 |
-| exametrika (>= 1.9.0) | 分析エンジン |
+| exametrika (>= 1.10.0) | 分析エンジン |
 | shiny.i18n | 多言語対応 |
 | bslib | モダン UI コンポーネント |
 | DT | インタラクティブテーブル |
@@ -226,7 +226,7 @@ shinyExametrika/
 | ggExametrika | ggplot2 ベース可視化（なくても base plot フォールバックで動作） |
 | testthat (>= 3.0.0) | テスト |
 
-**注意**: exametrika v1.9.0 は CRAN 未公開（v1.8.1 が CRAN 最新）、ggExametrika も CRAN 未公開のため、`Remotes` フィールドで GitHub インストールを指定している。両パッケージの CRAN 公開後に Remotes を削除し、バージョン制約を追加する予定。
+**注意**: exametrika v1.10.0 は CRAN 未公開（v1.8.1 が CRAN 最新、v1.9.0はスキップされv1.10.0を直接投稿予定）、ggExametrika も CRAN 未公開のため、`Remotes` フィールドで GitHub インストールを指定している。両パッケージの CRAN 公開後に Remotes を削除し、バージョン制約を追加する予定。
 
 ---
 
@@ -355,7 +355,7 @@ BINET(U, ncls = 13, nfld = 12, conf = NULL, adj_file = NULL, ...)
 - ワークフロー: `.github/workflows/R-CMD-check.yaml`
 - トリガー: push（main / develop）および pull request
 - マトリクス: macOS-latest (release) + Ubuntu-latest (release / devel) の3環境
-- 現状: **失敗中**（2026-02-26 時点）。exametrika v1.9.0 が CRAN 未公開のため、CI 環境でのインストールに問題がある可能性あり
+- 現状: **失敗中**（2026-02-28 時点）。exametrika v1.10.0 が CRAN 未公開のため、CI 環境でのインストールに問題がある可能性あり
 
 ### テストファイル
 
@@ -396,7 +396,7 @@ Rscript -e "shinyExametrika::run_app()"  # アプリの動作確認
 
 ---
 
-## 現在のリポジトリ状態（2026-02-26 時点）
+## 現在のリポジトリ状態（2026-02-28 時点）
 
 ### ブランチ
 
@@ -429,7 +429,7 @@ Rscript -e "shinyExametrika::run_app()"  # アプリの動作確認
 - ggExametrika は開発中（v0.0.34）。未実装プロットがある場合は exametrika の `plot()` にフォールバックする
 - shinyapps.io にデプロイ済み。`app.R` を変更する場合は `R/` の変更と整合性を保つこと
 - R/ のコードには非 ASCII 文字（日本語コメント含む）を入れないこと（CRAN コンプライアンス対応済み）
-- README.md の Phase 2 の Status 記載が「LCA, LRA done」のまま。Biclustering 完了分を含め更新が必要（次回作業時）
+- README.md の Phase 2 ステータスを更新済み（LCA, LRA, Biclustering, IRM 完了を反映、2026-02-28）
 
 ---
 

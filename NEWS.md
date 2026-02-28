@@ -2,6 +2,17 @@
 
 ## Changes
 
+### Documentation and version updates (2026-02-28)
+
+- `CLAUDE.md`: updated last-modified date to 2026-02-28
+- `CLAUDE.md`: changed Phase 2 status from "in progress" to "nearly complete (only GridSearch integration remaining)"
+- `CLAUDE.md`: marked IRM seed UI as completed in TODO section
+- `CLAUDE.md`: updated all exametrika version references from v1.9.0 to v1.10.0 (v1.9.0 skipped per upstream decision)
+- `CLAUDE.md`: updated repository state section date to 2026-02-28
+- `CLAUDE.md`: updated README.md status note (now reflects completed update)
+- `README.md`: updated Phase 2 status to reflect LCA, LRA, Biclustering, IRM completion (GridSearch remaining)
+- `DESCRIPTION`: updated exametrika dependency from `>= 1.9.0` to `>= 1.10.0`
+
 ### IRM seed UI exposure (2026-02-26)
 
 - `R/mod_irm.R`: added random seed input field to IRM module UI
