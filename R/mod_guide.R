@@ -368,15 +368,84 @@ mod_guide_ui <- function(id, i18n) {
             tags$div(
               class = "border rounded p-3 h-100",
               tags$h6(
-                tags$span(class = "badge bg-secondary me-1", "IRM"),
+                tags$span(class = "badge bg-info me-1", "IRM"),
                 i18n$t("Infinite Relational Model")
               ),
               tags$p(
                 i18n$t("Nonparametric Bayesian approach to automatically determine optimal cluster structure."),
-                class = "text-muted small mb-2"
+                class = "text-muted small mb-1"
               ),
               tags$span(
-                class = "badge bg-warning text-dark",
+                class = "badge bg-light text-dark",
+                i18n$t("Binary data")
+              )
+            )
+          )
+        ),
+
+        # --- Row 3: Network models ---
+        tags$div(
+          class = "row g-3 mb-3",
+
+          tags$div(
+            class = "col-md-3",
+            tags$div(
+              class = "border rounded p-3 h-100",
+              tags$h6(
+                tags$span(class = "badge bg-success me-1", "BNM"),
+                i18n$t("Bayesian Network Model")
+              ),
+              tags$p(
+                i18n$t("Bayesian network analysis that models conditional dependencies between test items using a directed acyclic graph (DAG)."),
+                class = "text-muted small mb-1"
+              ),
+              tags$span(
+                class = "badge bg-light text-dark",
+                i18n$t("Binary data")
+              )
+            )
+          ),
+
+          tags$div(
+            class = "col-md-3",
+            tags$div(
+              class = "border rounded p-3 h-100",
+              tags$h6(
+                tags$span(class = "badge bg-secondary me-1", "LDLRA"),
+                "LDLRA"
+              ),
+              tags$p(
+                class = "text-muted small mb-2",
+                i18n$t("Coming Soon")
+              )
+            )
+          ),
+
+          tags$div(
+            class = "col-md-3",
+            tags$div(
+              class = "border rounded p-3 h-100",
+              tags$h6(
+                tags$span(class = "badge bg-secondary me-1", "LDB"),
+                "LDB"
+              ),
+              tags$p(
+                class = "text-muted small mb-2",
+                i18n$t("Coming Soon")
+              )
+            )
+          ),
+
+          tags$div(
+            class = "col-md-3",
+            tags$div(
+              class = "border rounded p-3 h-100",
+              tags$h6(
+                tags$span(class = "badge bg-secondary me-1", "BINET"),
+                "BINET"
+              ),
+              tags$p(
+                class = "text-muted small mb-2",
                 i18n$t("Coming Soon")
               )
             )

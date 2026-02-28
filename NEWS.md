@@ -2,6 +2,32 @@
 
 ## Changes
 
+### BNM module and DAG input component (2026-02-28)
+
+- `R/fct_dag.R` newly added: Shared DAG input components for Phase 3 modules (BNM, LDLRA, LDB, BINET)
+  - `dag_input_ui()`: Reusable UI components for DAG CSV upload with sample download button
+  - `parse_dag_csv()`: CSV parser supporting both simple (From/To) and extended header formats
+  - `check_dag_acyclic()`: Acyclicity validation using Kahn's topological sort algorithm
+  - `generate_sample_dag_csv()`: Dynamic sample CSV generation (uses actual item labels when available)
+  - `dag_status_display()`: Reactive status indicator showing parsed edge/node counts or errors
+  - Validates: self-loops, duplicate edges, cycles, node-label mismatches
+  - Supports optional Rank column for LDLRA/LDB/BINET rank-specific adjacency
+- `R/mod_bnm.R` newly added: Bayesian Network Model (BNM) analysis module
+  - Three analysis modes:
+    - BNM (Fixed DAG): user uploads a DAG via CSV, analyzed with `exametrika::BNM()`
+    - BNM_GA (Genetic Algorithm): structure learning via `exametrika::BNM_GA()` with full parameter UI (population, survival rate, mutation rate, max parents, max generations, crossover type, elitism)
+    - BNM_PBIL (PBIL): structure learning via `exametrika::BNM_PBIL()` with learning rate and estimation method parameters
+  - Results tab: fit indices, adjacency matrix, PIRP parameter estimates, CCRR table
+  - Plots tab: DAG visualization via `ggExametrika::plotGraph_gg()` with layout algorithm and direction selectors, igraph base plot fallback
+  - CSV download for adjacency matrix and CCRR table; PNG download for DAG plot
+  - Binary data validation, progress indicators, error handling with notifications
+- `R/app_ui.R`: added BNM tab with `mod_bnm_ui()`, plus LDLRA/LDB/BINET placeholder tabs
+- `R/app_server.R`: added `mod_bnm_server()` call
+- `R/mod_guide.R`: updated IRM from "Coming Soon" to active (with Binary data badge), added BNM card with description, added Phase 3 placeholder cards (LDLRA, LDB, BINET)
+- `inst/i18n/translation.json`: added 42 translation keys for DAG input and BNM module (EN/JA)
+- `tests/testthat/test-fct_dag.R` newly added: 13 unit tests for DAG helper functions (acyclicity, parsing, validation, CSV generation)
+- Total tabs: 14 (Guide, Data, Descriptives, CTT, IRT, GRM, LCA, LRA, Biclustering, IRM, BNM, LDLRA*, LDB*, BINET*) *placeholder
+
 ### Documentation and version updates (2026-02-28)
 
 - `CLAUDE.md`: updated last-modified date to 2026-02-28

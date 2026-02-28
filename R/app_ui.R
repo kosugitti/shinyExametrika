@@ -92,6 +92,28 @@ app_ui <- function(request) {
         title = i18n$t("IRM"),
         value = "tab_irm",
         mod_irm_ui("irm", i18n)
+      ),
+      bslib::nav_panel(
+        title = i18n$t("BNM"),
+        value = "tab_bnm",
+        mod_bnm_ui("bnm", i18n)
+      ),
+
+      # --- Phase 3 placeholders (LDLRA, LDB, BINET) ---
+      bslib::nav_panel(
+        title = i18n$t("LDLRA"),
+        value = "tab_ldlra",
+        mod_placeholder_ui("ldlra_placeholder", i18n)
+      ),
+      bslib::nav_panel(
+        title = i18n$t("LDB"),
+        value = "tab_ldb",
+        mod_placeholder_ui("ldb_placeholder", i18n)
+      ),
+      bslib::nav_panel(
+        title = i18n$t("BINET"),
+        value = "tab_binet",
+        mod_placeholder_ui("binet_placeholder", i18n)
       )
     )
   )

@@ -41,8 +41,10 @@ shinyExametrika/
 │   ├── mod_lra.R             # LRA 分析モジュール
 │   ├── mod_biclustering.R    # Biclustering 分析モジュール
 │   ├── mod_irm.R             # IRM 分析モジュール（Infinite Relational Model）
+│   ├── mod_bnm.R             # BNM 分析モジュール（固定DAG / GA / PBIL）
 │   ├── mod_placeholder.R     # プレースホルダーモジュール（未実装タブ用）
-│   └── fct_analysis.R        # 分析ヘルパー関数（safe_field, extract_fit_indices 等）
+│   ├── fct_analysis.R        # 分析ヘルパー関数（safe_field, extract_fit_indices 等）
+│   └── fct_dag.R             # DAG入力共通コンポーネント（Phase 3全モジュール共用）
 ├── inst/
 │   ├── app/www/              # CSS, JS, 画像等の静的アセット
 │   ├── golem-config.yml      # golem 設定ファイル
@@ -70,7 +72,7 @@ shinyExametrika/
 └── README.md
 ```
 
-### UI 構成（全10タブ）
+### UI 構成（全14タブ）
 
 - **ナビゲーション**: bslib の `page_navbar` によるタブベースナビゲーション
   1. Guide（ランディングページ — 使い方ガイド）
@@ -83,8 +85,12 @@ shinyExametrika/
   8. LRA（潜在ランク分析）
   9. Biclustering（バイクラスタリング / ランクラスタリング）
   10. IRM（Infinite Relational Model — CRP によるクラス数・フィールド数自動決定）
+  11. BNM（ベイジアンネットワークモデル — 固定DAG / GA / PBIL）
+  12. LDLRA（プレースホルダー）
+  13. LDB（プレースホルダー）
+  14. BINET（プレースホルダー）
 - **言語切替**: shiny.i18n による日英切替（ヘッダーにトグル配置）
-- **翻訳キー数**: 197キー（inst/i18n/translation.json、EN/JA 統合ファイル）
+- **翻訳キー数**: 239キー（inst/i18n/translation.json、EN/JA 統合ファイル）
 - **デプロイ先**: shinyapps.io（https://kosugitti.shinyapps.io/shinyExametrika/）
 
 ### 各分析モジュールの共通構造
@@ -125,12 +131,13 @@ shinyExametrika/
 - [x] IRM モジュール（CRP によるクラス数・フィールド数自動決定）
 - [ ] GridSearch 統合
 
-### Phase 3: ネットワーク・局所依存モデル — 未着手
+### Phase 3: ネットワーク・局所依存モデル — BNM完了
 
-- [ ] BNM モジュール（DAG 入力 UI 含む）
-- [ ] LDLRA モジュール
-- [ ] LDB モジュール
-- [ ] BINET モジュール
+- [x] DAG 入力共通コンポーネント（fct_dag.R — Phase 3 全モジュール共用）
+- [x] BNM モジュール（固定DAG / BNM_GA / BNM_PBIL、DAG可視化対応）
+- [ ] LDLRA モジュール（プレースホルダー配置済み）
+- [ ] LDB モジュール（プレースホルダー配置済み）
+- [ ] BINET モジュール（プレースホルダー配置済み）
 
 ### Phase 4: 仕上げ — 一部着手
 
@@ -150,13 +157,14 @@ shinyExametrika/
 - [x] IRM seed UI の公開（再現性のための乱数シード指定、2026-02-26 実装済み）
 - [ ] GridSearch 統合（Biclustering モジュール内 or 独立タブ）
 
-### 中期（Phase 3）
+### 中期（Phase 3 残り）
 
-- [ ] BNM モジュール（DAG 入力 UI が最大の課題。隣接行列 CSV アップロード or インタラクティブ DAG エディタ）
-- [ ] LDLRA モジュール
-- [ ] LDB モジュール
-- [ ] BINET モジュール
-- ggExametrika の DAG 可視化（plotGraph_gg）が BNM は対応済み、LDLRA は基本実装済み、LDB/BINET は未実装
+- [x] DAG 入力共通コンポーネント（fct_dag.R、From/To CSV アップロード + バリデーション、2026-02-28 実装済み）
+- [x] BNM モジュール（固定DAG / BNM_GA / BNM_PBIL の3モード、plotGraph_gg DAG可視化対応、2026-02-28 実装済み）
+- [ ] LDLRA モジュール（プレースホルダー配置済み、fct_dag.R の Rank列対応を使用予定）
+- [ ] LDB モジュール（プレースホルダー配置済み）
+- [ ] BINET モジュール（プレースホルダー配置済み）
+- ggExametrika の DAG 可視化（plotGraph_gg）: BNM 対応済み、LDLRA 基本実装済み、LDB/BINET 未実装
 
 ### CRAN 準備
 
@@ -363,6 +371,7 @@ BINET(U, ncls = 13, nfld = 12, conf = NULL, adj_file = NULL, ...)
 |---------|------|
 | `tests/testthat/test-golem-recommended.R` | golem 基本テスト（app_ui / app_server / app_sys / golem-config の存在確認） |
 | `tests/testthat/test-fct_analysis.R` | ヘルパー関数のユニットテスト（safe_field, extract_fit_indices） |
+| `tests/testthat/test-fct_dag.R` | DAGヘルパー関数のユニットテスト（acyclicity, parsing, validation, CSV generation） |
 
 ### ローカルテスト・ビルド確認
 
