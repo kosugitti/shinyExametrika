@@ -40,6 +40,7 @@ shinyExametrika/
 │   ├── mod_lca.R             # LCA 分析モジュール
 │   ├── mod_lra.R             # LRA 分析モジュール
 │   ├── mod_biclustering.R    # Biclustering 分析モジュール
+│   ├── mod_irm.R             # IRM 分析モジュール（Infinite Relational Model）
 │   ├── mod_placeholder.R     # プレースホルダーモジュール（未実装タブ用）
 │   └── fct_analysis.R        # 分析ヘルパー関数（safe_field, extract_fit_indices 等）
 ├── inst/
@@ -81,9 +82,9 @@ shinyExametrika/
   7. LCA（潜在クラス分析）
   8. LRA（潜在ランク分析）
   9. Biclustering（バイクラスタリング / ランクラスタリング）
-  10. IRM（プレースホルダー — 未実装）
+  10. IRM（Infinite Relational Model — CRP によるクラス数・フィールド数自動決定）
 - **言語切替**: shiny.i18n による日英切替（ヘッダーにトグル配置）
-- **翻訳キー数**: 188キー（inst/i18n/translation.json、EN/JA 統合ファイル）
+- **翻訳キー数**: 197キー（inst/i18n/translation.json、EN/JA 統合ファイル）
 - **デプロイ先**: shinyapps.io（https://kosugitti.shinyapps.io/shinyExametrika/）
 
 ### 各分析モジュールの共通構造
@@ -121,7 +122,7 @@ shinyExametrika/
 - [x] LCA モジュール
 - [x] LRA モジュール
 - [x] Biclustering モジュール
-- [ ] IRM モジュール（現在プレースホルダー）
+- [x] IRM モジュール（CRP によるクラス数・フィールド数自動決定）
 - [ ] GridSearch 統合
 
 ### Phase 3: ネットワーク・局所依存モデル — 未着手
@@ -144,9 +145,9 @@ shinyExametrika/
 
 ### 短期（Phase 2 完了に向けて）
 
-- [ ] IRM モジュールの実装（`mod_placeholder.R` → `mod_irm.R` に置換）
-  - `Biclustering_IRM()` のラッパー。CRP パラメータ（gamma_c, gamma_f）の入力 UI
-  - 計算コストが高いため `withProgress()` + タイムアウト対策が必須
+- [x] IRM モジュールの実装（PR #10 でマージ済み、2026-02-26）
+- [ ] IRM タイムアウト機構の導入（計算コスト高、今後の改善候補）
+- [ ] IRM seed UI の公開（再現性のための乱数シード指定）
 - [ ] GridSearch 統合（Biclustering モジュール内 or 独立タブ）
 
 ### 中期（Phase 3）
@@ -406,7 +407,7 @@ Rscript -e "shinyExametrika::run_app()"  # アプリの動作確認
 
 - Open Issues: 0
 - Open PR: 0
-- 全 9 PR が MERGED 済み（#1 data-format 〜 #9 mod-biclustering）
+- 全 10 PR が MERGED/CLOSED 済み（#1 data-format 〜 #10 mod-irm）
 
 ### CI
 
