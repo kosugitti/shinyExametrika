@@ -272,6 +272,7 @@
     {"en": "Layout Algorithm", "ja": "レイアウトアルゴリズム"},
     {"en": "Direction", "ja": "方向"},
     {"en": "No DAG to display.", "ja": "表示するDAGがありません。"},
+    {"en": "Plot Height (px)", "ja": "プロットの高さ (px)"},
     {"en": "Bayesian Network Model", "ja": "ベイジアンネットワークモデル"},
     {"en": "Bayesian network analysis that models conditional dependencies between test items using a directed acyclic graph (DAG).", "ja": "有向非循環グラフ（DAG）を用いてテスト項目間の条件付き依存関係をモデル化するベイジアンネットワーク分析。"}
   ]

@@ -2,6 +2,12 @@
 
 ## Changes
 
+### BNM DAG plot height slider (2026-03-24)
+
+- `R/mod_bnm.R`: Added dynamic plot height slider for DAG plots (400-1200px, default 600px)
+- Slider appears only when DAG plot type is selected
+- Translation key added: "Plot Height (px)" / "プロットの高さ (px)"
+
 ### BNM module and DAG input component (2026-02-28)
 
 - `R/fct_dag.R` newly added: Shared DAG input components for Phase 3 modules (BNM, LDLRA, LDB, BINET)
