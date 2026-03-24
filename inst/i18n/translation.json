@@ -273,6 +273,20 @@
     {"en": "Direction", "ja": "方向"},
     {"en": "No DAG to display.", "ja": "表示するDAGがありません。"},
     {"en": "Bayesian Network Model", "ja": "ベイジアンネットワークモデル"},
-    {"en": "Bayesian network analysis that models conditional dependencies between test items using a directed acyclic graph (DAG).", "ja": "有向非循環グラフ（DAG）を用いてテスト項目間の条件付き依存関係をモデル化するベイジアンネットワーク分析。"}
+    {"en": "Bayesian network analysis that models conditional dependencies between test items using a directed acyclic graph (DAG).", "ja": "有向非循環グラフ（DAG）を用いてテスト項目間の条件付き依存関係をモデル化するベイジアンネットワーク分析。"},
+
+    {"en": "LDLRA analyzes locally dependent item structures across latent ranks.", "ja": "LDLRAは潜在ランクごとの局所依存項目構造を分析します。"},
+    {"en": "LDLRA requires binary response data.", "ja": "LDLRAには二値データが必要です。"},
+    {"en": "Running LDLRA analysis...", "ja": "LDLRA分析を実行中..."},
+    {"en": "Running LDLRA_PBIL structure learning...", "ja": "LDLRA_PBIL構造学習を実行中..."},
+    {"en": "Rank values in DAG must be between 1 and the number of ranks.", "ja": "DAGのランク値は1からランク数の範囲内である必要があります。"},
+    {"en": "Advanced Parameters", "ja": "詳細パラメータ"},
+    {"en": "Beta1 (prior parameter)", "ja": "Beta1（事前分布パラメータ）"},
+    {"en": "Beta2 (prior parameter)", "ja": "Beta2（事前分布パラメータ）"},
+    {"en": "Select Rank", "ja": "ランクを選択"},
+    {"en": "Estimation Table", "ja": "推定テーブル"},
+    {"en": "Plot Height (px)", "ja": "プロットの高さ (px)"},
+    {"en": "Locally Dependent LRA", "ja": "局所依存潜在ランク分析"},
+    {"en": "Latent rank analysis with locally dependent item structures modeled by directed acyclic graphs.", "ja": "有向非循環グラフによる局所依存項目構造を持つ潜在ランク分析。"}
   ]
 }

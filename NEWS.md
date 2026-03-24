@@ -2,6 +2,28 @@
 
 ## Changes
 
+### LDLRA module implementation (2026-03-19)
+
+- `R/mod_ldlra.R` newly added: Locally Dependent Latent Rank Analysis (LDLRA) module
+  - Two analysis modes:
+    - LDLRA (Fixed DAG): user uploads a rank-specific DAG via CSV (From/To/Rank columns), analyzed with `exametrika::LDLRA()`
+    - LDLRA_PBIL (Structure Learning): automatic DAG structure learning via `exametrika::LDLRA_PBIL()` with full parameter UI (population, survival rate, mutation rate, max parents, learning rate, estimation method)
+  - Common parameters: number of ranks (2-20), method (Rank/Class), beta1/beta2 (advanced, collapsible)
+  - Results tab: fit indices, IRP table, IRP Index, rank summary (TRP + LRD), student membership, CCRR table, estimation table
+  - Plots tab: IRP (with item selector), TRP, LRD, RMP (with student selector), DAG (with rank selector + layout/direction options)
+  - ggExametrika preferred for all plots with base plot fallback; DAG fallback uses igraph
+  - CSV download for IRP, students, CCRR, estimation table; PNG download for all plots
+  - Binary data validation, rank range validation for DAG CSV, progress indicators, error handling
+- `R/fct_dag.R`: added `build_adj_list_from_edges()` helper function
+  - Converts parsed DAG edges (From, To, Rank) into rank-specific adjacency matrix list for `exametrika::LDLRA(adj_list=...)`
+  - Handles both rank-specific edges (Rank column present) and shared edges (same DAG for all ranks)
+  - Reusable for future LDB and BINET modules
+- `R/app_ui.R`: replaced LDLRA placeholder with `mod_ldlra_ui()`
+- `R/app_server.R`: added `mod_ldlra_server()` call
+- `R/mod_guide.R`: updated LDLRA from "Coming Soon" (grey badge) to active (green badge with description and Binary data badge)
+- `inst/i18n/translation.json`: added 13 LDLRA-specific translation keys (EN/JA)
+- `tests/testthat/test-fct_dag.R`: added 3 unit tests for `build_adj_list_from_edges()` (rank-specific edges, shared edges, out-of-range rank handling)
+
 ### BNM module and DAG input component (2026-02-28)
 
 - `R/fct_dag.R` newly added: Shared DAG input components for Phase 3 modules (BNM, LDLRA, LDB, BINET)

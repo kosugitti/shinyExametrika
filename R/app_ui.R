@@ -103,7 +103,7 @@ app_ui <- function(request) {
       bslib::nav_panel(
         title = i18n$t("LDLRA"),
         value = "tab_ldlra",
-        mod_placeholder_ui("ldlra_placeholder", i18n)
+        mod_ldlra_ui("ldlra", i18n)
       ),
       bslib::nav_panel(
         title = i18n$t("LDB"),

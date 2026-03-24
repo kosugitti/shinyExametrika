@@ -146,8 +146,12 @@ parse_dag_csv <- function(file_path, item_labels = NULL, i18n = NULL) {
       return(list(error = msg("DAG contains self-loops. Each edge must connect different items.")))
     }
 
-    # Check for duplicate edges
-    edge_keys <- paste(edges$From, edges$To, sep = "->")
+    # Check for duplicate edges (include Rank if present)
+    if ("Rank" %in% colnames(edges) && !all(is.na(edges$Rank))) {
+      edge_keys <- paste(edges$From, edges$To, edges$Rank, sep = "->")
+    } else {
+      edge_keys <- paste(edges$From, edges$To, sep = "->")
+    }
     if (any(duplicated(edge_keys))) {
       return(list(error = msg("DAG contains duplicate edges.")))
     }
@@ -334,4 +338,58 @@ dag_status_display <- function(dag_result, i18n) {
       )
     )
   }
+}
+
+
+#' Build rank-specific adjacency list from parsed DAG edges
+#'
+#' Converts a data.frame of edges (From, To, Rank) into a list of adjacency
+#' matrices, one per rank. Used by LDLRA, LDB, BINET modules.
+#'
+#' @param edges data.frame with columns From, To, and optionally Rank
+#' @param item_labels Character vector of all item labels (defines matrix dimensions)
+#' @param ncls Number of ranks/classes (determines list length)
+#'
+#' @return A list of length ncls, where each element is an adjacency matrix
+#'   (items x items) with 0/1 entries. If Rank column is missing, all ranks
+#'   share the same adjacency structure.
+#'
+#' @noRd
+build_adj_list_from_edges <- function(edges, item_labels, ncls) {
+  n_items <- length(item_labels)
+
+  # Initialize empty adjacency matrices for each rank
+  adj_list <- vector("list", ncls)
+  for (k in seq_len(ncls)) {
+    adj_list[[k]] <- matrix(
+      0L, nrow = n_items, ncol = n_items,
+      dimnames = list(item_labels, item_labels)
+    )
+  }
+
+  if ("Rank" %in% colnames(edges) && !all(is.na(edges$Rank))) {
+    # Rank-specific edges
+    for (i in seq_len(nrow(edges))) {
+      rank_val <- as.integer(edges$Rank[i])
+      from_item <- as.character(edges$From[i])
+      to_item <- as.character(edges$To[i])
+      if (!is.na(rank_val) && rank_val >= 1 && rank_val <= ncls &&
+          from_item %in% item_labels && to_item %in% item_labels) {
+        adj_list[[rank_val]][from_item, to_item] <- 1L
+      }
+    }
+  } else {
+    # No Rank column: same DAG for all ranks
+    for (i in seq_len(nrow(edges))) {
+      from_item <- as.character(edges$From[i])
+      to_item <- as.character(edges$To[i])
+      if (from_item %in% item_labels && to_item %in% item_labels) {
+        for (k in seq_len(ncls)) {
+          adj_list[[k]][from_item, to_item] <- 1L
+        }
+      }
+    }
+  }
+
+  adj_list
 }

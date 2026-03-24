@@ -139,3 +139,59 @@ test_that("generate_sample_dag_csv with rank column", {
   lines <- strsplit(csv, "\n")[[1]]
   expect_equal(lines[1], "From,To,Rank")
 })
+
+# --- build_adj_list_from_edges tests ---
+
+test_that("build_adj_list_from_edges creates correct structure with Rank column", {
+  edges <- data.frame(
+    From = c("Item01", "Item02", "Item02"),
+    To   = c("Item02", "Item03", "Item03"),
+    Rank = c(1, 1, 2),
+    stringsAsFactors = FALSE
+  )
+  item_labels <- c("Item01", "Item02", "Item03")
+  adj_list <- build_adj_list_from_edges(edges, item_labels, ncls = 3)
+
+  expect_length(adj_list, 3)
+  # Rank 1: Item01 -> Item02, Item02 -> Item03
+  expect_equal(adj_list[[1]]["Item01", "Item02"], 1L)
+  expect_equal(adj_list[[1]]["Item02", "Item03"], 1L)
+  # Rank 2: Item02 -> Item03 only
+  expect_equal(adj_list[[2]]["Item01", "Item02"], 0L)
+  expect_equal(adj_list[[2]]["Item02", "Item03"], 1L)
+  # Rank 3: no edges
+  expect_equal(adj_list[[3]]["Item01", "Item02"], 0L)
+  expect_equal(adj_list[[3]]["Item02", "Item03"], 0L)
+})
+
+test_that("build_adj_list_from_edges without Rank column copies to all ranks", {
+  edges <- data.frame(
+    From = c("Item01", "Item02"),
+    To   = c("Item02", "Item03"),
+    stringsAsFactors = FALSE
+  )
+  item_labels <- c("Item01", "Item02", "Item03")
+  adj_list <- build_adj_list_from_edges(edges, item_labels, ncls = 3)
+
+  expect_length(adj_list, 3)
+  for (k in 1:3) {
+    expect_equal(adj_list[[k]]["Item01", "Item02"], 1L)
+    expect_equal(adj_list[[k]]["Item02", "Item03"], 1L)
+    expect_equal(adj_list[[k]]["Item01", "Item03"], 0L)
+  }
+})
+
+test_that("build_adj_list_from_edges ignores out-of-range ranks", {
+  edges <- data.frame(
+    From = c("A", "A"),
+    To   = c("B", "B"),
+    Rank = c(1, 5),
+    stringsAsFactors = FALSE
+  )
+  item_labels <- c("A", "B")
+  adj_list <- build_adj_list_from_edges(edges, item_labels, ncls = 2)
+
+  expect_length(adj_list, 2)
+  expect_equal(adj_list[[1]]["A", "B"], 1L)
+  expect_equal(adj_list[[2]]["A", "B"], 0L)  # Rank 5 out of range, ignored
+})

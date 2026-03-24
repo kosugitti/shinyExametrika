@@ -1,6 +1,6 @@
 # shinyExametrika — プロジェクト CLAUDE.md
 
-**最終更新: 2026-02-28**
+**最終更新: 2026-03-19**
 
 ## プロジェクト概要
 
@@ -86,11 +86,11 @@ shinyExametrika/
   9. Biclustering（バイクラスタリング / ランクラスタリング）
   10. IRM（Infinite Relational Model — CRP によるクラス数・フィールド数自動決定）
   11. BNM（ベイジアンネットワークモデル — 固定DAG / GA / PBIL）
-  12. LDLRA（プレースホルダー）
+  12. LDLRA（局所依存潜在ランク分析 — 固定DAG / PBIL）
   13. LDB（プレースホルダー）
   14. BINET（プレースホルダー）
 - **言語切替**: shiny.i18n による日英切替（ヘッダーにトグル配置）
-- **翻訳キー数**: 239キー（inst/i18n/translation.json、EN/JA 統合ファイル）
+- **翻訳キー数**: 252キー（inst/i18n/translation.json、EN/JA 統合ファイル）
 - **デプロイ先**: shinyapps.io（https://kosugitti.shinyapps.io/shinyExametrika/）
 
 ### 各分析モジュールの共通構造
@@ -131,11 +131,11 @@ shinyExametrika/
 - [x] IRM モジュール（CRP によるクラス数・フィールド数自動決定）
 - [ ] GridSearch 統合
 
-### Phase 3: ネットワーク・局所依存モデル — BNM完了
+### Phase 3: ネットワーク・局所依存モデル — BNM・LDLRA完了
 
 - [x] DAG 入力共通コンポーネント（fct_dag.R — Phase 3 全モジュール共用）
 - [x] BNM モジュール（固定DAG / BNM_GA / BNM_PBIL、DAG可視化対応）
-- [ ] LDLRA モジュール（プレースホルダー配置済み）
+- [x] LDLRA モジュール（固定DAG / LDLRA_PBIL、ランク別DAG可視化対応）
 - [ ] LDB モジュール（プレースホルダー配置済み）
 - [ ] BINET モジュール（プレースホルダー配置済み）
 
@@ -161,7 +161,7 @@ shinyExametrika/
 
 - [x] DAG 入力共通コンポーネント（fct_dag.R、From/To CSV アップロード + バリデーション、2026-02-28 実装済み）
 - [x] BNM モジュール（固定DAG / BNM_GA / BNM_PBIL の3モード、plotGraph_gg DAG可視化対応、2026-02-28 実装済み）
-- [ ] LDLRA モジュール（プレースホルダー配置済み、fct_dag.R の Rank列対応を使用予定）
+- [x] LDLRA モジュール（固定DAG / LDLRA_PBIL の2モード、ランク別DAG可視化対応、2026-03-19 実装済み）
 - [ ] LDB モジュール（プレースホルダー配置済み）
 - [ ] BINET モジュール（プレースホルダー配置済み）
 - ggExametrika の DAG 可視化（plotGraph_gg）: BNM 対応済み、LDLRA 基本実装済み、LDB/BINET 未実装
@@ -405,7 +405,7 @@ Rscript -e "shinyExametrika::run_app()"  # アプリの動作確認
 
 ---
 
-## 現在のリポジトリ状態（2026-02-28 時点）
+## 現在のリポジトリ状態（2026-03-19 時点）
 
 ### ブランチ
 
@@ -425,9 +425,10 @@ Rscript -e "shinyExametrika::run_app()"  # アプリの動作確認
 
 ### テスト
 
-- testthat: 2 テストファイル
+- testthat: 3 テストファイル
   - `test-golem-recommended.R`: golem 基本テスト（app_ui, app_server, app_sys, golem-config の存在と型）
   - `test-fct_analysis.R`: ヘルパー関数ユニットテスト（safe_field, extract_fit_indices）
+  - `test-fct_dag.R`: DAGヘルパー関数のユニットテスト（acyclicity, parsing, validation, CSV generation, build_adj_list_from_edges）
 
 ---
 
