@@ -7,3 +7,7 @@ $run_dev.*
 ^\.here$
 ^CLAUDE\.md$
 ^\.claude$
+^\.github$
+^LICENSE\.md$
+^app\.R$
+^rsconnect$

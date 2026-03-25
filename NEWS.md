@@ -2,6 +2,15 @@
 
 ## Changes
 
+### R CMD check NOTE fixes for CRAN compliance (2026-03-25)
+
+- `.Rbuildignore`: added `^\.github$`, `^LICENSE\.md$`, `^app\.R$`, `^rsconnect$` to exclude non-package files from the build tarball
+- `LICENSE`: converted to CRAN-required DCF format (`YEAR: 2026` / `COPYRIGHT HOLDER: Koji Kosugi`)
+- `LICENSE.md`: newly added with full MIT License text (excluded from build via `.Rbuildignore`)
+- `DESCRIPTION`: removed `waiter` from Imports (was listed but never actually used in any R/ code)
+- `DESCRIPTION`: added `Depends: R (>= 4.1.0)` to specify minimum R version requirement
+- Result: R CMD check now passes with 0 errors, 0 warnings, 0 notes
+
 ### LDLRA module implementation (2026-02-28)
 
 - `R/mod_ldlra.R` newly added: Locally Dependent Latent Rank Analysis (LDLRA) module

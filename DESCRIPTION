@@ -12,6 +12,8 @@ Description: Provides a web-based graphical user interface for the exametrika
     Item Response Theory (IRT), Latent Class Analysis (LCA), Latent Rank
     Analysis (LRA), Biclustering, and more, with bilingual (English/Japanese)
     interface.
+Depends:
+    R (>= 4.1.0)
 License: MIT + file LICENSE
 URL: https://github.com/kosugitti/shinyExametrika
 BugReports: https://github.com/kosugitti/shinyExametrika/issues
@@ -24,8 +26,7 @@ Imports:
     shiny,
     shiny.i18n,
     shinyjs,
-    shinyWidgets,
-    waiter
+    shinyWidgets
 Suggests:
     ggExametrika,
     ggplot2,
