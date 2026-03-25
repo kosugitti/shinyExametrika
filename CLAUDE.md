@@ -1,6 +1,6 @@
 # shinyExametrika — プロジェクト CLAUDE.md
 
-**最終更新: 2026-02-28**
+**最終更新: 2026-03-25**
 
 ## プロジェクト概要
 
@@ -42,9 +42,10 @@ shinyExametrika/
 │   ├── mod_biclustering.R    # Biclustering 分析モジュール
 │   ├── mod_irm.R             # IRM 分析モジュール（Infinite Relational Model）
 │   ├── mod_bnm.R             # BNM 分析モジュール（固定DAG / GA / PBIL）
+│   ├── mod_ldlra.R           # LDLRA 分析モジュール（固定DAG / LDLRA_PBIL）
 │   ├── mod_placeholder.R     # プレースホルダーモジュール（未実装タブ用）
 │   ├── fct_analysis.R        # 分析ヘルパー関数（safe_field, extract_fit_indices 等）
-│   └── fct_dag.R             # DAG入力共通コンポーネント（Phase 3全モジュール共用）
+│   └── fct_dag.R             # DAG入力共通コンポーネント（Phase 3全モジュール共用、ranked DAG対応）
 ├── inst/
 │   ├── app/www/              # CSS, JS, 画像等の静的アセット
 │   ├── golem-config.yml      # golem 設定ファイル
@@ -86,11 +87,11 @@ shinyExametrika/
   9. Biclustering（バイクラスタリング / ランクラスタリング）
   10. IRM（Infinite Relational Model — CRP によるクラス数・フィールド数自動決定）
   11. BNM（ベイジアンネットワークモデル — 固定DAG / GA / PBIL）
-  12. LDLRA（プレースホルダー）
+  12. LDLRA（局所依存潜在ランク分析 — 固定DAG / PBIL構造学習）
   13. LDB（プレースホルダー）
   14. BINET（プレースホルダー）
 - **言語切替**: shiny.i18n による日英切替（ヘッダーにトグル配置）
-- **翻訳キー数**: 239キー（inst/i18n/translation.json、EN/JA 統合ファイル）
+- **翻訳キー数**: 259キー（inst/i18n/translation.json、EN/JA 統合ファイル）
 - **デプロイ先**: shinyapps.io（https://kosugitti.shinyapps.io/shinyExametrika/）
 
 ### 各分析モジュールの共通構造
@@ -131,11 +132,11 @@ shinyExametrika/
 - [x] IRM モジュール（CRP によるクラス数・フィールド数自動決定）
 - [ ] GridSearch 統合
 
-### Phase 3: ネットワーク・局所依存モデル — BNM完了
+### Phase 3: ネットワーク・局所依存モデル — BNM・LDLRA完了
 
-- [x] DAG 入力共通コンポーネント（fct_dag.R — Phase 3 全モジュール共用）
+- [x] DAG 入力共通コンポーネント（fct_dag.R — Phase 3 全モジュール共用、ranked DAG対応済み）
 - [x] BNM モジュール（固定DAG / BNM_GA / BNM_PBIL、DAG可視化対応）
-- [ ] LDLRA モジュール（プレースホルダー配置済み）
+- [x] LDLRA モジュール（固定DAG / LDLRA_PBIL、ランク別DAG入力、OAC表示、2026-03-25 実装済み）
 - [ ] LDB モジュール（プレースホルダー配置済み）
 - [ ] BINET モジュール（プレースホルダー配置済み）
 
@@ -159,12 +160,12 @@ shinyExametrika/
 
 ### 中期（Phase 3 残り）
 
-- [x] DAG 入力共通コンポーネント（fct_dag.R、From/To CSV アップロード + バリデーション、2026-02-28 実装済み）
+- [x] DAG 入力共通コンポーネント（fct_dag.R、From/To CSV アップロード + バリデーション + ranked DAG対応、2026-02-28〜03-25 実装済み）
 - [x] BNM モジュール（固定DAG / BNM_GA / BNM_PBIL の3モード、plotGraph_gg DAG可視化対応、2026-02-28 実装済み）
-- [ ] LDLRA モジュール（プレースホルダー配置済み、fct_dag.R の Rank列対応を使用予定）
-- [ ] LDB モジュール（プレースホルダー配置済み）
+- [x] LDLRA モジュール（固定DAG / LDLRA_PBIL、ランク別DAG入力、OAC表示・CCRR・PIRP対応、2026-03-25 実装済み）
+- [ ] LDB モジュール（プレースホルダー配置済み、次の実装対象）
 - [ ] BINET モジュール（プレースホルダー配置済み）
-- ggExametrika の DAG 可視化（plotGraph_gg）: BNM 対応済み、LDLRA 基本実装済み、LDB/BINET 未実装
+- ggExametrika の DAG 可視化（plotGraph_gg）: BNM・LDLRA 対応済み、LDB/BINET 未実装
 
 ### CRAN 準備
 
@@ -232,9 +233,10 @@ shinyExametrika/
 | パッケージ | 用途 |
 |-----------|------|
 | ggExametrika | ggplot2 ベース可視化（なくても base plot フォールバックで動作） |
+| igraph | DAG可視化フォールバック（BNM/LDLRA の base plot 用） |
 | testthat (>= 3.0.0) | テスト |
 
-**注意**: exametrika v1.10.0 は CRAN 未公開（v1.8.1 が CRAN 最新、v1.9.0はスキップされv1.10.0を直接投稿予定）、ggExametrika も CRAN 未公開のため、`Remotes` フィールドで GitHub インストールを指定している。両パッケージの CRAN 公開後に Remotes を削除し、バージョン制約を追加する予定。
+**注意**: exametrika v1.10.1 CRAN 公開済み（2026-03-20）。ggExametrika v1.0.0 CRAN 審査中（2026-03-25 時点）。ggExametrika CRAN 公開後に Remotes を削除し、shinyExametrika の CRAN 投稿準備に入る。
 
 ---
 
@@ -405,18 +407,19 @@ Rscript -e "shinyExametrika::run_app()"  # アプリの動作確認
 
 ---
 
-## 現在のリポジトリ状態（2026-02-28 時点）
+## 現在のリポジトリ状態（2026-03-25 時点）
 
 ### ブランチ
 
-- `main` と `develop` は完全同期済み（差分なし）
-- feature ブランチは全てマージ済み・削除済み（ローカル・リモートとも）
+- `develop` は `main` より先行（LDLRA モジュール追加分）
+- feature ブランチは全てマージ済み・削除済み
 
 ### GitHub Issues / PR
 
 - Open Issues: 0
 - Open PR: 0
 - 全 10 PR が MERGED/CLOSED 済み（#1 data-format 〜 #10 mod-irm）
+- LDLRA はローカルで直接マージ（feature/mod-ldlra → develop）
 
 ### CI
 
@@ -425,9 +428,15 @@ Rscript -e "shinyExametrika::run_app()"  # アプリの動作確認
 
 ### テスト
 
-- testthat: 2 テストファイル
+- testthat: 3 テストファイル、67 テスト
   - `test-golem-recommended.R`: golem 基本テスト（app_ui, app_server, app_sys, golem-config の存在と型）
   - `test-fct_analysis.R`: ヘルパー関数ユニットテスト（safe_field, extract_fit_indices）
+  - `test-fct_dag.R`: DAGヘルパー関数ユニットテスト（acyclicity, parsing, validation, ranked DAG）
+
+### R CMD check 状態
+
+- 0 errors / 0 warnings / 4 NOTEs（2026-03-25 時点）
+- NOTEs は全て既知（.github, License, app.R/rsconnect, 未使用waiter）
 
 ---
 
@@ -435,7 +444,7 @@ Rscript -e "shinyExametrika::run_app()"  # アプリの動作確認
 
 - exametrika の分析は計算コストが高いものがある（特に GridSearch, BNM_GA, IRM）。UI にプログレスバーを表示し、タイムアウト対策を入れること
 - exametrika v1.8.0 以降、出力オブジェクトのフィールド名が snake_case に移行中（`n_class`, `n_field` 等）。新しい名前を使うこと
-- ggExametrika は開発中（v0.0.34）。未実装プロットがある場合は exametrika の `plot()` にフォールバックする
+- ggExametrika v1.0.0 CRAN審査中（2026-03-25 時点）。未実装プロットがある場合は exametrika の `plot()` にフォールバックする
 - shinyapps.io にデプロイ済み。`app.R` を変更する場合は `R/` の変更と整合性を保つこと
 - R/ のコードには非 ASCII 文字（日本語コメント含む）を入れないこと（CRAN コンプライアンス対応済み）
 - README.md の Phase 2 ステータスを更新済み（LCA, LRA, Biclustering, IRM 完了を反映、2026-02-28）
