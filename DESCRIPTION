@@ -29,6 +29,7 @@ Imports:
 Suggests:
     ggExametrika,
     ggplot2,
+    igraph,
     testthat (>= 3.0.0)
 Remotes:
     kosugitti/exametrika,

@@ -411,12 +411,16 @@ mod_guide_ui <- function(id, i18n) {
             tags$div(
               class = "border rounded p-3 h-100",
               tags$h6(
-                tags$span(class = "badge bg-secondary me-1", "LDLRA"),
-                "LDLRA"
+                tags$span(class = "badge bg-success me-1", "LDLRA"),
+                i18n$t("Locally Dependent Latent Rank Analysis")
               ),
               tags$p(
-                class = "text-muted small mb-2",
-                i18n$t("Coming Soon")
+                i18n$t("LDLRA extends LRA by modeling item dependencies within each latent rank using directed acyclic graphs (DAGs). Supports fixed DAG input and PBIL structure learning."),
+                class = "text-muted small mb-1"
+              ),
+              tags$span(
+                class = "badge bg-light text-dark",
+                i18n$t("Binary data")
               )
             )
           ),

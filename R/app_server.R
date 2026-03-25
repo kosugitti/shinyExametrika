@@ -31,4 +31,5 @@ app_server <- function(input, output, session) {
   mod_biclustering_server("biclustering", formatted_data = formatted_data, i18n = i18n)
   mod_irm_server("irm", formatted_data = formatted_data, i18n = i18n)
   mod_bnm_server("bnm", formatted_data = formatted_data, i18n = i18n)
+  mod_ldlra_server("ldlra", formatted_data = formatted_data, i18n = i18n)
 }

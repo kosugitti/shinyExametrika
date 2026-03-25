@@ -139,3 +139,147 @@ test_that("generate_sample_dag_csv with rank column", {
   lines <- strsplit(csv, "\n")[[1]]
   expect_equal(lines[1], "From,To,Rank")
 })
+
+
+# =============================================================================
+# Tests for parse_ranked_dag_csv (LDLRA/LDB/BINET support)
+# =============================================================================
+
+test_that("parse_ranked_dag_csv parses valid ranked CSV correctly", {
+  tmp <- tempfile(fileext = ".csv")
+  writeLines(c(
+    "From,To,Rank",
+    "Item01,Item02,1",
+    "Item02,Item03,1",
+    "Item02,Item04,2",
+    "Item03,Item05,2"
+  ), tmp)
+  on.exit(unlink(tmp))
+
+  result <- parse_ranked_dag_csv(tmp, n_ranks = 2)
+  expect_null(result$error)
+  expect_equal(result$n_ranks, 2)
+  expect_equal(result$rank_edges, c(2L, 2L))
+  expect_equal(length(result$adj_list), 2)
+  expect_true(is.matrix(result$adj_list[[1]]))
+  expect_true(is.matrix(result$adj_list[[2]]))
+  # Rank 1 edges: Item01->Item02, Item02->Item03
+  expect_equal(result$adj_list[[1]]["Item01", "Item02"], 1L)
+  expect_equal(result$adj_list[[1]]["Item02", "Item03"], 1L)
+  # Rank 2 edges: Item02->Item04, Item03->Item05
+  expect_equal(result$adj_list[[2]]["Item02", "Item04"], 1L)
+  expect_equal(result$adj_list[[2]]["Item03", "Item05"], 1L)
+  # Rank 1 should NOT have rank 2 edges
+  expect_equal(result$adj_list[[1]]["Item02", "Item04"], 0L)
+})
+
+test_that("parse_ranked_dag_csv rejects CSV without Rank column", {
+  tmp <- tempfile(fileext = ".csv")
+  writeLines(c("From,To", "A,B", "B,C"), tmp)
+  on.exit(unlink(tmp))
+
+  result <- parse_ranked_dag_csv(tmp, n_ranks = 2)
+  expect_false(is.null(result$error))
+})
+
+test_that("parse_ranked_dag_csv rejects CSV with fewer than 3 columns", {
+  tmp <- tempfile(fileext = ".csv")
+  writeLines(c("From,To", "A,B"), tmp)
+  on.exit(unlink(tmp))
+
+  result <- parse_ranked_dag_csv(tmp, n_ranks = 2)
+  expect_false(is.null(result$error))
+})
+
+test_that("parse_ranked_dag_csv rejects out-of-range rank values", {
+  tmp <- tempfile(fileext = ".csv")
+  writeLines(c("From,To,Rank", "A,B,1", "B,C,5"), tmp)
+  on.exit(unlink(tmp))
+
+  result <- parse_ranked_dag_csv(tmp, n_ranks = 3)
+  expect_false(is.null(result$error))
+})
+
+test_that("parse_ranked_dag_csv detects per-rank cycles", {
+  tmp <- tempfile(fileext = ".csv")
+  # Rank 1 has a cycle: A -> B -> C -> A
+  writeLines(c("From,To,Rank", "A,B,1", "B,C,1", "C,A,1"), tmp)
+  on.exit(unlink(tmp))
+
+  result <- parse_ranked_dag_csv(tmp, n_ranks = 2)
+  expect_false(is.null(result$error))
+  expect_true(grepl("cycle", result$error, ignore.case = TRUE))
+})
+
+test_that("parse_ranked_dag_csv allows cross-rank anti-parallel edges", {
+  tmp <- tempfile(fileext = ".csv")
+  # Rank 1: A -> B; Rank 2: B -> A (not a cycle within any single rank)
+  writeLines(c("From,To,Rank", "A,B,1", "B,A,2"), tmp)
+  on.exit(unlink(tmp))
+
+  result <- parse_ranked_dag_csv(tmp, n_ranks = 2)
+  expect_null(result$error)
+  expect_equal(result$adj_list[[1]]["A", "B"], 1L)
+  expect_equal(result$adj_list[[2]]["B", "A"], 1L)
+})
+
+test_that("parse_ranked_dag_csv handles empty ranks", {
+  tmp <- tempfile(fileext = ".csv")
+  # Only rank 1 has edges; rank 2 and 3 are empty
+  writeLines(c("From,To,Rank", "A,B,1", "B,C,1"), tmp)
+  on.exit(unlink(tmp))
+
+  result <- parse_ranked_dag_csv(tmp, n_ranks = 3)
+  expect_null(result$error)
+  expect_equal(result$rank_edges, c(2L, 0L, 0L))
+  expect_equal(sum(result$adj_list[[2]]), 0)
+  expect_equal(sum(result$adj_list[[3]]), 0)
+})
+
+test_that("parse_ranked_dag_csv validates nodes against item labels", {
+  tmp <- tempfile(fileext = ".csv")
+  writeLines(c("From,To,Rank", "A,B,1", "B,C,2"), tmp)
+  on.exit(unlink(tmp))
+
+  # C not in labels
+  result <- parse_ranked_dag_csv(tmp, item_labels = c("A", "B"), n_ranks = 2)
+  expect_false(is.null(result$error))
+
+  # All nodes match
+  result2 <- parse_ranked_dag_csv(
+    tmp, item_labels = c("A", "B", "C"), n_ranks = 2
+  )
+  expect_null(result2$error)
+})
+
+test_that("parse_ranked_dag_csv uses item_labels for matrix dimensions", {
+  tmp <- tempfile(fileext = ".csv")
+  # Only A->B edge, but D and E are also items
+  writeLines(c("From,To,Rank", "A,B,1"), tmp)
+  on.exit(unlink(tmp))
+
+  labels <- c("A", "B", "C", "D", "E")
+  result <- parse_ranked_dag_csv(tmp, item_labels = labels, n_ranks = 2)
+  expect_null(result$error)
+  expect_equal(nrow(result$adj_list[[1]]), 5)
+  expect_equal(ncol(result$adj_list[[1]]), 5)
+  expect_equal(rownames(result$adj_list[[1]]), labels)
+})
+
+test_that("parse_ranked_dag_csv detects self-loops", {
+  tmp <- tempfile(fileext = ".csv")
+  writeLines(c("From,To,Rank", "A,A,1"), tmp)
+  on.exit(unlink(tmp))
+
+  result <- parse_ranked_dag_csv(tmp, n_ranks = 1)
+  expect_false(is.null(result$error))
+})
+
+test_that("parse_ranked_dag_csv detects duplicate edges within same rank", {
+  tmp <- tempfile(fileext = ".csv")
+  writeLines(c("From,To,Rank", "A,B,1", "A,B,1"), tmp)
+  on.exit(unlink(tmp))
+
+  result <- parse_ranked_dag_csv(tmp, n_ranks = 1)
+  expect_false(is.null(result$error))
+})

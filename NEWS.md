@@ -2,6 +2,27 @@
 
 ## Changes
 
+### LDLRA module implementation (2026-02-28)
+
+- `R/mod_ldlra.R` newly added: Locally Dependent Latent Rank Analysis (LDLRA) module
+  - Two analysis modes:
+    - LDLRA (Fixed DAG): user uploads rank-specific DAGs via CSV with From/To/Rank columns, analyzed with `exametrika::LDLRA()`
+    - LDLRA_PBIL (Structure Learning): structure learning via `exametrika::LDLRA_PBIL()` with full parameter UI (population, survival rate, mutation rate, max parents, max generations, learning rate, estimation method)
+  - Common parameters: number of ranks (2-10), method (Rank/Class)
+  - Results tab: fit indices, Ordinal Alignment Conditions (SOAC/WOAC), IRP table, IRP Index, rank summary (TRP/LRD), CCRR table, Estimation table (PIRP per rank), student membership
+  - Plots tab: IRP (per item), TRP, LRD, RMP (per student), DAG (per rank) via `ggExametrika::plotGraph_gg()` with layout/direction selectors and igraph base plot fallback
+  - CSV download for IRP, CCRR table, and student membership; PNG download for plots
+  - Binary data validation, progress indicators, error handling with notifications
+- `R/fct_dag.R`: added two new functions for rank-specific DAG handling
+  - `parse_ranked_dag_csv()`: CSV parser for rank-specific DAGs (From/To/Rank columns), with per-rank acyclicity validation, rank value range checking, and item label matching
+  - `dag_status_display_ranked()`: Reactive status indicator showing per-rank edge counts or error messages
+- `R/app_ui.R`: replaced LDLRA placeholder with `mod_ldlra_ui()`
+- `R/app_server.R`: added `mod_ldlra_server()` call
+- `R/mod_guide.R`: updated LDLRA from "Coming Soon" placeholder to active card with full description and Binary data badge
+- `inst/i18n/translation.json`: added 18 translation keys for LDLRA module (EN/JA)
+- `tests/testthat/test-fct_dag.R`: added 11 unit tests for `parse_ranked_dag_csv()` (valid parsing, missing Rank column, out-of-range ranks, per-rank cycles, cross-rank anti-parallel edges, empty ranks, item label validation, matrix dimensions, self-loops, duplicate edges)
+- Total tests: 67 (all PASS), R CMD check: 0 errors, 0 warnings
+
 ### BNM module and DAG input component (2026-02-28)
 
 - `R/fct_dag.R` newly added: Shared DAG input components for Phase 3 modules (BNM, LDLRA, LDB, BINET)

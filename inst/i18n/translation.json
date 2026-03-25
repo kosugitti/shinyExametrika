@@ -273,6 +273,24 @@
     {"en": "Direction", "ja": "方向"},
     {"en": "No DAG to display.", "ja": "表示するDAGがありません。"},
     {"en": "Bayesian Network Model", "ja": "ベイジアンネットワークモデル"},
-    {"en": "Bayesian network analysis that models conditional dependencies between test items using a directed acyclic graph (DAG).", "ja": "有向非循環グラフ（DAG）を用いてテスト項目間の条件付き依存関係をモデル化するベイジアンネットワーク分析。"}
+    {"en": "Bayesian network analysis that models conditional dependencies between test items using a directed acyclic graph (DAG).", "ja": "有向非循環グラフ（DAG）を用いてテスト項目間の条件付き依存関係をモデル化するベイジアンネットワーク分析。"},
+
+    {"en": "LDLRA extends LRA by modeling local item dependencies within each rank using rank-specific DAGs.", "ja": "LDLRAはランク固有のDAGを用いて各ランク内の局所的な項目依存関係をモデル化し、LRAを拡張します。"},
+    {"en": "LDLRA requires binary response data.", "ja": "LDLRAには二値データが必要です。"},
+    {"en": "Running LDLRA analysis...", "ja": "LDLRA分析を実行中..."},
+    {"en": "Running LDLRA_PBIL structure learning...", "ja": "LDLRA_PBIL構造学習を実行中..."},
+    {"en": "Ordinal Alignment Conditions", "ja": "順序整列条件"},
+    {"en": "SOAC (Strongly Ordinal Alignment Condition)", "ja": "SOAC（強順序整列条件）"},
+    {"en": "WOAC (Weakly Ordinal Alignment Condition)", "ja": "WOAC（弱順序整列条件）"},
+    {"en": "Satisfied", "ja": "満たされている"},
+    {"en": "Not Satisfied", "ja": "満たされていない"},
+    {"en": "Estimation Table (PIRP)", "ja": "推定テーブル（PIRP）"},
+    {"en": "Select Rank", "ja": "ランクを選択"},
+    {"en": "DAG CSV for LDLRA must have 3 columns (From, To, Rank).", "ja": "LDLRA用のDAG CSVには3列（From, To, Rank）が必要です。"},
+    {"en": "DAG CSV for LDLRA must include a Rank column.", "ja": "LDLRA用のDAG CSVにはRank列が必要です。"},
+    {"en": "Rank values in DAG must be between 1 and", "ja": "DAGのRank値は1から"},
+    {"en": "DAG contains cycles at rank", "ja": "ランクのDAGに循環が含まれています"},
+    {"en": "Locally Dependent Latent Rank Analysis", "ja": "局所依存潜在ランク分析"},
+    {"en": "LDLRA extends LRA by modeling item dependencies within each latent rank using directed acyclic graphs (DAGs). Supports fixed DAG input and PBIL structure learning.", "ja": "LDLRAは有向非循環グラフ（DAG）を用いて各潜在ランク内の項目依存関係をモデル化し、LRAを拡張します。固定DAG入力とPBIL構造学習に対応。"}
   ]
 }

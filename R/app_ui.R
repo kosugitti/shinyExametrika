@@ -99,11 +99,11 @@ app_ui <- function(request) {
         mod_bnm_ui("bnm", i18n)
       ),
 
-      # --- Phase 3 placeholders (LDLRA, LDB, BINET) ---
+      # --- Phase 3: Network / locally dependent models ---
       bslib::nav_panel(
         title = i18n$t("LDLRA"),
         value = "tab_ldlra",
-        mod_placeholder_ui("ldlra_placeholder", i18n)
+        mod_ldlra_ui("ldlra", i18n)
       ),
       bslib::nav_panel(
         title = i18n$t("LDB"),
