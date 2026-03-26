@@ -2,6 +2,12 @@
 
 ## Changes
 
+### DAG plot height slider for BNM and LDLRA (2026-03-26)
+
+- `R/mod_bnm.R`: Added height slider (400-1200px) to DAG plot options; `renderPlot` uses dynamic `height` function so the plot container auto-resizes
+- `R/mod_ldlra.R`: Same DAG plot height slider added to DAG plot options
+- `inst/i18n/translation.json`: Added "Plot Height (px)" translation key (EN/JA)
+
 ### R CMD check NOTE fixes for CRAN compliance (2026-03-25)
 
 - `.Rbuildignore`: added `^\.github$`, `^LICENSE\.md$`, `^app\.R$`, `^rsconnect$` to exclude non-package files from the build tarball
