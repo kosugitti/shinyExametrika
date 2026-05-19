@@ -255,12 +255,12 @@ mod_ldlra_ui <- function(id, i18n) {
             )
           ),
           uiOutput(ns("plot_options_ui")),
-          plotOutput(ns("plot"), height = "600px"),
           downloadButton(
             ns("dl_plot"),
             i18n$t("Download Plot"),
-            class = "mt-2"
-          )
+            class = "mb-3"
+          ),
+          plotOutput(ns("plot"), height = "600px")
         )
       )
     )
@@ -631,6 +631,11 @@ mod_ldlra_server <- function(id, formatted_data, i18n) {
               "Right to Left" = "RL"
             ),
             selected = "BT"
+          ),
+          sliderInput(
+            session$ns("plot_height"),
+            label = i18n$t("Plot Height (px)"),
+            min = 400, max = 1200, value = 600, step = 50
           )
         )
       } else {
@@ -732,6 +737,13 @@ mod_ldlra_server <- function(id, formatted_data, i18n) {
         } else {
           plot(r, type = pt)
         }
+      }
+    }, height = function() {
+      if (!is.null(input$plot_type) && input$plot_type == "DAG" &&
+          !is.null(input$plot_height)) {
+        input$plot_height
+      } else {
+        600
       }
     })
 
