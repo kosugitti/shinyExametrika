@@ -2,6 +2,22 @@
 
 ## Changes
 
+### Japanese translation spacing fix for GRM/BNM/LDLRA progress messages (2026-06-02)
+
+- `inst/i18n/translation.json`: Inserted a half-width space between the
+  Latin abbreviation and the following Japanese in 6 progress strings so
+  the typography matches the rest of the file. Found during a family-wide
+  user-facing string audit (exametrika/ggExametrika/shinyExametrika)
+  triggered by the `Clusterd` -> `Clustered` rename. The other 8 parallel
+  messages (CTT, IRT, LCA, LRA, Biclustering, IRM, ...) already had the
+  space.
+  - `"GRM分析を実行中..."` -> `"GRM 分析を実行中..."`
+  - `"BNM分析を実行中..."` -> `"BNM 分析を実行中..."`
+  - `"BNM_GA構造学習を実行中..."` -> `"BNM_GA 構造学習を実行中..."`
+  - `"BNM_PBIL構造学習を実行中..."` -> `"BNM_PBIL 構造学習を実行中..."`
+  - `"LDLRA分析を実行中..."` -> `"LDLRA 分析を実行中..."`
+  - `"LDLRA_PBIL構造学習を実行中..."` -> `"LDLRA_PBIL 構造学習を実行中..."`
+
 ### DAG plot height slider for BNM and LDLRA (2026-03-26)
 
 - `R/mod_bnm.R`: Added height slider (400-1200px) to DAG plot options; `renderPlot` uses dynamic `height` function so the plot container auto-resizes
