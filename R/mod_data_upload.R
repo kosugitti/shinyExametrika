@@ -100,6 +100,20 @@ mod_data_upload_ui <- function(id, i18n) {
         placeholder = t_plain(i18n, "e.g., -9, 99, NA")
       ),
 
+      # Correct-answer key, required only for "rated" (scored multiple-choice) data
+      conditionalPanel(
+        condition = sprintf("input['%s'] == 'rated'", ns("response_type")),
+        textInput(
+          ns("ca_codes"),
+          label = i18n$t("Correct Answers (CA)"),
+          placeholder = t_plain(i18n, "e.g., 2, 1, 4, 3")
+        ),
+        tags$small(
+          class = "text-muted d-block mb-2",
+          i18n$t("Rated data needs one correct-answer category per analysis variable, comma-separated, in item order.")
+        )
+      ),
+
       # Format button
       actionButton(
         ns("btn_format"),
@@ -271,6 +285,21 @@ mod_data_upload_server <- function(id, i18n, script_log = NULL) {
         # Response type
         resp_type <- if (input$response_type == "auto") NULL else input$response_type
 
+        # Correct-answer key, required for rated data
+        ca_vec <- NULL
+        if (identical(resp_type, "rated")) {
+          ca_raw <- strsplit(trimws(input$ca_codes %||% ""), "[[:space:],]+")[[1]]
+          ca_raw <- ca_raw[nzchar(ca_raw)]
+          ca_vec <- suppressWarnings(as.numeric(ca_raw))
+          if (length(ca_vec) != length(item_names) || anyNA(ca_vec)) {
+            showNotification(
+              i18n$t("Rated data needs one numeric correct answer per analysis variable."),
+              type = "warning"
+            )
+            return(invisible(NULL))
+          }
+        }
+
         # Execute dataFormat()
         # Passing id=NULL causes an error, so build arguments dynamically with do.call()
         fmt_args <- list(
@@ -280,6 +309,7 @@ mod_data_upload_server <- function(id, i18n, script_log = NULL) {
         )
         # The ID, when present, is now the first column of the subset
         if (nzchar(id_name)) fmt_args$id <- 1
+        if (!is.null(ca_vec)) fmt_args$CA <- ca_vec
         result <- do.call(exametrika::dataFormat, fmt_args)
 
         formatted_data(result)
@@ -288,7 +318,8 @@ mod_data_upload_server <- function(id, i18n, script_log = NULL) {
           cols = keep_cols,
           has_id = nzchar(id_name),
           na_code = na_arg,
-          resp_type = resp_type
+          resp_type = resp_type,
+          ca = ca_vec
         ), label = "Load & format data")
         showNotification(i18n$t("Data formatted successfully!"), type = "message")
       }, error = function(e) {

@@ -27,3 +27,12 @@ rsconnect/
 # shinylive build artifacts
 shinylive/site/
 shinylive/app/
+
+# video production media (large; scripts/storyboard/demo-data are kept)
+docs/video/audio/
+docs/video/voice_samples/
+docs/video/*.wav
+docs/video/*.mp3
+docs/video/*.mp4
+docs/video/narration_*.wav
+__pycache__/

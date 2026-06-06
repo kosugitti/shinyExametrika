@@ -115,12 +115,14 @@ wrap_quoted_vec <- function(items, indent = "    ", width = 74) {
 #' @param has_id whether an ID column is included (then id = 1)
 #' @param na_code numeric NA code or NULL
 #' @param resp_type response type string or NULL (auto)
+#' @param ca numeric correct-answer vector (rated data) or NULL
 #' @noRd
-script_block_upload <- function(file_hint, cols, has_id, na_code, resp_type) {
+script_block_upload <- function(file_hint, cols, has_id, na_code, resp_type, ca = NULL) {
   args <- character(0)
   if (isTRUE(has_id)) args <- c(args, "id = 1")
   if (!is.null(na_code)) args <- c(args, sprintf("na = %s", na_code))
   if (!is.null(resp_type)) args <- c(args, sprintf('response.type = "%s"', resp_type))
+  if (!is.null(ca)) args <- c(args, sprintf("CA = c(%s)", paste(ca, collapse = ", ")))
 
   lines <- c(
     sprintf('raw <- read.csv("%s")', file_hint %||% "your_data.csv"),

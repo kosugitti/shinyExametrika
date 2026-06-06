@@ -17,6 +17,15 @@ test_that("script_block_upload wraps long column vectors and emits valid args", 
   expect_true(max(nchar(blk)) < 90)
 })
 
+test_that("script_block_upload emits a CA vector for rated data", {
+  blk <- script_block_upload("mc.csv", c("ID", "Q1", "Q2", "Q3"), has_id = TRUE,
+                             na_code = NULL, resp_type = "rated", ca = c(2, 1, 4))
+  txt <- paste(blk, collapse = "\n")
+  expect_match(txt, 'response.type = "rated"')
+  expect_match(txt, "CA = c\\(2, 1, 4\\)")
+  expect_silent(parse(text = txt))
+})
+
 test_that("script_block_upload omits absent optional args", {
   blk <- script_block_upload("x.csv", c("Q1", "Q2"), has_id = FALSE, na_code = NULL, resp_type = NULL)
   txt <- paste(blk, collapse = "\n")

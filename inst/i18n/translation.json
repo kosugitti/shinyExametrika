@@ -16,6 +16,9 @@
     {"en": "BINET", "ja": "BINET"},
 
     {"en": "R script", "ja": "Rスクリプト"},
+    {"en": "Correct Answers (CA)", "ja": "正答キー（CA）"},
+    {"en": "Rated data needs one correct-answer category per analysis variable, comma-separated, in item order.", "ja": "rated（採点）データは、各分析変数の正答カテゴリを項目順にカンマ区切りで1つずつ指定します。"},
+    {"en": "Rated data needs one numeric correct answer per analysis variable.", "ja": "rated データは、分析変数ごとに数値の正答を1つずつ指定してください。"},
     {"en": "Item analysis", "ja": "項目分析"},
     {"en": "Item reference profile", "ja": "項目参照プロファイル"},
     {"en": "Class membership", "ja": "クラス所属"},
