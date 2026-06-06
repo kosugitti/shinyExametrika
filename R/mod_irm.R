@@ -59,7 +59,11 @@ mod_irm_ui <- function(id, i18n) {
         label = i18n$t("Run Analysis"),
         class = "btn-primary w-100",
         icon = icon("play")
-      )
+      ),
+
+      # Unified download section (outputs appear after a successful run;
+      # the R-script button is always available)
+      download_sidebar_ui(ns, i18n)
     ),
 
     # ========== Main Panel ==========
@@ -88,8 +92,7 @@ mod_irm_ui <- function(id, i18n) {
           tags$div(
             class = "mb-5",
             tags$h5(i18n$t("FRP (Field Reference Profile)"), class = "mt-3 mb-3"),
-            DT::DTOutput(ns("table_frp")),
-            downloadButton(ns("dl_frp"), i18n$t("Download CSV"), class = "mt-3 mb-2")
+            DT::DTOutput(ns("table_frp"))
           ),
 
           # FRP Index table
@@ -117,8 +120,7 @@ mod_irm_ui <- function(id, i18n) {
           tags$div(
             class = "mb-5",
             tags$h5(i18n$t("Student Membership"), class = "mt-3 mb-3"),
-            DT::DTOutput(ns("table_students")),
-            downloadButton(ns("dl_students"), i18n$t("Download CSV"), class = "mt-3 mb-2")
+            DT::DTOutput(ns("table_students"))
           ),
 
           # Item field analysis
@@ -152,7 +154,7 @@ mod_irm_ui <- function(id, i18n) {
 #' @param i18n shiny.i18n Translator object
 #'
 #' @noRd
-mod_irm_server <- function(id, formatted_data, i18n) {
+mod_irm_server <- function(id, formatted_data, i18n, script_log = NULL) {
   moduleServer(id, function(input, output, session) {
 
     # ========== Data-readiness banner ==========
@@ -219,6 +221,13 @@ mod_irm_server <- function(id, formatted_data, i18n) {
         incProgress(1)
         if (!is.null(r)) {
           shiny::showNotification(i18n$t("Analysis completed!"), type = "message", duration = 3)
+          log_append(script_log, c(
+            sprintf(
+              "fit_irm <- Biclustering_IRM(dat, gamma_c = %s, gamma_f = %s, seed = %d)",
+              gamma_c, gamma_f, seed_val
+            ),
+            "print(fit_irm)"
+          ), label = "IRM")
         }
         r
       })
@@ -392,18 +401,35 @@ mod_irm_server <- function(id, formatted_data, i18n) {
 
     # ========== Downloads ==========
 
-    output$dl_frp <- downloadHandler(
-      filename = function() paste0("IRM_FRP_", Sys.Date(), ".csv"),
-      content  = function(file) utils::write.csv(result()$FRP, file, row.names = TRUE)
-    )
+    # Result tables exposed for download, named as Excel sheets (one report per
+    # sheet, Shojima "Test Data Engineering" layout).
+    report_sheets <- reactive({
+      req(result())
+      r <- result()
+      list(
+        TestFit     = list(data = extract_fit_indices(r), rowNames = FALSE),
+        FieldReport = list(data = as.data.frame(r$FRP), rowNames = TRUE),
+        Membership  = list(
+          data = data.frame(
+            Student = seq_len(r$nobs),
+            Class   = paste0("Class ", r$ClassEstimated)
+          ),
+          rowNames = FALSE
+        )
+      )
+    })
 
-    output$dl_students <- downloadHandler(
-      filename = function() paste0("IRM_Students_", Sys.Date(), ".csv"),
-      content  = function(file) {
-        r <- result()
-        df <- data.frame(Student = seq_len(r$nobs), Class = paste0("Class ", r$ClassEstimated))
-        utils::write.csv(df, file, row.names = FALSE)
-      }
+    mod_downloads_server(
+      output, session, i18n,
+      prefix = "IRM",
+      result = result,
+      sheets = report_sheets,
+      csv_items = list(
+        list(id = "dl_fit",     label = "Fit indices",            sheet = "TestFit"),
+        list(id = "dl_frp",     label = "Field reference profile", sheet = "FieldReport"),
+        list(id = "dl_members", label = "Membership",             sheet = "Membership")
+      ),
+      script_log = script_log
     )
 
     output$dl_plot <- downloadHandler(

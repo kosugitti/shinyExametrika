@@ -33,21 +33,26 @@ app_server <- function(input, output, session) {
     ))
   }, ignoreInit = TRUE)
 
+  # --- Session R-script log (reproducible code of everything done).
+  #     The download button itself lives in each module's sidebar (wired by
+  #     mod_downloads_server); this just holds the shared accumulating log. ---
+  script_log <- reactiveVal(list())
+
   # --- Data upload module ---
-  data_mod <- mod_data_upload_server("data_upload", i18n = i18n)
+  data_mod <- mod_data_upload_server("data_upload", i18n = i18n, script_log = script_log)
   formatted_data <- data_mod$data
 
-  # --- Analysis modules ---
-  mod_descriptives_server("descriptives", formatted_data = formatted_data, i18n = i18n)
-  mod_ctt_server("ctt", formatted_data = formatted_data, i18n = i18n)
-  mod_irt_server("irt", formatted_data = formatted_data, i18n = i18n)
-  mod_grm_server("grm", formatted_data = formatted_data, i18n = i18n)
-  mod_lca_server("lca", formatted_data = formatted_data, i18n = i18n)
-  mod_lra_server("lra", formatted_data = formatted_data, i18n = i18n)
-  mod_biclustering_server("biclustering", formatted_data = formatted_data, i18n = i18n)
-  mod_irm_server("irm", formatted_data = formatted_data, i18n = i18n)
-  mod_bnm_server("bnm", formatted_data = formatted_data, i18n = i18n)
-  mod_ldlra_server("ldlra", formatted_data = formatted_data, i18n = i18n)
+  # --- Analysis modules (each gets the shared script_log for the R-script button) ---
+  mod_descriptives_server("descriptives", formatted_data = formatted_data, i18n = i18n, script_log = script_log)
+  mod_ctt_server("ctt", formatted_data = formatted_data, i18n = i18n, script_log = script_log)
+  mod_irt_server("irt", formatted_data = formatted_data, i18n = i18n, script_log = script_log)
+  mod_grm_server("grm", formatted_data = formatted_data, i18n = i18n, script_log = script_log)
+  mod_lca_server("lca", formatted_data = formatted_data, i18n = i18n, script_log = script_log)
+  mod_lra_server("lra", formatted_data = formatted_data, i18n = i18n, script_log = script_log)
+  mod_biclustering_server("biclustering", formatted_data = formatted_data, i18n = i18n, script_log = script_log)
+  mod_irm_server("irm", formatted_data = formatted_data, i18n = i18n, script_log = script_log)
+  mod_bnm_server("bnm", formatted_data = formatted_data, i18n = i18n, script_log = script_log)
+  mod_ldlra_server("ldlra", formatted_data = formatted_data, i18n = i18n, script_log = script_log)
 
   # --- Tab gating: analysis tabs stay disabled until data is formatted, and a
   #     tab only enables when the loaded data matches its required type

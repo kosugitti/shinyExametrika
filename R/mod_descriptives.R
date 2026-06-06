@@ -19,18 +19,9 @@ mod_descriptives_ui <- function(id, i18n) {
         icon = icon("play")
       ),
 
-      tags$hr(),
-
-      downloadButton(
-        ns("dl_test_csv"),
-        label = i18n$t("Download CSV (Test)"),
-        class = "btn-outline-secondary w-100 mb-2"
-      ),
-      downloadButton(
-        ns("dl_item_csv"),
-        label = i18n$t("Download CSV (Item)"),
-        class = "btn-outline-secondary w-100"
-      )
+      # Unified download section (outputs appear after a successful run;
+      # the R-script button is always available)
+      download_sidebar_ui(ns, i18n)
     ),
 
     uiOutput(ns("precheck")),
@@ -61,7 +52,7 @@ mod_descriptives_ui <- function(id, i18n) {
 #' @param i18n shiny.i18n Translator object
 #'
 #' @noRd
-mod_descriptives_server <- function(id, formatted_data, i18n) {
+mod_descriptives_server <- function(id, formatted_data, i18n, script_log = NULL) {
   moduleServer(id, function(input, output, session) {
 
     # ========== Data-readiness banner ==========
@@ -82,6 +73,10 @@ mod_descriptives_server <- function(id, formatted_data, i18n) {
             item  = exametrika::ItemStatistics(fd)
           )
           desc_result(result)
+          log_append(script_log, c(
+            "print(TestStatistics(dat))",
+            "print(ItemStatistics(dat))"
+          ), label = "Descriptive statistics")
           showNotification(i18n$t("Analysis completed!"), type = "message")
         }, error = function(e) {
           showNotification(
@@ -185,15 +180,28 @@ mod_descriptives_server <- function(id, formatted_data, i18n) {
       dt
     })
 
-    # --- CSV download ---
-    output$dl_test_csv <- downloadHandler(
-      filename = function() paste0("test_statistics_", Sys.Date(), ".csv"),
-      content  = function(file) utils::write.csv(test_stats_df(), file, row.names = FALSE)
-    )
+    # ========== Downloads ==========
 
-    output$dl_item_csv <- downloadHandler(
-      filename = function() paste0("item_statistics_", Sys.Date(), ".csv"),
-      content  = function(file) utils::write.csv(item_stats_df(), file, row.names = FALSE)
+    # Result tables exposed for download, named as Excel sheets (one report per
+    # sheet, Shojima "Test Data Engineering" layout).
+    report_sheets <- reactive({
+      req(desc_result())
+      list(
+        TestStatistics = list(data = test_stats_df(), rowNames = FALSE),
+        ItemStatistics = list(data = item_stats_df(), rowNames = FALSE)
+      )
+    })
+
+    mod_downloads_server(
+      output, session, i18n,
+      prefix = "Descriptives",
+      result = desc_result,
+      sheets = report_sheets,
+      csv_items = list(
+        list(id = "dl_test", label = "Test statistics", sheet = "TestStatistics"),
+        list(id = "dl_item", label = "Item statistics", sheet = "ItemStatistics")
+      ),
+      script_log = script_log
     )
   })
 }

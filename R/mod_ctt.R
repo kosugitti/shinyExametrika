@@ -27,19 +27,9 @@ mod_ctt_ui <- function(id, i18n) {
         icon = icon("play")
       ),
 
-      tags$hr(),
-
-      # Download Reliability and ReliabilityExcludingItem separately
-      downloadButton(
-        ns("dl_reliability"),
-        label = i18n$t("Download CSV (Reliability)"),
-        class = "btn-outline-secondary w-100 mb-2"
-      ),
-      downloadButton(
-        ns("dl_item_deleted"),
-        label = i18n$t("Download CSV (Item Deleted)"),
-        class = "btn-outline-secondary w-100"
-      )
+      # Unified download section (outputs appear after a successful run;
+      # the R-script button is always available)
+      download_sidebar_ui(ns, i18n)
     ),
 
     # --- Main panel ---
@@ -77,7 +67,7 @@ mod_ctt_ui <- function(id, i18n) {
 #' @param i18n shiny.i18n Translator object
 #'
 #' @noRd
-mod_ctt_server <- function(id, formatted_data, i18n) {
+mod_ctt_server <- function(id, formatted_data, i18n, script_log = NULL) {
   moduleServer(id, function(input, output, session) {
 
     # --- Data-readiness banner ---
@@ -86,41 +76,43 @@ mod_ctt_server <- function(id, formatted_data, i18n) {
     })
 
     # --- CTT analysis result ---
-    ctt_result <- reactiveVal(NULL)
-
-    # --- Run analysis ---
-    observeEvent(input$btn_run, {
+    result <- eventReactive(input$btn_run, {
       req(formatted_data())
 
       fd <- formatted_data()
 
       # CTT supports binary data only
       if (!is.null(fd$response.type) && fd$response.type != "binary") {
-        showNotification(
+        shiny::showNotification(
           i18n$t("CTT requires binary response data."),
           type = "warning"
         )
-        return()
+        return(NULL)
       }
 
       withProgress(message = i18n$t("Running CTT analysis..."), value = 0.5, {
-        tryCatch({
-          result <- exametrika::CTT(fd)
-          ctt_result(result)
-          showNotification(i18n$t("Analysis completed!"), type = "message")
-        }, error = function(e) {
-          showNotification(
-            paste(i18n$t("Analysis failed"), ":", e$message),
-            type = "error"
-          )
-        })
+        result <- tryCatch(
+          exametrika::CTT(fd),
+          error = function(e) {
+            shiny::showNotification(
+              paste(i18n$t("Analysis failed"), ":", e$message),
+              type = "error"
+            )
+            NULL
+          }
+        )
+
+        if (!is.null(result)) {
+          log_append(script_log, c("fit_ctt <- CTT(dat)", "print(fit_ctt)"), label = "CTT")
+        }
+        result
       })
     })
 
     # --- Reliability coefficients: summary value_box ---
     output$reliability_summary <- renderUI({
-      req(ctt_result())
-      rel <- ctt_result()$Reliability
+      req(result())
+      rel <- result()$Reliability
 
       alpha_val <- rel$value[rel$name == "Alpha(Covariance)"]
       omega_val <- rel$value[rel$name == "Omega(Covariance)"]
@@ -152,8 +144,8 @@ mod_ctt_server <- function(id, formatted_data, i18n) {
 
     # --- Reliability coefficients table ---
     output$reliability_table <- DT::renderDT({
-      req(ctt_result())
-      df <- ctt_result()$Reliability
+      req(result())
+      df <- result()$Reliability
       colnames(df) <- c(i18n$t("Index"), i18n$t("Value"))
       DT::datatable(
         df,
@@ -169,8 +161,8 @@ mod_ctt_server <- function(id, formatted_data, i18n) {
 
     # --- Reliability if item deleted table ---
     output$item_deleted_table <- DT::renderDT({
-      req(ctt_result())
-      df <- ctt_result()$ReliabilityExcludingItem
+      req(result())
+      df <- result()$ReliabilityExcludingItem
       # Detect and round numeric columns
       num_cols <- names(df)[sapply(df, is.numeric)]
       dt <- DT::datatable(
@@ -185,22 +177,28 @@ mod_ctt_server <- function(id, formatted_data, i18n) {
       dt
     })
 
-    # --- CSV download: Reliability ---
-    output$dl_reliability <- downloadHandler(
-      filename = function() paste0("CTT_Reliability_", Sys.Date(), ".csv"),
-      content  = function(file) {
-        req(ctt_result())
-        utils::write.csv(ctt_result()$Reliability, file, row.names = FALSE)
-      }
-    )
+    # --- Downloads ---
 
-    # --- CSV download: ReliabilityExcludingItem ---
-    output$dl_item_deleted <- downloadHandler(
-      filename = function() paste0("CTT_ReliabilityExcludingItem_", Sys.Date(), ".csv"),
-      content  = function(file) {
-        req(ctt_result())
-        utils::write.csv(ctt_result()$ReliabilityExcludingItem, file, row.names = FALSE)
-      }
+    # Result tables exposed for download, named as Excel sheets (one report per
+    # sheet, Shojima "Test Data Engineering" layout).
+    report_sheets <- reactive({
+      req(result())
+      list(
+        Reliability  = list(data = result()$Reliability, rowNames = FALSE),
+        ItemAnalysis = list(data = result()$ReliabilityExcludingItem, rowNames = FALSE)
+      )
+    })
+
+    mod_downloads_server(
+      output, session, i18n,
+      prefix = "CTT",
+      result = result,
+      sheets = report_sheets,
+      csv_items = list(
+        list(id = "dl_reliability", label = "Reliability",  sheet = "Reliability"),
+        list(id = "dl_item",        label = "Item analysis", sheet = "ItemAnalysis")
+      ),
+      script_log = script_log
     )
   })
 }

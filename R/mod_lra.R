@@ -52,7 +52,11 @@ mod_lra_ui <- function(id, i18n) {
         label = i18n$t("Run Analysis"),
         class = "btn-primary w-100",
         icon = icon("play")
-      )
+      ),
+
+      # Unified download section (outputs appear after a successful run;
+      # the R-script button is always available)
+      download_sidebar_ui(ns, i18n)
     ),
 
     # ========== Main Panel ==========
@@ -78,8 +82,7 @@ mod_lra_ui <- function(id, i18n) {
           tags$div(
             class = "mb-5",
             tags$h5(i18n$t("IRP (Item Reference Profile)"), class = "mt-3 mb-3"),
-            DT::DTOutput(ns("table_irp")),
-            downloadButton(ns("dl_irp"), i18n$t("Download CSV"), class = "mt-3 mb-2")
+            DT::DTOutput(ns("table_irp"))
           ),
 
           # IRP Index Table
@@ -100,8 +103,7 @@ mod_lra_ui <- function(id, i18n) {
           tags$div(
             class = "mb-5",
             tags$h5(i18n$t("Student Membership"), class = "mt-3 mb-3"),
-            DT::DTOutput(ns("table_students")),
-            downloadButton(ns("dl_students"), i18n$t("Download CSV"), class = "mt-3 mb-2")
+            DT::DTOutput(ns("table_students"))
           )
         )
       ),
@@ -146,7 +148,7 @@ mod_lra_ui <- function(id, i18n) {
 #' @param i18n shiny.i18n Translator object
 #'
 #' @noRd
-mod_lra_server <- function(id, formatted_data, i18n) {
+mod_lra_server <- function(id, formatted_data, i18n, script_log = NULL) {
   moduleServer(id, function(input, output, session) {
 
     # ========== Data-readiness banner ==========
@@ -184,6 +186,10 @@ mod_lra_server <- function(id, formatted_data, i18n) {
         incProgress(1)
         if (!is.null(r)) {
           shiny::showNotification(i18n$t("Analysis completed!"), type = "message", duration = 3)
+          log_append(script_log, c(
+            sprintf('fit_lra <- LRA(dat, nrank = %d, method = "%s", mic = %s)', as.integer(input$nrank), input$method, as.character(isTRUE(input$mic))),
+            "print(fit_lra)"
+          ), label = sprintf("LRA (nrank=%d, %s)", as.integer(input$nrank), input$method))
         }
         r
       })
@@ -340,14 +346,28 @@ mod_lra_server <- function(id, formatted_data, i18n) {
 
     # ========== Downloads ==========
 
-    output$dl_irp <- downloadHandler(
-      filename = function() paste0("LRA_IRP_", Sys.Date(), ".csv"),
-      content  = function(file) utils::write.csv(result()$IRP, file, row.names = TRUE)
-    )
+    # Result tables exposed for download, named as Excel sheets (one report per
+    # sheet, Shojima "Test Data Engineering" layout).
+    report_sheets <- reactive({
+      req(result())
+      list(
+        TestFit    = list(data = extract_fit_indices(result()), rowNames = FALSE),
+        ItemReport = list(data = as.data.frame(result()$IRP), rowNames = TRUE),
+        Membership = list(data = as.data.frame(result()$Students), rowNames = TRUE)
+      )
+    })
 
-    output$dl_students <- downloadHandler(
-      filename = function() paste0("LRA_Students_", Sys.Date(), ".csv"),
-      content  = function(file) utils::write.csv(result()$Students, file, row.names = TRUE)
+    mod_downloads_server(
+      output, session, i18n,
+      prefix = "LRA",
+      result = result,
+      sheets = report_sheets,
+      csv_items = list(
+        list(id = "dl_fit",     label = "Fit indices",            sheet = "TestFit"),
+        list(id = "dl_irp",     label = "Item reference profile", sheet = "ItemReport"),
+        list(id = "dl_members", label = "Rank membership",        sheet = "Membership")
+      ),
+      script_log = script_log
     )
 
     output$dl_plot <- downloadHandler(

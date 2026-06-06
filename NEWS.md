@@ -2,6 +2,32 @@
 
 ## Changes
 
+### Unified result downloads + session R-script export (2026-06-06)
+
+- **Unified download section.** Every analysis module now gathers its downloads
+  in the left sidebar, below the Run button (instead of scattered buttons next to
+  each table). Each model offers per-table CSV buttons (fit indices / item
+  parameters / examinee parameters / etc.) plus a single **"All results (Excel)"**
+  button that writes a multi-sheet `.xlsx` in the Shojima "Test Data Engineering"
+  layout (one report per sheet, English CamelCase sheet names: `TestFit`,
+  `ItemReport`, `ScoreReport`, `FieldReport`, `Membership`, ...), matching the
+  reference workbooks in exametrika/develop. New helper `R/fct_downloads.R`
+  (`write_report_xlsx()`, `download_sidebar_ui()`, `mod_downloads_server()`).
+  Adds an `openxlsx` dependency. The download section appears once an analysis
+  has been run; plot downloads stay in the Plots tab.
+- **Session R-script export.** A new "R script" button (also in the sidebar)
+  downloads a reproducible R script for the whole session. It is an append-only,
+  timestamped journal: every data load and every analysis run adds a new section
+  headed by a divider with a `YYYY-MM-DD HH:MM:SS` timestamp and a label, ending
+  in `print(fit_...)`. Long `dataFormat()` column vectors are wrapped/indented.
+  New helper `R/fct_script.R` (`log_append()`, `assemble_script()`, the script
+  blocks). A shared session log lives in `app_server` and is passed to every
+  module; it is session-scoped only (not persisted).
+- Applied across all 10 analysis tabs (Descriptives, CTT, IRT, GRM, LCA, LRA,
+  Biclustering, IRM, BNM, LDLRA). For BNM/LDLRA the script emits the structure-
+  learning call (GA/PBIL) faithfully, or a fixed-DAG call with an adjacency-matrix
+  supply comment. New i18n strings (EN/JA). Unit tests added for the new helpers.
+
 ### Fix "unused argument (envir = env)" when loading a sample dataset (2026-06-03)
 
 - Selecting a built-in sample dataset could fail with

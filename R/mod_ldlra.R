@@ -170,7 +170,11 @@ mod_ldlra_ui <- function(id, i18n) {
         label = i18n$t("Run Analysis"),
         class = "btn-primary w-100",
         icon = icon("play")
-      )
+      ),
+
+      # Unified download section (outputs appear after a successful run;
+      # the R-script button is always available)
+      download_sidebar_ui(ns, i18n)
     ),
 
     # ========== Main Panel ==========
@@ -209,12 +213,7 @@ mod_ldlra_ui <- function(id, i18n) {
               i18n$t("IRP (Item Reference Profile)"),
               class = "mt-3 mb-3"
             ),
-            DT::DTOutput(ns("table_irp")),
-            downloadButton(
-              ns("dl_irp"),
-              i18n$t("Download CSV"),
-              class = "mt-3 mb-2"
-            )
+            DT::DTOutput(ns("table_irp"))
           ),
 
           # IRP Index Table
@@ -238,12 +237,7 @@ mod_ldlra_ui <- function(id, i18n) {
               i18n$t("Conditional Correct Response Rates"),
               class = "mt-3 mb-3"
             ),
-            DT::DTOutput(ns("table_ccrr")),
-            downloadButton(
-              ns("dl_ccrr"),
-              i18n$t("Download CSV"),
-              class = "mt-3 mb-2"
-            )
+            DT::DTOutput(ns("table_ccrr"))
           ),
 
           # Estimation table (PIRP per rank)
@@ -260,12 +254,7 @@ mod_ldlra_ui <- function(id, i18n) {
           tags$div(
             class = "mb-5",
             tags$h5(i18n$t("Student Membership"), class = "mt-3 mb-3"),
-            DT::DTOutput(ns("table_students")),
-            downloadButton(
-              ns("dl_students"),
-              i18n$t("Download CSV"),
-              class = "mt-3 mb-2"
-            )
+            DT::DTOutput(ns("table_students"))
           )
         )
       ),
@@ -306,7 +295,7 @@ mod_ldlra_ui <- function(id, i18n) {
 #' @param i18n shiny.i18n Translator object
 #'
 #' @noRd
-mod_ldlra_server <- function(id, formatted_data, i18n) {
+mod_ldlra_server <- function(id, formatted_data, i18n, script_log = NULL) {
   moduleServer(id, function(input, output, session) {
 
     # ========== Data-readiness banner ==========
@@ -415,6 +404,15 @@ mod_ldlra_server <- function(id, formatted_data, i18n) {
                 i18n$t("Analysis completed!"),
                 type = "message", duration = 3
               )
+              log_append(script_log, c(
+                "# Supply your rank-wise DAGs as an adjacency list / adj_file, e.g.:",
+                "#   adj_list <- list(...)  # one adjacency matrix per rank",
+                sprintf(
+                  'fit_ldlra <- LDLRA(dat, ncls = %d, method = "%s", adj_list = adj_list)',
+                  as.integer(input$ncls), input$method
+                ),
+                "print(fit_ldlra)"
+              ), label = "LDLRA (fixed DAG)")
             }
             r
           }
@@ -460,6 +458,25 @@ mod_ldlra_server <- function(id, formatted_data, i18n) {
                 i18n$t("Analysis completed!"),
                 type = "message", duration = 3
               )
+              log_append(script_log, c(
+                "fit_ldlra <- LDLRA_PBIL(",
+                "  dat,",
+                sprintf("  seed = %d,", as.integer(seed_val)),
+                sprintf("  ncls = %d, method = \"%s\",",
+                        as.integer(input$ncls), input$method),
+                sprintf("  population = %d, Rs = %s, Rm = %s,",
+                        as.integer(input$population),
+                        input$survival_rate, input$mutation_rate),
+                sprintf("  maxParents = %d, maxGeneration = %d, successiveLimit = %d,",
+                        as.integer(input$max_parents),
+                        as.integer(input$max_generation),
+                        as.integer(input$successive_limit)),
+                sprintf("  alpha = %s, estimate = %d,",
+                        input$pbil_alpha, as.integer(input$pbil_estimate)),
+                "  verbose = FALSE",
+                ")",
+                "print(fit_ldlra)"
+              ), label = "LDLRA_PBIL (structure learning)")
             }
             r
           }
@@ -785,28 +802,30 @@ mod_ldlra_server <- function(id, formatted_data, i18n) {
 
     # ========== Downloads ==========
 
-    # Download IRP table
-    output$dl_irp <- downloadHandler(
-      filename = function() paste0("LDLRA_IRP_", Sys.Date(), ".csv"),
-      content  = function(file) {
-        utils::write.csv(result()$IRP, file, row.names = TRUE)
-      }
-    )
+    # Result tables exposed for download, named as Excel sheets (one report per
+    # sheet, Shojima "Test Data Engineering" layout).
+    report_sheets <- reactive({
+      req(result())
+      list(
+        TestFit    = list(data = extract_fit_indices(result()), rowNames = FALSE),
+        ItemReport = list(data = result()$IRP, rowNames = TRUE),
+        CCRR       = list(data = result()$CCRR_table, rowNames = FALSE),
+        Membership = list(data = result()$Students, rowNames = TRUE)
+      )
+    })
 
-    # Download CCRR table
-    output$dl_ccrr <- downloadHandler(
-      filename = function() paste0("LDLRA_CCRR_", Sys.Date(), ".csv"),
-      content  = function(file) {
-        utils::write.csv(result()$CCRR_table, file, row.names = FALSE)
-      }
-    )
-
-    # Download student membership
-    output$dl_students <- downloadHandler(
-      filename = function() paste0("LDLRA_Students_", Sys.Date(), ".csv"),
-      content  = function(file) {
-        utils::write.csv(result()$Students, file, row.names = TRUE)
-      }
+    mod_downloads_server(
+      output, session, i18n,
+      prefix = "LDLRA",
+      result = result,
+      sheets = report_sheets,
+      csv_items = list(
+        list(id = "dl_fit",     label = "Fit indices",            sheet = "TestFit"),
+        list(id = "dl_irp",     label = "Item reference profile", sheet = "ItemReport"),
+        list(id = "dl_ccrr",    label = "CCRR table",             sheet = "CCRR"),
+        list(id = "dl_members", label = "Rank membership",        sheet = "Membership")
+      ),
+      script_log = script_log
     )
 
     # Download plot

@@ -23,6 +23,7 @@ Imports:
     DT,
     exametrika (>= 1.10.0),
     golem,
+    openxlsx,
     shiny,
     shiny.i18n,
     shinyjs,

@@ -142,7 +142,7 @@ mod_data_upload_ui <- function(id, i18n) {
 #'
 #' @return reactive: result of exametrika dataFormat()
 #' @noRd
-mod_data_upload_server <- function(id, i18n) {
+mod_data_upload_server <- function(id, i18n, script_log = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -194,6 +194,8 @@ mod_data_upload_server <- function(id, i18n) {
         # Set Formatted Data directly (no Format Data button needed)
         formatted_data(df)
         dataset_name(input$sample_data)
+        log_append(script_log, script_block_sample(input$sample_data),
+                   label = paste0("Load sample dataset: ", input$sample_data))
         showNotification(i18n$t("Data loaded successfully!"), type = "message")
       }, error = function(err) {
         showNotification(
@@ -281,6 +283,13 @@ mod_data_upload_server <- function(id, i18n) {
         result <- do.call(exametrika::dataFormat, fmt_args)
 
         formatted_data(result)
+        log_append(script_log, script_block_upload(
+          file_hint = dataset_name(),
+          cols = keep_cols,
+          has_id = nzchar(id_name),
+          na_code = na_arg,
+          resp_type = resp_type
+        ), label = "Load & format data")
         showNotification(i18n$t("Data formatted successfully!"), type = "message")
       }, error = function(e) {
         showNotification(

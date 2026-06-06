@@ -37,7 +37,11 @@ mod_irt_ui <- function(id, i18n) {
         label = i18n$t("Run Analysis"),
         class = "btn-primary w-100",
         icon = icon("play")
-      )
+      ),
+
+      # Unified download section (outputs appear after a successful run;
+      # the R-script button is always available)
+      download_sidebar_ui(ns, i18n)
     ),
 
     # ========== Main Panel ==========
@@ -63,16 +67,14 @@ mod_irt_ui <- function(id, i18n) {
           tags$div(
             class = "mb-5",
             tags$h5(i18n$t("Item Parameters"), class = "mt-3 mb-3"),
-            DT::DTOutput(ns("table_params")),
-            downloadButton(ns("download_params"), i18n$t("Download CSV"), class = "mt-3 mb-2")
+            DT::DTOutput(ns("table_params"))
           ),
 
           # Ability estimates section
           tags$div(
             class = "mb-5",
             tags$h5(i18n$t("Ability Estimates"), class = "mt-3 mb-3"),
-            DT::DTOutput(ns("table_ability")),
-            downloadButton(ns("download_ability"), i18n$t("Download CSV"), class = "mt-3 mb-2")
+            DT::DTOutput(ns("table_ability"))
           )
         )
       ),
@@ -111,7 +113,7 @@ mod_irt_ui <- function(id, i18n) {
 #' @param i18n shiny.i18n Translator object
 #'
 #' @noRd
-mod_irt_server <- function(id, formatted_data, i18n) {
+mod_irt_server <- function(id, formatted_data, i18n, script_log = NULL) {
   moduleServer(id, function(input, output, session) {
 
     # ========== Data-readiness banner ==========
@@ -157,6 +159,12 @@ mod_irt_server <- function(id, formatted_data, i18n) {
         )
 
         incProgress(1)
+        if (!is.null(result)) {
+          log_append(script_log, c(
+            sprintf("fit_irt <- IRT(dat, model = %d)", model_num),
+            "print(fit_irt)"
+          ), label = sprintf("IRT (%dPL)", model_num))
+        }
         result
       })
     })
@@ -275,25 +283,28 @@ mod_irt_server <- function(id, formatted_data, i18n) {
 
     # ========== Downloads ==========
 
-    # Parameters CSV
-    output$download_params <- downloadHandler(
-      filename = function() {
-        paste0("IRT_parameters_", Sys.Date(), ".csv")
-      },
-      content = function(file) {
-        utils::write.csv(result()$params, file, row.names = TRUE)
-      }
-    )
+    # Result tables exposed for download, named as Excel sheets (one report per
+    # sheet, Shojima "Test Data Engineering" layout).
+    report_sheets <- reactive({
+      req(result())
+      list(
+        TestFit     = list(data = extract_fit_indices(result()), rowNames = FALSE),
+        ItemReport  = list(data = as.data.frame(result()$params), rowNames = TRUE),
+        ScoreReport = list(data = extract_ability(result()), rowNames = FALSE)
+      )
+    })
 
-    # Ability estimates CSV (using common helper function)
-    output$download_ability <- downloadHandler(
-      filename = function() {
-        paste0("IRT_ability_", Sys.Date(), ".csv")
-      },
-      content = function(file) {
-        ability <- extract_ability(result())
-        utils::write.csv(ability, file, row.names = FALSE)
-      }
+    mod_downloads_server(
+      output, session, i18n,
+      prefix = "IRT",
+      result = result,
+      sheets = report_sheets,
+      csv_items = list(
+        list(id = "dl_fit",    label = "Fit indices",         sheet = "TestFit"),
+        list(id = "dl_item",   label = "Item parameters",     sheet = "ItemReport"),
+        list(id = "dl_person", label = "Examinee parameters", sheet = "ScoreReport")
+      ),
+      script_log = script_log
     )
 
     # Plot PNG

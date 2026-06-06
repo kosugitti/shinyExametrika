@@ -23,3 +23,7 @@ rsconnect/
 
 # Claude
 .claude/
+
+# shinylive build artifacts
+shinylive/site/
+shinylive/app/
