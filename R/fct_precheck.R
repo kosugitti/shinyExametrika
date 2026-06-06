@@ -34,7 +34,7 @@ analysis_tab_requirements <- function() {
     tab_descriptives = "any",
     tab_ctt          = "binary",
     tab_irt          = "binary",
-    tab_grm          = c("ordinal", "rated"),
+    tab_grm          = "ordinal",
     tab_lca          = "binary",
     tab_lra          = "binary",
     tab_biclustering = "binary",

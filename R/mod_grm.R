@@ -107,7 +107,7 @@ mod_grm_server <- function(id, formatted_data, i18n, script_log = NULL) {
 
     # ========== Data-readiness banner ==========
     output$precheck <- renderUI({
-      precheck_banner(formatted_data(), required = c("ordinal", "rated"), i18n)
+      precheck_banner(formatted_data(), required = "ordinal", i18n)
     })
 
     # ========== Reactive values ==========
