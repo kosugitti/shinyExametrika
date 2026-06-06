@@ -13,32 +13,45 @@ mod_data_upload_ui <- function(id, i18n) {
       width = 350,
       title = i18n$t("Data Upload"),
 
-      # File upload
-      fileInput(
-        ns("file_upload"),
-        label = i18n$t("Upload CSV File"),
-        accept = c(".csv", ".tsv", ".txt"),
-        placeholder = "CSV / TSV"
+      # Data source: upload a CSV OR pick a sample dataset (mutually exclusive,
+      # so a single radio chooses which input is shown -- no stacked sections).
+      radioButtons(
+        ns("data_source"),
+        label = i18n$t("Data source"),
+        choiceNames = list(i18n$t("Upload CSV File"), i18n$t("Use sample data")),
+        choiceValues = c("upload", "sample"),
+        selected = "upload"
       ),
 
-      tags$hr(),
+      conditionalPanel(
+        condition = "input.data_source == 'upload'",
+        ns = ns,
+        fileInput(
+          ns("file_upload"),
+          label = NULL,
+          accept = c(".csv", ".tsv", ".txt"),
+          placeholder = "CSV / TSV"
+        )
+      ),
 
-      # Sample data selection
-      tags$p(i18n$t("Or use sample data"), class = "text-muted"),
-      selectInput(
-        ns("sample_data"),
-        label = i18n$t("Select sample data"),
-        choices = c(
-          "---" = "",
-          "J5S10 (5 items, 10 examinees, binary)" = "J5S10",
-          "J15S500 (15 items, 500 examinees, binary)" = "J15S500",
-          "J35S515 (35 items, 515 examinees, binary)" = "J35S515",
-          "J20S400 (20 items, 400 examinees, binary)" = "J20S400",
-          "J12S5000 (12 items, 5000 examinees, binary)" = "J12S5000",
-          "J35S5000 (35 items, 5000 examinees, binary)" = "J35S5000",
-          "J50S100 (50 items, 100 examinees, binary)" = "J50S100",
-          "J5S1000 (5 items, 1000 examinees, ordinal)" = "J5S1000",
-          "J15S3810 (15 items, 3810 examinees, ordinal)" = "J15S3810"
+      conditionalPanel(
+        condition = "input.data_source == 'sample'",
+        ns = ns,
+        selectInput(
+          ns("sample_data"),
+          label = NULL,
+          choices = c(
+            "---" = "",
+            "J5S10 (5 items, 10 examinees, binary)" = "J5S10",
+            "J15S500 (15 items, 500 examinees, binary)" = "J15S500",
+            "J35S515 (35 items, 515 examinees, binary)" = "J35S515",
+            "J20S400 (20 items, 400 examinees, binary)" = "J20S400",
+            "J12S5000 (12 items, 5000 examinees, binary)" = "J12S5000",
+            "J35S5000 (35 items, 5000 examinees, binary)" = "J35S5000",
+            "J50S100 (50 items, 100 examinees, binary)" = "J50S100",
+            "J5S1000 (5 items, 1000 examinees, ordinal)" = "J5S1000",
+            "J15S3810 (15 items, 3810 examinees, ordinal)" = "J15S3810"
+          )
         )
       ),
 
@@ -59,19 +72,32 @@ mod_data_upload_ui <- function(id, i18n) {
         )
       ),
 
+      # ID column picker (populated from the uploaded columns).
+      # Supports data with more than one identifier column (e.g. ID + GID):
+      # pick one as the ID, then exclude the rest from the analysis variables.
       selectInput(
         ns("id_column"),
         label = i18n$t("ID Column"),
-        choices = c(
-          "First column" = "first",
-          "No ID column" = "none"
-        )
+        choices = c("No ID column" = "")
+      ),
+
+      # Analysis variable picker: which columns become the response items.
+      selectizeInput(
+        ns("item_columns"),
+        label = i18n$t("Analysis Variables"),
+        choices = NULL,
+        multiple = TRUE,
+        options = list(plugins = list("remove_button"))
+      ),
+      tags$small(
+        class = "text-muted d-block mb-2",
+        i18n$t("Choose the columns to analyze. Exclude extra ID or grouping columns (e.g. GID).")
       ),
 
       textInput(
         ns("na_code"),
         label = i18n$t("Missing Value Code"),
-        placeholder = i18n$t("e.g., -9, 99, NA")
+        placeholder = t_plain(i18n, "e.g., -9, 99, NA")
       ),
 
       # Format button
@@ -123,6 +149,7 @@ mod_data_upload_server <- function(id, i18n) {
     # --- Reactive values ---
     raw_data <- reactiveVal(NULL)
     formatted_data <- reactiveVal(NULL)
+    dataset_name <- reactiveVal(NULL)  # uploaded file name or sample dataset id
 
     # --- CSV file upload ---
     observeEvent(input$file_upload, {
@@ -135,6 +162,7 @@ mod_data_upload_server <- function(id, i18n) {
         )
         raw_data(df)
         formatted_data(NULL)
+        dataset_name(input$file_upload$name)
         showNotification(i18n$t("Data loaded successfully!"), type = "message")
       }, error = function(e) {
         showNotification(
@@ -150,7 +178,11 @@ mod_data_upload_server <- function(id, i18n) {
       tryCatch({
         env <- new.env(parent = emptyenv())
         utils::data(list = input$sample_data, package = "exametrika", envir = env)
-        df <- get(input$sample_data, envir = env)
+        # Use env[[...]] rather than get(): an unqualified get() can be masked by
+        # a package on the user's search path whose get() lacks an `envir`
+        # argument (RStudio "Run App" inherits the console session's attached
+        # packages), which surfaced as "unused argument (envir = env)".
+        df <- env[[input$sample_data]]
 
         # Sample data is already in exametrikaData format
         # Raw Data tab: display original values (ordinal uses Q, binary uses U)
@@ -161,6 +193,7 @@ mod_data_upload_server <- function(id, i18n) {
 
         # Set Formatted Data directly (no Format Data button needed)
         formatted_data(df)
+        dataset_name(input$sample_data)
         showNotification(i18n$t("Data loaded successfully!"), type = "message")
       }, error = function(err) {
         showNotification(
@@ -170,12 +203,62 @@ mod_data_upload_server <- function(id, i18n) {
       })
     })
 
+    # --- Populate the ID / analysis-variable pickers from the loaded columns ---
+    # Runs whenever new raw data arrives. Default: first column is the ID,
+    # every other column is an analysis variable. The user can then change the
+    # ID and deselect any extra identifier/grouping columns (e.g. GID).
+    observeEvent(raw_data(), {
+      df <- raw_data()
+      req(df)
+      cols <- colnames(df)
+
+      updateSelectInput(
+        session, "id_column",
+        choices = c(stats::setNames("", i18n$t("No ID column")),
+                    stats::setNames(cols, cols)),
+        selected = if (length(cols) > 0) cols[1] else ""
+      )
+
+      updateSelectizeInput(
+        session, "item_columns",
+        choices = cols,
+        selected = if (length(cols) > 1) cols[-1] else cols
+      )
+    })
+
+    # Keep the chosen ID column out of the analysis-variable selection.
+    observeEvent(input$id_column, {
+      req(raw_data())
+      if (nzchar(input$id_column)) {
+        keep <- setdiff(input$item_columns, input$id_column)
+        if (!identical(keep, input$item_columns)) {
+          updateSelectizeInput(session, "item_columns", selected = keep)
+        }
+      }
+    }, ignoreInit = TRUE)
+
     # --- Data formatting ---
     observeEvent(input$btn_format, {
       req(raw_data())
 
       tryCatch({
         df <- raw_data()
+
+        id_name <- input$id_column
+        item_names <- setdiff(input$item_columns, id_name)
+
+        # Require at least one analysis variable
+        if (length(item_names) == 0) {
+          showNotification(
+            i18n$t("Please select at least one analysis variable."),
+            type = "warning"
+          )
+          return(invisible(NULL))
+        }
+
+        # Subset to the selected columns: ID first (if any), then the items
+        keep_cols <- c(if (nzchar(id_name)) id_name, item_names)
+        df <- df[, keep_cols, drop = FALSE]
 
         # Missing value code
         na_arg <- NULL
@@ -193,7 +276,8 @@ mod_data_upload_server <- function(id, i18n) {
           na = na_arg,
           response.type = resp_type
         )
-        if (input$id_column == "first") fmt_args$id <- 1
+        # The ID, when present, is now the first column of the subset
+        if (nzchar(id_name)) fmt_args$id <- 1
         result <- do.call(exametrika::dataFormat, fmt_args)
 
         formatted_data(result)
@@ -312,7 +396,11 @@ mod_data_upload_server <- function(id, i18n) {
       )
     })
 
-    # --- Return formatted data ---
-    return(reactive({ formatted_data() }))
+    # --- Return formatted data + the loaded dataset name (for the header
+    #     indicator and tab gating in app_server) ---
+    list(
+      data = reactive({ formatted_data() }),
+      name = reactive({ dataset_name() })
+    )
   })
 }

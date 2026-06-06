@@ -167,6 +167,53 @@ shinyExametrika/
 - [ ] BINET モジュール（プレースホルダー配置済み）
 - ggExametrika の DAG 可視化（plotGraph_gg）: BNM・LDLRA 対応済み、LDB/BINET 未実装
 
+### UX 洗練（2026-06 棚卸し・優先A〜C）
+
+exametrika-dev の横断メモ（`notes/2026-06-03_shinylive_and_shiny_refinement.md`）で整理した改善候補。
+Shinylive 化より先に三男を洗練する方針。優先A（広く効く・低コスト）から着手。
+
+- [x] **優先A-1: データ未読込/型不一致の pre-check 統一**（2026-06-03 実装）
+  - `fct_precheck.R` に `check_data_requirement()` / `precheck_banner()` を新設
+  - 全10分析タブの冒頭に `uiOutput(ns("precheck"))` を配置し、データ未設定/型不一致を
+    黄色アラートで明示（従来は silent な `req()` のみ）。i18n（en/ja）対応
+  - 型要件: binary=CTT/IRT/LCA/LRA/Biclustering/IRM/BNM/LDLRA、ordinal+rated=GRM、any=Descriptives
+- [x] **優先A-2: パラメータ guidance**（2026-06-03 実装）
+  - `fct_param_help.R` の `param_label()` で対象パラメータのラベルに (?) ホバーツールチップ
+    （説明＋推奨/既定値）を付与。IRT 2PL/3PL/4PL、LRA GTM/SOM・MIC、Biclustering ncls/nfld/
+    method/MIC、IRM gamma_c/gamma_f/seed、BNM/LDLRA の analysis_mode/max_parents/population/
+    mutation_rate/pbil_alpha 等。i18n（en/ja）18文字列追加
+- [x] **優先A-3: 各分析タブ上部に折りたたみ式「このモデルは何か」help**（2026-06-03 実装）
+  - `fct_modelhelp.R` の `model_help_block()`（native `<details>`、既定で折りたたみ）を全10タブへ。
+    モデル名・1行説明・データ型バッジを表示。文言は mod_guide の既存翻訳を再利用（新規i18nは3文字列）
+- [x] **タブのデータ準備ゲーティング＋データセット表示＋データタブ整理**（2026-06-03 実装）
+  - 分析タブは dataFormat 前は無効（`.nav-disabled`）、整形後かつ型一致時のみ有効化
+    （binaryではGRM無効、ordinalではDescriptives+GRMのみ）。`analysis_tab_requirements()`
+    （`fct_precheck.R`）＋app_serverの`observe`→**shinyjs::addClass/removeClass(selector=)**。
+    現タブが無効化されたらデータタブへ誘導。chromoteで実ブラウザ検証済み
+  - **i18n ライブ切替の不具合修正**: `shiny.i18n::update_lang()` は shiny.i18n 0.3.0 の
+    `#i18n-state` 入力バインディング経由で、shiny 1.13 と非互換（`Unexpected input value mode`
+    エラーを起動時＋トグル毎に投げる）。`update_lang` をやめ，app_serverの言語observerで
+    **shinyjs::runjs により `.i18n` span を `i18n_translations` 辞書から直接書き換え**＋
+    `ignoreInit=TRUE`。EN/JA切替がエラー0で動作（実ブラウザ検証済み）。
+    当初のタブ制御カスタムJSハンドラはShiny初期化とのレースで有効化が無反応になっていた（→shinyjs化で解消）
+  - ナビヘッダ左に現読み込みデータセットを赤字常時表示（`● k2022.csv [binary, 20 × 6]`）。
+    `mod_data_upload_server` の戻り値を `list(data, name)` に拡張
+  - データ取得方法を「アップロード／サンプル」のラジオ1段に整理（conditionalPanelで該当入力のみ表示）
+- [x] **データタブ: 列選択UI**（2026-06-03 実装）
+  - ID列をプルダウン（列名）＋分析変数を複数選択（`selectizeInput`）に。複数ID列（ID+GID 等）で
+    余分な列が分析に混入し nominal 誤判定になる問題を解消。既定=先頭列ID・残りを分析変数。
+    選択ID は分析変数から自動除外、変数0個は警告。`mod_data_upload.R`、testServer テスト追加
+- [x] **i18n ライブ切替の修正**（2026-06-03）
+  - EN/JA 切替で一部（Settings・Upload 等の静的ラベル）が翻訳されない問題。shiny.i18n は
+    `use_js()` 後の `i18n$t()` が出す `.i18n` span だけをJS差し替えする仕様。`usei18n()` がUI末尾に
+    あり、それ以前の `i18n$t()` がプレーンテキスト化していた。`app_ui()` 冒頭で `i18n$use_js()` を
+    呼ぶ順序に修正（約340ラベルがライブ切替対象に）。属性文脈用に `utils_i18n.R` の `t_plain()` 新設
+  - 残: サーバ描画の動的テキスト（データタブの value box・結果表）はトグルでは即時更新されず，
+    次のデータ操作時に反映（別途対応）
+- [ ] 優先B: 長時間計算の所要時間目安＋タイムアウト、ggフォールバックの通知、結果表カラム説明、UI一貫性
+  - サーバ描画テキストの言語ライブ更新（value box 等を `input$selected_language` 依存に）もここで扱う
+- [ ] 優先C: GridSearch を LCA/LRA にも、GRM ICRF（次男 plotICRF_gg 待ち＝家老案件）、LDB/BINET 実装
+
 ### CRAN 準備
 
 - [ ] R CMD check WARNING/NOTE の修正

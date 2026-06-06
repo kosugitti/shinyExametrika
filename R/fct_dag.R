@@ -48,8 +48,8 @@ dag_input_ui <- function(ns, i18n, show_rank_col = FALSE) {
       ns("dag_file"),
       label = NULL,
       accept = c(".csv", ".tsv", "text/csv"),
-      buttonLabel = i18n$t("Browse..."),
-      placeholder = i18n$t("No file selected")
+      buttonLabel = t_plain(i18n, "Browse..."),
+      placeholder = t_plain(i18n, "No file selected")
     ),
 
     downloadButton(

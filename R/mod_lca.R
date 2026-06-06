@@ -15,7 +15,11 @@ mod_lca_ui <- function(id, i18n) {
 
       sliderInput(
         ns("ncls"),
-        label = i18n$t("Number of Classes"),
+        label = param_label(
+          "Number of Classes",
+          "Number of unordered latent groups to classify examinees into. Try 3-5 first, then compare fit indices (BIC/AIC) across values.",
+          i18n
+        ),
         min = 2, max = 10, value = 3, step = 1
       ),
 
@@ -30,6 +34,9 @@ mod_lca_ui <- function(id, i18n) {
     ),
 
     # ========== Main Panel ==========
+    uiOutput(ns("precheck")),
+    model_help_block("lca", i18n),
+
     bslib::navset_card_tab(
       id = ns("main_tabs"),
 
@@ -112,6 +119,11 @@ mod_lca_ui <- function(id, i18n) {
 #' @noRd
 mod_lca_server <- function(id, formatted_data, i18n) {
   moduleServer(id, function(input, output, session) {
+
+    # ========== Data-readiness banner ==========
+    output$precheck <- renderUI({
+      precheck_banner(formatted_data(), required = "binary", i18n)
+    })
 
     # ========== Run Analysis ==========
     result <- eventReactive(input$btn_run, {

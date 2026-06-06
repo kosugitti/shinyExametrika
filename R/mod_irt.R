@@ -16,7 +16,11 @@ mod_irt_ui <- function(id, i18n) {
       # Model selection
       radioButtons(
         ns("model"),
-        label = i18n$t("IRT Model"),
+        label = param_label(
+          "IRT Model",
+          "2PL estimates item discrimination and difficulty. 3PL adds a guessing (lower asymptote) parameter; 4PL adds a careless-slip (upper asymptote) parameter. Start with 2PL unless you have a reason to model guessing or slipping.",
+          i18n
+        ),
         choices = c(
           "2PL (2-Parameter Logistic)" = "2",
           "3PL (3-Parameter Logistic)" = "3",
@@ -37,6 +41,10 @@ mod_irt_ui <- function(id, i18n) {
     ),
 
     # ========== Main Panel ==========
+    # Data-readiness banner (shown when no data / wrong type is loaded)
+    uiOutput(ns("precheck")),
+    model_help_block("irt", i18n),
+
     bslib::navset_card_tab(
       id = ns("main_tabs"),
 
@@ -105,6 +113,11 @@ mod_irt_ui <- function(id, i18n) {
 #' @noRd
 mod_irt_server <- function(id, formatted_data, i18n) {
   moduleServer(id, function(input, output, session) {
+
+    # ========== Data-readiness banner ==========
+    output$precheck <- renderUI({
+      precheck_banner(formatted_data(), required = "binary", i18n)
+    })
 
     # ========== Reactive values ==========
 

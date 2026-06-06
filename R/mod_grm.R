@@ -31,6 +31,9 @@ mod_grm_ui <- function(id, i18n) {
     ),
 
     # ========== Main Panel ==========
+    uiOutput(ns("precheck")),
+    model_help_block("grm", i18n),
+
     bslib::navset_card_tab(
       id = ns("main_tabs"),
 
@@ -99,6 +102,11 @@ mod_grm_ui <- function(id, i18n) {
 #' @noRd
 mod_grm_server <- function(id, formatted_data, i18n) {
   moduleServer(id, function(input, output, session) {
+
+    # ========== Data-readiness banner ==========
+    output$precheck <- renderUI({
+      precheck_banner(formatted_data(), required = c("ordinal", "rated"), i18n)
+    })
 
     # ========== Reactive values ==========
 

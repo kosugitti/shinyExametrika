@@ -10,12 +10,18 @@
 mod_guide_ui <- function(id, i18n) {
   ns <- NS(id)
 
-  bslib::layout_column_wrap(
-    width = 1,
-    heights_equal = "row",
+  # The Guide is a long, read-top-to-bottom document. Inside page_navbar's fill
+  # layout, a layout_column_wrap(heights_equal = "row") squeezes every card into
+  # an equal slice of the viewport height and clips the overflow. Use a plain
+  # vertical stack instead so each card sizes to its content and the page
+  # scrolls naturally.
+  tags$div(
+    class = "d-flex flex-column gap-3 mx-auto p-2",
+    style = "max-width: 1000px;",
 
     # --- Hero Section ---
     bslib::card(
+      fill = FALSE,
       class = "border-0 bg-light",
       bslib::card_body(
         class = "text-center py-4",
@@ -33,6 +39,7 @@ mod_guide_ui <- function(id, i18n) {
 
     # --- Getting Started ---
     bslib::card(
+      fill = FALSE,
       bslib::card_header(
         tags$h4(
           icon("rocket"),
@@ -142,6 +149,7 @@ mod_guide_ui <- function(id, i18n) {
 
     # --- Screen Layout Explanation ---
     bslib::card(
+      fill = FALSE,
       bslib::card_header(
         tags$h4(
           icon("desktop"),
@@ -225,6 +233,7 @@ mod_guide_ui <- function(id, i18n) {
 
     # --- Available Analysis Methods ---
     bslib::card(
+      fill = FALSE,
       bslib::card_header(
         tags$h4(
           icon("list-check"),
@@ -467,6 +476,7 @@ mod_guide_ui <- function(id, i18n) {
 
     # --- Tips ---
     bslib::card(
+      fill = FALSE,
       bslib::card_header(
         tags$h4(
           icon("lightbulb"),

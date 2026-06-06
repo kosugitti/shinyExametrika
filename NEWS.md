@@ -2,6 +2,124 @@
 
 ## Changes
 
+### Fix "unused argument (envir = env)" when loading a sample dataset (2026-06-03)
+
+- Selecting a built-in sample dataset could fail with
+  `Error loading data : unused argument (envir = env)`. The cause was the
+  unqualified `get(name, envir = env)` used to pull the dataset out of a
+  temporary environment: if a package on the user's search path masks `get()`
+  with a version that lacks an `envir` argument (and RStudio's "Run App" runs
+  in the console session, inheriting whatever is attached there), that masked
+  `get()` is called instead. Replaced with `env[[name]]`, which cannot be
+  masked. Reproduced and confirmed with a stand-in masked `get()`; regression
+  test added.
+
+### Gate analysis tabs by data readiness + dataset indicator + Data-tab layout (2026-06-03)
+
+- **Tab gating.** Analysis tabs now start disabled and only enable once data has
+  been formatted, and only when the loaded data matches the tab's required type
+  (e.g. GRM stays disabled for binary data; only Descriptives + GRM enable for
+  ordinal data). Implemented with `analysis_tab_requirements()` (in
+  `fct_precheck.R`), an `observe()` in app_server that toggles a `.nav-disabled`
+  class on each tab's nav link **via shinyjs** (`addClass`/`removeClass` with a
+  `selector`), and the matching style. If the active tab becomes disabled (data
+  changed underneath the user) they are returned to the Data tab. (shinyjs is
+  used rather than a hand-rolled custom message handler, whose registration
+  raced with Shiny's startup and left the enable step silently dead -- the bug
+  where Format Data succeeded but the analysis tabs never lit up.)
+- **Loaded-dataset indicator.** The navbar header now shows, in red on the left
+  of the EN/JA toggle, the currently loaded dataset and its shape, e.g.
+  `● k2022.csv  [binary, 20 × 6]`, or "No dataset loaded" before any data. The
+  data-upload module now returns `list(data, name)` so app_server can label it.
+- **Data-tab layout.** Upload-vs-sample is an either/or, so the two stacked
+  sections were replaced by a single "Data source" radio that shows just the
+  relevant input (file upload or sample dropdown).
+- New i18n strings (Data source, Use sample data, No dataset loaded, dataset).
+
+### Fix clipped/squished cards on the Guide page (2026-06-03)
+
+- The Guide laid its sections out with
+  `layout_column_wrap(heights_equal = "row")`. Inside page_navbar's fill layout
+  that grid gives every card an equal slice of the viewport height and clips the
+  overflow, so each section showed only a couple of lines (the welcome blurb and
+  card bodies were cut off). Replaced the wrapper with a plain vertical flex
+  stack and set `fill = FALSE` on the cards, so each section sizes to its content
+  and the page scrolls normally.
+
+### Live language switching now covers all static UI labels (2026-06-03)
+
+- Fixed the EN/JA toggle only translating part of the interface (e.g. the Data
+  tab's "Settings", upload labels and other sidebar text stayed English).
+  shiny.i18n only live-swaps text wrapped in a `<span class="i18n" data-key>`,
+  which `i18n$t()` emits **only after** `use_js()` has been called on the
+  translator. `usei18n()` was placed at the end of the UI, so every `i18n$t()`
+  above it had already rendered as plain text. `app_ui()` now calls
+  `i18n$use_js()` immediately after creating the translator, before any label is
+  built, so all static labels become swappable. (~340 labels now switch live.)
+- New `R/utils_i18n.R` with `t_plain()`: returns a bare translated string for
+  HTML *attribute* contexts (input `placeholder`, `buttonLabel`) that cannot
+  hold a span. Applied to the missing-value-code placeholder and the DAG
+  file-input in `fct_dag.R`.
+- Note: server-rendered dynamic text (the Data-tab value boxes, result tables)
+  still updates on the next data interaction rather than on a bare toggle; that
+  is tracked separately.
+- **Follow-up (verified in a real browser via chromote):** the language switch
+  no longer routes through `shiny.i18n::update_lang()`. That call round-trips
+  through shiny.i18n 0.3.0's `#i18n-state` input binding, which is incompatible
+  with shiny >= 1.x and threw "Unexpected input value mode: '[object Object]'"
+  on every toggle (and once at startup before the dictionary was ready). The
+  observer now rewrites the `.i18n` spans directly with `shinyjs::runjs()` from
+  the injected `i18n_translations` dictionary, and uses `ignoreInit = TRUE`.
+  Result: EN/JA switching works with zero console errors.
+
+### Column selection on the Data tab: ID picker + analysis-variable picker (2026-06-03)
+
+- The Data tab previously offered only "First column" / "No ID column" for the
+  identifier, so a dataset with two ID-like columns (e.g. `ID` + `GID`) fed the
+  extra column into the analysis and `dataFormat()` auto-detected it as
+  `nominal`. The sidebar now has a column-name **ID picker** plus a multi-select
+  **Analysis Variables** picker (populated from the uploaded columns; default =
+  first column is the ID, the rest are analysis variables). Deselecting `GID`
+  yields the expected binary data.
+- The chosen ID is automatically removed from the analysis-variable selection,
+  and at least one analysis variable is required (otherwise a warning is shown).
+- testServer coverage in `tests/testthat/test-mod_data_upload.R`.
+
+### Inline model help and parameter guidance on analysis tabs (2026-06-03)
+
+- New `R/fct_modelhelp.R`: each analysis tab now has a collapsible
+  "About this model" panel (native `<details>`, collapsed by default) showing
+  the model's full name, one-line description and data-type badge. The text
+  reuses the strings already on the Guide tab, so the explanation lives where
+  the user needs it without leaving the tab. Wired into all 10 modules.
+- New `R/fct_param_help.R`: `param_label()` adds a hover "?" tooltip to the
+  parameters that need statistical judgement — IRT 2PL/3PL/4PL, LRA GTM/SOM,
+  the monotone-increasing constraint, Biclustering classes/fields/method, IRM
+  concentration parameters, and the BNM/LDLRA structure-learning knobs
+  (analysis mode, max parents, population size, mutation rate, learning rate).
+  Each tooltip explains what the parameter does and gives a sensible default.
+- 21 new bilingual (en/ja) strings in `inst/i18n/translation.json` (3 for the
+  help panels, 18 for the parameter tooltips).
+- 30 new tests in `tests/testthat/test-fct_modelhelp.R` (116 tests pass total).
+- Priority A-2 and A-3 of the 2026-06 UX refinement backlog.
+
+### Data-readiness pre-check banner on all analysis tabs (2026-06-03)
+
+- New `R/fct_precheck.R` with `check_data_requirement()` and `precheck_banner()`.
+  Every analysis tab now shows a clear warning banner at the top when no data
+  has been loaded, or when the loaded data is the wrong response type for that
+  analysis (e.g. opening IRT with ordinal data). Previously each tab relied on a
+  silent `req(formatted_data())`, leaving the user with no explanation for why
+  nothing happened.
+- Wired into all 10 modules (Descriptives, CTT, IRT, GRM, LCA, LRA,
+  Biclustering, IRM, BNM, LDLRA). Required type per tab: binary for
+  CTT/IRT/LCA/LRA/Biclustering/IRM/BNM/LDLRA, ordinal/rated for GRM, any for
+  Descriptives.
+- Two new i18n strings (en/ja) in `inst/i18n/translation.json`.
+- 19 new tests in `tests/testthat/test-fct_precheck.R` (86 tests pass total).
+- First item of the 2026-06 UX refinement backlog (priority A-1). See
+  `CLAUDE.md` "UX 洗練" and the exametrika-dev cross-cutting note.
+
 ### Japanese translation spacing fix for GRM/BNM/LDLRA progress messages (2026-06-02)
 
 - `inst/i18n/translation.json`: Inserted a half-width space between the

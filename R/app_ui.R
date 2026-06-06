@@ -10,6 +10,13 @@ app_ui <- function(request) {
     translation_json_path = app_sys("i18n/translation.json")
   )
   i18n$set_translation_language("en")
+  # Enable automatic client-side translation BEFORE any i18n$t() is evaluated
+  # while building the UI below. In this mode i18n$t("X") emits a
+  # <span class="i18n" data-key="X"> that shiny.i18n's JS swaps live on language
+  # change. usei18n() (added further down) injects the dictionary + JS and also
+  # calls use_js(); calling it here first is what makes every static label --
+  # tab titles, sidebar headings, input labels -- actually switch language.
+  i18n$use_js()
 
   tagList(
     golem_add_external_resources(),
@@ -24,9 +31,11 @@ app_ui <- function(request) {
         primary = "#2c3e50"
       ),
 
-      # --- Language switch ---
+      # --- Header: loaded-dataset indicator (left) + language switch (right) ---
       header = tags$div(
-        class = "d-flex justify-content-end pe-3 pt-1",
+        class = "d-flex justify-content-between align-items-center px-3 pt-1",
+        # Persistent indicator of which dataset is currently loaded
+        uiOutput("current_dataset", inline = TRUE),
         shinyWidgets::radioGroupButtons(
           inputId = "selected_language",
           label = NULL,
@@ -143,6 +152,12 @@ golem_add_external_resources <- function() {
       shiny.i18n::Translator$new(
         translation_json_path = app_sys("i18n/translation.json")
       )
-    )
+    ),
+
+    # --- Tab gating: disable analysis tabs until data is formatted ---
+    # (the class itself is toggled from the server with shinyjs)
+    tags$style(htmltools::HTML(
+      ".nav-disabled { pointer-events: none; opacity: 0.4; cursor: not-allowed; }"
+    ))
   )
 }

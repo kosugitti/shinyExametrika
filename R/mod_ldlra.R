@@ -24,7 +24,11 @@ mod_ldlra_ui <- function(id, i18n) {
       # --- Analysis mode selection ---
       radioButtons(
         ns("analysis_mode"),
-        label = i18n$t("Analysis Mode"),
+        label = param_label(
+          "Analysis Mode",
+          "Fixed DAG analyses rank-specific networks you upload as CSV. PBIL learns them automatically from the data.",
+          i18n
+        ),
         choices = c(
           "LDLRA (Fixed DAG)"              = "LDLRA",
           "LDLRA_PBIL (Structure Learning)" = "LDLRA_PBIL"
@@ -42,13 +46,21 @@ mod_ldlra_ui <- function(id, i18n) {
       # --- Common parameters ---
       sliderInput(
         ns("ncls"),
-        label = i18n$t("Number of Ranks"),
+        label = param_label(
+          "Number of Ranks",
+          "Number of ordered latent levels (ranks). Try 3-5 first and compare fit indices. Unlike classes, ranks are ordered from low to high.",
+          i18n
+        ),
         min = 2, max = 10, value = 5, step = 1
       ),
 
       radioButtons(
         ns("method"),
-        label = i18n$t("Method"),
+        label = param_label(
+          "Method",
+          "Rank treats the latent levels as ordered; Class treats them as unordered groups.",
+          i18n
+        ),
         choices = c(
           "Rank"  = "R",
           "Class" = "C"
@@ -82,13 +94,21 @@ mod_ldlra_ui <- function(id, i18n) {
 
         numericInput(
           ns("population"),
-          label = i18n$t("Population Size"),
+          label = param_label(
+            "Population Size",
+            "Number of candidate networks evaluated per generation. Larger explores more of the search space but is slower; 20 is a reasonable default.",
+            i18n
+          ),
           value = 20, min = 5, max = 100, step = 5
         ),
 
         sliderInput(
           ns("max_parents"),
-          label = i18n$t("Max Parents per Item"),
+          label = param_label(
+            "Max Parents per Item",
+            "Maximum number of incoming edges (parents) per item in the learned network. Smaller values give simpler, more stable structures; 2 is a common choice.",
+            i18n
+          ),
           min = 1, max = 5, value = 2, step = 1
         ),
 
@@ -112,13 +132,21 @@ mod_ldlra_ui <- function(id, i18n) {
 
         numericInput(
           ns("mutation_rate"),
-          label = i18n$t("Mutation Rate"),
+          label = param_label(
+            "Mutation Rate",
+            "Probability of randomly flipping an edge each generation. Small values (around 0.005) keep the search stable.",
+            i18n
+          ),
           value = 0.002, min = 0.001, max = 0.1, step = 0.001
         ),
 
         numericInput(
           ns("pbil_alpha"),
-          label = i18n$t("Learning Rate (alpha)"),
+          label = param_label(
+            "Learning Rate (alpha)",
+            "PBIL learning-rate (update step size). Smaller values learn more slowly but more stably; 0.05 is typical.",
+            i18n
+          ),
           value = 0.05, min = 0.01, max = 0.5, step = 0.01
         ),
 
@@ -146,6 +174,9 @@ mod_ldlra_ui <- function(id, i18n) {
     ),
 
     # ========== Main Panel ==========
+    uiOutput(ns("precheck")),
+    model_help_block("ldlra", i18n),
+
     bslib::navset_card_tab(
       id = ns("main_tabs"),
 
@@ -277,6 +308,11 @@ mod_ldlra_ui <- function(id, i18n) {
 #' @noRd
 mod_ldlra_server <- function(id, formatted_data, i18n) {
   moduleServer(id, function(input, output, session) {
+
+    # ========== Data-readiness banner ==========
+    output$precheck <- renderUI({
+      precheck_banner(formatted_data(), required = "binary", i18n)
+    })
 
     # ========== DAG Parsing (for fixed LDLRA mode) ==========
 

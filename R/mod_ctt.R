@@ -43,6 +43,9 @@ mod_ctt_ui <- function(id, i18n) {
     ),
 
     # --- Main panel ---
+    uiOutput(ns("precheck")),
+    model_help_block("ctt", i18n),
+
     bslib::navset_card_tab(
       id = ns("result_tabs"),
 
@@ -76,6 +79,11 @@ mod_ctt_ui <- function(id, i18n) {
 #' @noRd
 mod_ctt_server <- function(id, formatted_data, i18n) {
   moduleServer(id, function(input, output, session) {
+
+    # --- Data-readiness banner ---
+    output$precheck <- renderUI({
+      precheck_banner(formatted_data(), required = "binary", i18n)
+    })
 
     # --- CTT analysis result ---
     ctt_result <- reactiveVal(NULL)

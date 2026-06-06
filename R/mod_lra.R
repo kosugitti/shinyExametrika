@@ -15,13 +15,21 @@ mod_lra_ui <- function(id, i18n) {
 
       sliderInput(
         ns("nrank"),
-        label = i18n$t("Number of Ranks"),
+        label = param_label(
+          "Number of Ranks",
+          "Number of ordered latent levels (ranks). Try 3-5 first and compare fit indices. Unlike classes, ranks are ordered from low to high.",
+          i18n
+        ),
         min = 2, max = 10, value = 3, step = 1
       ),
 
       radioButtons(
         ns("method"),
-        label = i18n$t("Method"),
+        label = param_label(
+          "Method",
+          "GTM (Gaussian-mixture) gives smoother, more stable rank profiles and is the usual default. SOM (self-organizing map) is an alternative estimator.",
+          i18n
+        ),
         choices = c("GTM", "SOM"),
         selected = "GTM",
         inline = TRUE
@@ -29,7 +37,11 @@ mod_lra_ui <- function(id, i18n) {
 
       checkboxInput(
         ns("mic"),
-        label = i18n$t("Monotone Increasing Constraint"),
+        label = param_label(
+          "Monotone Increasing Constraint",
+          "Force each item's reference profile to be non-decreasing across ranks, so higher ranks never lower the correct-response probability.",
+          i18n
+        ),
         value = FALSE
       ),
 
@@ -44,6 +56,9 @@ mod_lra_ui <- function(id, i18n) {
     ),
 
     # ========== Main Panel ==========
+    uiOutput(ns("precheck")),
+    model_help_block("lra", i18n),
+
     bslib::navset_card_tab(
       id = ns("main_tabs"),
 
@@ -133,6 +148,11 @@ mod_lra_ui <- function(id, i18n) {
 #' @noRd
 mod_lra_server <- function(id, formatted_data, i18n) {
   moduleServer(id, function(input, output, session) {
+
+    # ========== Data-readiness banner ==========
+    output$precheck <- renderUI({
+      precheck_banner(formatted_data(), required = "binary", i18n)
+    })
 
     # ========== Run Analysis ==========
     result <- eventReactive(input$btn_run, {

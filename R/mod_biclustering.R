@@ -15,19 +15,31 @@ mod_biclustering_ui <- function(id, i18n) {
 
       sliderInput(
         ns("ncls"),
-        label = i18n$t("Number of Classes"),
+        label = param_label(
+          "Number of Classes",
+          "Number of examinee clusters (row groups). Try 3-5 and compare fit indices.",
+          i18n
+        ),
         min = 2, max = 10, value = 3, step = 1
       ),
 
       sliderInput(
         ns("nfld"),
-        label = i18n$t("Number of Fields"),
+        label = param_label(
+          "Number of Fields",
+          "Number of item clusters, called fields (column groups). Try 3-5 and compare fit indices.",
+          i18n
+        ),
         min = 2, max = 10, value = 3, step = 1
       ),
 
       radioButtons(
         ns("method"),
-        label = i18n$t("Method"),
+        label = param_label(
+          "Method",
+          "Biclustering leaves the examinee clusters unordered. Ranklustering orders them into ranks; choose it when the latent levels are ordinal.",
+          i18n
+        ),
         choices = c(
           "Biclustering" = "B",
           "Ranklustering" = "R"
@@ -38,7 +50,11 @@ mod_biclustering_ui <- function(id, i18n) {
 
       checkboxInput(
         ns("mic"),
-        label = i18n$t("Monotone Increasing Constraint"),
+        label = param_label(
+          "Monotone Increasing Constraint",
+          "Force each item's reference profile to be non-decreasing across ranks, so higher ranks never lower the correct-response probability.",
+          i18n
+        ),
         value = FALSE
       ),
 
@@ -53,6 +69,9 @@ mod_biclustering_ui <- function(id, i18n) {
     ),
 
     # ========== Main Panel ==========
+    uiOutput(ns("precheck")),
+    model_help_block("biclustering", i18n),
+
     bslib::navset_card_tab(
       id = ns("main_tabs"),
 
@@ -186,6 +205,11 @@ mod_biclustering_ui <- function(id, i18n) {
 #' @noRd
 mod_biclustering_server <- function(id, formatted_data, i18n) {
   moduleServer(id, function(input, output, session) {
+
+    # ========== Data-readiness banner ==========
+    output$precheck <- renderUI({
+      precheck_banner(formatted_data(), required = "binary", i18n)
+    })
 
     # ========== Run Analysis ==========
     result <- eventReactive(input$btn_run, {

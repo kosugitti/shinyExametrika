@@ -15,19 +15,31 @@ mod_irm_ui <- function(id, i18n) {
 
       numericInput(
         ns("gamma_c"),
-        label = i18n$t("Concentration Parameter (Classes)"),
+        label = param_label(
+          "Concentration Parameter (Classes)",
+          "Dirichlet-process concentration for examinee clusters. Higher values favour more clusters; 1.0 is a neutral default. IRM decides the actual count automatically.",
+          i18n
+        ),
         value = 1.0, min = 0.1, max = 10, step = 0.1
       ),
 
       numericInput(
         ns("gamma_f"),
-        label = i18n$t("Concentration Parameter (Fields)"),
+        label = param_label(
+          "Concentration Parameter (Fields)",
+          "Dirichlet-process concentration for item clusters (fields). Higher values favour more fields; 1.0 is a neutral default.",
+          i18n
+        ),
         value = 1.0, min = 0.1, max = 10, step = 0.1
       ),
 
       numericInput(
         ns("seed"),
-        label = i18n$t("Random Seed"),
+        label = param_label(
+          "Random Seed",
+          "Fixes the random-number stream so results are reproducible across runs.",
+          i18n
+        ),
         value = 123, min = 1, max = 99999, step = 1
       ),
 
@@ -51,6 +63,9 @@ mod_irm_ui <- function(id, i18n) {
     ),
 
     # ========== Main Panel ==========
+    uiOutput(ns("precheck")),
+    model_help_block("irm", i18n),
+
     bslib::navset_card_tab(
       id = ns("main_tabs"),
 
@@ -139,6 +154,11 @@ mod_irm_ui <- function(id, i18n) {
 #' @noRd
 mod_irm_server <- function(id, formatted_data, i18n) {
   moduleServer(id, function(input, output, session) {
+
+    # ========== Data-readiness banner ==========
+    output$precheck <- renderUI({
+      precheck_banner(formatted_data(), required = "binary", i18n)
+    })
 
     # ========== Run Analysis ==========
     result <- eventReactive(input$btn_run, {

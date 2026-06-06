@@ -33,6 +33,9 @@ mod_descriptives_ui <- function(id, i18n) {
       )
     ),
 
+    uiOutput(ns("precheck")),
+    model_help_block("descriptives", i18n),
+
     bslib::navset_card_tab(
       bslib::nav_panel(
         title = i18n$t("Test Statistics"),
@@ -60,6 +63,11 @@ mod_descriptives_ui <- function(id, i18n) {
 #' @noRd
 mod_descriptives_server <- function(id, formatted_data, i18n) {
   moduleServer(id, function(input, output, session) {
+
+    # ========== Data-readiness banner ==========
+    output$precheck <- renderUI({
+      precheck_banner(formatted_data(), required = "any", i18n)
+    })
 
     desc_result <- reactiveVal(NULL)
 
