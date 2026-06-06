@@ -40,7 +40,7 @@ test_that("analysis_tab_requirements gates the implemented analysis tabs", {
   expect_true("tab_grm" %in% names(reqs))
   expect_identical(reqs[["tab_descriptives"]], "any")
   expect_identical(reqs[["tab_irt"]], "binary")
-  expect_setequal(reqs[["tab_grm"]], c("ordinal", "rated"))
+  expect_identical(reqs[["tab_grm"]], "ordinal")  # GRM is not applicable to rated data
   # Guide / Data / placeholders are never gated
   expect_false(any(c("tab_guide", "tab_data", "tab_ldb", "tab_binet") %in% names(reqs)))
 })
