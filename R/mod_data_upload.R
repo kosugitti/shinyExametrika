@@ -100,13 +100,34 @@ mod_data_upload_ui <- function(id, i18n) {
         placeholder = t_plain(i18n, "e.g., -9, 99, NA")
       ),
 
-      # Correct-answer key, required only for "rated" (scored multiple-choice) data
+      # Correct-answer key, required only for "rated" (scored multiple-choice) data.
+      # Can be typed in or uploaded as a CSV (one value per item, in item order).
       conditionalPanel(
         condition = sprintf("input['%s'] == 'rated'", ns("response_type")),
-        textInput(
-          ns("ca_codes"),
+        radioButtons(
+          ns("ca_source"),
           label = i18n$t("Correct Answers (CA)"),
-          placeholder = t_plain(i18n, "e.g., 2, 1, 4, 3")
+          choices = c("Type in" = "text", "Upload CSV" = "csv"),
+          selected = "text",
+          inline = TRUE
+        ),
+        conditionalPanel(
+          condition = sprintf("input['%s'] == 'text'", ns("ca_source")),
+          textInput(
+            ns("ca_codes"),
+            label = NULL,
+            placeholder = t_plain(i18n, "e.g., 2, 1, 4, 3")
+          )
+        ),
+        conditionalPanel(
+          condition = sprintf("input['%s'] == 'csv'", ns("ca_source")),
+          fileInput(
+            ns("ca_file"),
+            label = NULL,
+            accept = c(".csv", ".txt"),
+            buttonLabel = i18n$t("Browse"),
+            placeholder = t_plain(i18n, "CA CSV (1 row or column, no header)")
+          )
         ),
         tags$small(
           class = "text-muted d-block mb-2",
@@ -285,12 +306,25 @@ mod_data_upload_server <- function(id, i18n, script_log = NULL) {
         # Response type
         resp_type <- if (input$response_type == "auto") NULL else input$response_type
 
-        # Correct-answer key, required for rated data
+        # Correct-answer key, required for rated data (typed in or uploaded as CSV)
         ca_vec <- NULL
         if (identical(resp_type, "rated")) {
-          ca_raw <- strsplit(trimws(input$ca_codes %||% ""), "[[:space:],]+")[[1]]
-          ca_raw <- ca_raw[nzchar(ca_raw)]
-          ca_vec <- suppressWarnings(as.numeric(ca_raw))
+          if (identical(input$ca_source, "csv")) {
+            if (is.null(input$ca_file)) {
+              showNotification(i18n$t("Please upload a correct-answer CSV."), type = "warning")
+              return(invisible(NULL))
+            }
+            ca_tbl <- tryCatch(
+              utils::read.csv(input$ca_file$datapath, header = FALSE, stringsAsFactors = FALSE),
+              error = function(e) NULL
+            )
+            ca_vec <- suppressWarnings(as.numeric(unlist(ca_tbl, use.names = FALSE)))
+            ca_vec <- ca_vec[!is.na(ca_vec)]
+          } else {
+            ca_raw <- strsplit(trimws(input$ca_codes %||% ""), "[[:space:],]+")[[1]]
+            ca_raw <- ca_raw[nzchar(ca_raw)]
+            ca_vec <- suppressWarnings(as.numeric(ca_raw))
+          }
           if (length(ca_vec) != length(item_names) || anyNA(ca_vec)) {
             showNotification(
               i18n$t("Rated data needs one numeric correct answer per analysis variable."),

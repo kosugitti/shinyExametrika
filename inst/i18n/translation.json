@@ -17,6 +17,9 @@
 
     {"en": "R script", "ja": "Rスクリプト"},
     {"en": "Correct Answers (CA)", "ja": "正答キー（CA）"},
+    {"en": "Browse", "ja": "参照"},
+    {"en": "CA CSV (1 row or column, no header)", "ja": "正答CSV（1行または1列・ヘッダなし）"},
+    {"en": "Please upload a correct-answer CSV.", "ja": "正答キーのCSVをアップロードしてください。"},
     {"en": "Rated data needs one correct-answer category per analysis variable, comma-separated, in item order.", "ja": "rated（採点）データは、各分析変数の正答カテゴリを項目順にカンマ区切りで1つずつ指定します。"},
     {"en": "Rated data needs one numeric correct answer per analysis variable.", "ja": "rated データは、分析変数ごとに数値の正答を1つずつ指定してください。"},
     {"en": "Item analysis", "ja": "項目分析"},
