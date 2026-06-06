@@ -50,6 +50,12 @@ PRON_MAP_JA = [
     ("exametrika", "エグザメトリカ"),
     ("kosugitti", "コスギッチ"),
     ("shinyapps.io", "シャイニーアップスドットアイオー"),
+    ("4 つ", "よっつ"),
+    ("4つ", "よっつ"),
+    ("500人", "ごひゃくにん"),
+    ("15項目", "じゅうごこうもく"),
+    ("二値", "にち"),
+    ("母数", "ぼすう"),
 ]
 
 
@@ -65,7 +71,7 @@ OPENAI_INSTRUCTIONS = ("Speak like a cheerful, upbeat and friendly tutorial host
                        "Warm, lively, and smooth, with natural phrasing. Not rushed.")
 SAY_VOICE = "Aaron"           # フォールバック用 macOS en_US 男性
 W, H = 1920, 1080
-SCENE_GAP = 0.6              # シーン間の無音(秒)
+SCENE_GAP = 1.2              # シーン間の無音(秒)
 CARD_SEC = 6                 # タイトル/エンドカードの尺(秒)
 
 
@@ -193,13 +199,17 @@ def cmd_audio(lang):
     tg = os.path.join(BASE, f"timing_{lang}.md")
     with open(tg, "w", encoding="utf-8") as f:
         f.write(f"# 録画タイミングガイド ({lang})\n\n")
+        # カードは先頭(0)と末尾(最大番号)。録画はその間のシーンのみ。
+        card_scenes = {0, max(scenes)}
         f.write("narration を再生しながら，各シーンの開始時刻を目安に操作してください。\n")
-        f.write("（シーン 0=タイトル, 8=エンドは録画不要。録画は Scene 1〜7 を通しで。）\n\n")
+        body_scenes = [nn for nn in sorted(scenes) if nn not in card_scenes]
+        f.write(f"（シーン 0=タイトル, {max(scenes)}=エンドは録画不要。"
+                f"録画は Scene {body_scenes[0]}〜{body_scenes[-1]} を通しで。）\n\n")
         f.write("| Scene | 開始(録画基準) | 尺 |\n|---|---|---|\n")
-        # 録画はシーン1から始まる(タイトルカードは後で前置)ので，シーン1を0:00基準に再計算
-        base1 = next((s for (nn, s, d) in timing if nn == 1), 0.0)
+        # 録画は最初の本編シーンから始まる(タイトルカードは後で前置)ので，それを0:00基準に再計算
+        base1 = next((s for (nn, s, d) in timing if nn == body_scenes[0]), 0.0)
         for (nn, s, d) in timing:
-            if nn in (0, 8):
+            if nn in card_scenes:
                 continue
             rel = s - base1
             f.write(f"| {nn} | {int(rel//60)}:{rel%60:04.1f} | {d:.1f}s |\n")
@@ -241,9 +251,10 @@ def cmd_cards():
     # エンド
     img = Image.new("RGB", (W, H), (24, 38, 64))
     d = ImageDraw.Draw(img)
-    _center(d, "Try it now", _font(110), 330, (255, 255, 255))
-    _center(d, "kosugitti.shinyapps.io/shinyExametrika", _font(54), 540, (170, 200, 240))
-    _center(d, "github.com/kosugitti/shinyExametrika", _font(44), 640, (140, 170, 210))
+    _center(d, "Try it now", _font(104), 250, (255, 255, 255))
+    _center(d, "kosugitti.shinyapps.io/shinyExametrika", _font(50), 440, (170, 200, 240))
+    _center(d, 'Also an R package:  install.packages("exametrika")', _font(44), 560, (200, 220, 250))
+    _center(d, "github.com/kosugitti/shinyExametrika", _font(40), 660, (140, 170, 210))
     img.save(os.path.join(CARDS, "end.png"))
     print("cards -> cards/title.png, cards/end.png")
 
