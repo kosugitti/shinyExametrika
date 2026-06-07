@@ -20,6 +20,11 @@
 - Note: the webR runtime pulls exametrika from repo.r-wasm.org (currently 1.11.0),
   which can lag the local/CRAN version. `docs/video/*.mov` and the generated
   `shinylive/` output are git-ignored.
+- **CI fixes (R CMD check warnings).** Removed the three warnings that were
+  failing GitHub Actions (`error_on: "warning"`): replaced the non-ASCII glyphs
+  in the dataset indicator with `×` / `●` escapes, and switched the one
+  `htmltools::HTML()` call to shiny's re-exported `HTML()` so no undeclared
+  `htmltools` import remains. Package builds, installs, and all 183 tests pass.
 
 ### Unified result downloads + session R-script export (2026-06-06)
 

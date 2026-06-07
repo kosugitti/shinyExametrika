@@ -114,7 +114,7 @@ app_server <- function(input, output, session, tabs = NULL) {
     } else {
       mat <- if (!is.null(fd$U)) fd$U else fd$Q
       txt <- sprintf(
-        "%s  [%s, %d × %d]",
+        "%s  [%s, %d \u00d7 %d]",
         if (is.null(nm)) i18n$t("dataset") else nm,
         fd$response.type %||% "unknown",
         nrow(mat), ncol(mat)
@@ -124,7 +124,7 @@ app_server <- function(input, output, session, tabs = NULL) {
     tags$span(
       class = "fw-semibold",
       style = "color: #c0392b;",
-      tags$span(style = "opacity: 0.7;", "● "),
+      tags$span(style = "opacity: 0.7;", "\u25cf "),
       txt
     )
   })

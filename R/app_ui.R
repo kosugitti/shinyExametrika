@@ -182,7 +182,7 @@ golem_add_external_resources <- function() {
 
     # --- Tab gating: disable analysis tabs until data is formatted ---
     # (the class itself is toggled from the server with shinyjs)
-    tags$style(htmltools::HTML(
+    tags$style(HTML(
       ".nav-disabled { pointer-events: none; opacity: 0.4; cursor: not-allowed; }"
     ))
   )
