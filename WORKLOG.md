@@ -264,8 +264,34 @@ load_all 通過確認。
   - webR の exametrika は repo.r-wasm.org の wasm 版 = 1.11.0 (ローカル 1.13.1 より遅れる)。
 - 生成物 `shinylive/` は .gitignore。再生成は `Rscript dev/build_shinylive.R`。
 
-### 残課題
+### CI 修正 (R CMD check warnings → 緑)
 
-- shinylive サイトの公開先配置 (さくら + .htaccess 等。SW が COOP/COEP を付与するので
-  素の静的ホスティングで可)。
+- `error_on: "warning"` の R-CMD-check が 3 warnings で落ち続けていた (6/3 由来、6/7 の
+  変更が原因ではない)。3 件を解消して緑化:
+  - 非ASCII (R/ の `×`/`●`) → `×`/`●` エスケープ (app_server.R)。
+  - `htmltools::HTML()` (R コード) → shiny 再エクスポートの `HTML()` (app_ui.R)。
+  - tests の `htmltools::renderTags` 未宣言 → DESCRIPTION の Suggests に htmltools 追加。
+- 結果 0 errors / 0 warnings / 2 notes で success。commit `c6c2a0b`。
+
+### shinylive 公開の判断 (2026-06-07)
+
+- GitHub Pages への一般公開は見送り。理由: shinyapps.io でフル機能版が稼働中で、
+  shinylive 版は4アプリ=機能の部分集合 (BNM/LDLRA は webR で重く除外) のため置換に
+  ならない。二重メンテ・初回ロード重・wasm版1.11.0のバージョン遅れ等のコストに対し、
+  常時公開の意義が現時点では薄い。
+- ビルド資産は温存 (`dev/build_shinylive.R` で1コマンド再生成、ローカル動作確認済み)。
+- 将来の公開トリガー: (a) 動画公開でアクセスが伸び shinyapps.io 無料枠 (月25時間) の
+  上限が問題化, (b) データをサーバに出さないプライバシー重視の配布が必要, (c) 教材への
+  iframe 埋め込み。いずれか発生時に gh-pages へ出す (サブパス配信でも SW パスは相対計算で動く)。
+
+### このセッションの区切り
+
+- 当初3目標 (shinyapps.io 公開 / 使い方動画 / shinylive 化) は完了。動画は日英 YouTube 公開・
+  両リポジトリ Discussions 告知済み。shinylive は実装・検証済みで公開は条件付き保留。
+- shinyExametrika プロジェクトは一旦この区切りで完了とする。
+
+### 残課題 (将来)
+
+- shinylive 公開 (上記トリガー発生時)。
 - LDB / BINET タブ実装 (引き続き)。
+- 優先B の UX 洗練 (長時間計算の時間目安+タイムアウト等)。

@@ -1,6 +1,6 @@
 # shinyExametrika — プロジェクト CLAUDE.md
 
-**最終更新: 2026-03-25**
+**最終更新: 2026-06-07**（使い方動画 日英公開 + shinylive 4アプリ分割実装・公開は見送り + CI 緑化。当セッションで一区切り）
 
 ## プロジェクト概要
 
@@ -449,8 +449,11 @@ Rscript -e "shinyExametrika::run_app()"  # アプリの動作確認
     実ブラウザ（chromote）で4アプリとも webR 起動を確認済み。
   - **配信の罠**はメモリ `shinylive-serving-gotchas` 参照。webR の exametrika は
     repo.r-wasm.org の wasm 版（現状 1.11.0、ローカル/CRAN より遅れることがある）。
-  - **公開先未配置**（さくら + .htaccess 等。SW が COOP/COEP を付与するので素の静的
-    ホスティングで可）。
+  - **一般公開は見送り（資産温存）**。shinyapps.io でフル機能版が稼働中、shinylive は
+    機能の部分集合（BNM/LDLRA 除外）で置換にならず、二重メンテ・初回ロード重・wasm 1.11.0
+    のコストに対し常時公開の意義が薄いと判断（2026-06-07）。将来の公開トリガー: 無料枠
+    上限の問題化 / プライバシー重視配布 / 教材への iframe 埋め込み。発生時に gh-pages へ
+    （サブパス配信でも SW パスは相対計算で動く）。
 - **使い方動画**: 2026-06-07 公開。日本語 https://youtu.be/q5I25ttD_Bs /
   英語 https://youtu.be/dKi-vMs1iYQ 。制作パイプラインは `docs/video/`
   （`build_video.py`, `narration_<lang>.md`, `anchors_<lang>.json`,
