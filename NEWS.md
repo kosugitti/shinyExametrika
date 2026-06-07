@@ -2,6 +2,25 @@
 
 ## Changes
 
+### Per-function shinylive builds (2026-06-07)
+
+- **`app_ui()` / `app_server()` now take an optional `tabs` argument.** When
+  `NULL` (default) all tabs are shown -- the full shinyapps.io app is unchanged.
+  Passing a subset (e.g. `c("tab_ctt", "tab_descriptives")`) builds only those
+  panels and wires only those module servers. `tab_guide` and `tab_data` are
+  always forced in so every build can load and format data. Tab gating only
+  toggles tabs present in the build.
+- **Four standalone shinylive apps**, each bundling Guide + Data (dataFormat)
+  plus a focused set of analyses, exported to a single static site that shares
+  one webR runtime: `ctt` (Descriptives + CTT), `irt` (IRT + GRM),
+  `lca` (LCA + LRA), `bicl` (Biclustering + IRM). New build script
+  `dev/build_shinylive.R` assembles each app dir (shared helpers + the needed
+  modules + `inst/`) and runs `shinylive::export(..., subdir =)`. Verified in a
+  real browser: all four boot under webR with the correct tab sets.
+- Note: the webR runtime pulls exametrika from repo.r-wasm.org (currently 1.11.0),
+  which can lag the local/CRAN version. `docs/video/*.mov` and the generated
+  `shinylive/` output are git-ignored.
+
 ### Unified result downloads + session R-script export (2026-06-06)
 
 - **Unified download section.** Every analysis module now gathers its downloads

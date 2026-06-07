@@ -2,9 +2,22 @@
 #'
 #' @param input,output,session Internal parameters for {shiny}.
 #'     DO NOT REMOVE.
+#' @param tabs Optional character vector of tab values to wire (must match the
+#'     subset passed to `app_ui`). When `NULL` (default) all analysis modules are
+#'     wired -- the full shinyapps.io app. The shinylive per-function builds pass
+#'     a subset so only those modules' servers run.
 #' @import shiny
 #' @noRd
-app_server <- function(input, output, session) {
+app_server <- function(input, output, session, tabs = NULL) {
+
+  all_tabs <- c(
+    "tab_guide", "tab_data", "tab_descriptives", "tab_ctt", "tab_irt",
+    "tab_grm", "tab_lca", "tab_lra", "tab_biclustering", "tab_irm",
+    "tab_bnm", "tab_ldlra", "tab_ldb", "tab_binet"
+  )
+  if (is.null(tabs)) tabs <- all_tabs
+  tabs <- union(c("tab_guide", "tab_data"), tabs)
+  has <- function(x) x %in% tabs
 
   # --- Translator object ---
   i18n <- shiny.i18n::Translator$new(
@@ -38,32 +51,34 @@ app_server <- function(input, output, session) {
   #     mod_downloads_server); this just holds the shared accumulating log. ---
   script_log <- reactiveVal(list())
 
-  # --- Data upload module ---
+  # --- Data upload module (always present) ---
   data_mod <- mod_data_upload_server("data_upload", i18n = i18n, script_log = script_log)
   formatted_data <- data_mod$data
 
-  # --- Analysis modules (each gets the shared script_log for the R-script button) ---
-  mod_descriptives_server("descriptives", formatted_data = formatted_data, i18n = i18n, script_log = script_log)
-  mod_ctt_server("ctt", formatted_data = formatted_data, i18n = i18n, script_log = script_log)
-  mod_irt_server("irt", formatted_data = formatted_data, i18n = i18n, script_log = script_log)
-  mod_grm_server("grm", formatted_data = formatted_data, i18n = i18n, script_log = script_log)
-  mod_lca_server("lca", formatted_data = formatted_data, i18n = i18n, script_log = script_log)
-  mod_lra_server("lra", formatted_data = formatted_data, i18n = i18n, script_log = script_log)
-  mod_biclustering_server("biclustering", formatted_data = formatted_data, i18n = i18n, script_log = script_log)
-  mod_irm_server("irm", formatted_data = formatted_data, i18n = i18n, script_log = script_log)
-  mod_bnm_server("bnm", formatted_data = formatted_data, i18n = i18n, script_log = script_log)
-  mod_ldlra_server("ldlra", formatted_data = formatted_data, i18n = i18n, script_log = script_log)
+  # --- Analysis modules (each gets the shared script_log for the R-script button).
+  #     Only the modules whose tab is included are wired. ---
+  if (has("tab_descriptives")) mod_descriptives_server("descriptives", formatted_data = formatted_data, i18n = i18n, script_log = script_log)
+  if (has("tab_ctt")) mod_ctt_server("ctt", formatted_data = formatted_data, i18n = i18n, script_log = script_log)
+  if (has("tab_irt")) mod_irt_server("irt", formatted_data = formatted_data, i18n = i18n, script_log = script_log)
+  if (has("tab_grm")) mod_grm_server("grm", formatted_data = formatted_data, i18n = i18n, script_log = script_log)
+  if (has("tab_lca")) mod_lca_server("lca", formatted_data = formatted_data, i18n = i18n, script_log = script_log)
+  if (has("tab_lra")) mod_lra_server("lra", formatted_data = formatted_data, i18n = i18n, script_log = script_log)
+  if (has("tab_biclustering")) mod_biclustering_server("biclustering", formatted_data = formatted_data, i18n = i18n, script_log = script_log)
+  if (has("tab_irm")) mod_irm_server("irm", formatted_data = formatted_data, i18n = i18n, script_log = script_log)
+  if (has("tab_bnm")) mod_bnm_server("bnm", formatted_data = formatted_data, i18n = i18n, script_log = script_log)
+  if (has("tab_ldlra")) mod_ldlra_server("ldlra", formatted_data = formatted_data, i18n = i18n, script_log = script_log)
 
   # --- Tab gating: analysis tabs stay disabled until data is formatted, and a
   #     tab only enables when the loaded data matches its required type
-  #     (e.g. GRM stays disabled for binary data). ---
+  #     (e.g. GRM stays disabled for binary data). Only tabs present in this
+  #     build are toggled. ---
   observe({
     fd <- formatted_data()
     current <- if (is.null(fd)) NA_character_ else (fd$response.type %||% "unknown")
 
     reqs <- analysis_tab_requirements()
     disabled <- character(0)
-    for (tab in names(reqs)) {
+    for (tab in intersect(names(reqs), tabs)) {
       ok <- !is.null(fd) &&
         (identical(reqs[[tab]], "any") || current %in% reqs[[tab]])
       # Toggle the .nav-disabled class on the tab's nav link. shinyjs is used
