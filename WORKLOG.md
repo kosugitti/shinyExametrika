@@ -215,3 +215,57 @@ load_all 通過確認。
 - LDB / BINET タブ実装 (12/14 タブ実装済)。
 - v1.13.1 exametrika との互換性は ggExametrika の smoke test と
   共通で確認済 (BNM / LDLRA の API 変更なし)。
+
+## 2026-06-07 使い方動画 (日英) + shinylive 4アプリ分割
+
+### 使い方動画
+
+- 録画先行方式。先生が英語UIで画面録画 (`docs/video/movie.mov`, 282秒) を撮り，
+  それに合わせてナレーションを配置 (write to picture)。
+- `docs/video/build_video.py` を拡張:
+  - エンドカードを無音化し，ナレーション (シーン9) は本編の最後に重ねて流す
+    →音声が終わってから無音エンドカードを出す方式に変更 (`card_silent`)。
+  - `_body_end` で本編をトリム (エンドカードを早く出す)。
+  - `bgm` コマンド新設: BGM を小音量ループ＋末尾フェードアウト＋ナレーション中の
+    ダッキング (sidechaincompress)。`start` 秒で BGM 開始を遅らせ，タイトルコール中は
+    無音・本編開始でBGMイン (フェードインなし)。
+  - シーン配置は `anchors_<lang>.json` (録画本編内の開始秒，`_body_end` 付き)。
+- 日本語ナレーション (`narration_ja.md`): #5 を尺に合わせて短縮 (枠25秒に対し
+  元36.7秒→24秒)。読み修正は build_video.py の `PRON_MAP_JA`。
+  VOICEVOX 四国めたん (speaker=2)。
+- 英語ナレーション (`narration_en.md`): 全面書き直し (日本語版の構成に一致)。
+  同じ録画 (UIは英語) に当てるためアンカーは日本語版と同じ。OpenAI gpt-4o-mini-tts
+  voice="ash" (陽気な口調)。キーは `~/Dropbox/.openai_key`。
+- BGM: Pixabay の Maksym Malko (cute happy kids)。エンドカードにテキストクレジット，
+  YouTube 説明欄用にHTMLリンク版クレジットを `youtube_descriptions.txt` に同梱。
+- 公開: 日本語 https://youtu.be/q5I25ttD_Bs / 英語 https://youtu.be/dKi-vMs1iYQ
+- exametrika Discussions #31 / shinyExametrika Discussions #15 (Discussions を
+  有効化してから) で日英まとめて告知。
+- `docs/video/*.mov` は .gitignore。動画・音声 (mp4/wav/mp3) も従来どおり除外。
+
+### shinylive 4アプリ分割
+
+- `app_ui()` / `app_server()` に `tabs` 引数を追加 (既定 NULL = 全タブ。本体アプリ不変)。
+  部分集合を渡すとそのタブのパネルだけ構築し，対応するモジュールサーバだけ起動。
+  `tab_guide` / `tab_data` は常に含む。タブゲーティングも build 内のタブのみ対象。
+- `dev/build_shinylive.R`: 4アプリを生成して1サイトに同居エクスポート。
+  - ctt = Descriptives + CTT / irt = IRT + GRM / lca = LCA + LRA /
+    bicl = Biclustering + IRM。各アプリに Guide + Data (dataFormat) を内包。
+  - 各 app dir に共有ヘルパー (fct_*) + 必要モジュール + `inst/` をコピーし，
+    `app.R` を生成 (`app_ui(request, tabs=...)` / `app_server(..., tabs=...)`)。
+  - `shinylive::export(appdir, destdir, subdir=name)` で `shinylive/site/<name>` へ。
+- 実ブラウザ (chromote) で4アプリとも webR 起動・正しいタブ構成を確認。先生が
+  各分析を実際に回してエラーなしを確認。
+- 配信の罠 (メモリ `shinylive-serving-gotchas` 記録):
+  - COOP/COEP を自前サーバで付ける場合，COEP は `credentialless` (require-corp だと
+    webR の repo.r-wasm.org からの cross-origin パッケージ取得がブロックされる)。
+  - サイトルートの `shinylive-sw.js` は全サブアプリを制御する本体。消すと起動しない。
+  - エクスポート版は `#root` 内の iframe (`app-frame`) でアプリが走る。
+  - webR の exametrika は repo.r-wasm.org の wasm 版 = 1.11.0 (ローカル 1.13.1 より遅れる)。
+- 生成物 `shinylive/` は .gitignore。再生成は `Rscript dev/build_shinylive.R`。
+
+### 残課題
+
+- shinylive サイトの公開先配置 (さくら + .htaccess 等。SW が COOP/COEP を付与するので
+  素の静的ホスティングで可)。
+- LDB / BINET タブ実装 (引き続き)。

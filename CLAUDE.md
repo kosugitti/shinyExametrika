@@ -440,7 +440,22 @@ Rscript -e "shinyExametrika::run_app()"  # アプリの動作確認
   - アカウント: kosugitti（free plan）
   - `app.R` がデプロイ用エントリポイント（golem 構造を直接 source する方式）
   - rsconnect v1.7.0 使用
-- **その他候補**: Shiny Server（研究室サーバ） / shinylive（GitHub Pages）— 未対応
+- **shinylive（webR・サーバ不要）**: 2026-06-07 実装。機能別4アプリに分割し1サイトへ
+  同居エクスポート（`ctt` / `irt` / `lca` / `bicl`、各アプリに Guide + Data=dataFormat）。
+  - `app_ui()` / `app_server()` の `tabs` 引数で表示タブを切替（既定 NULL = 全タブ）。
+  - ビルド: `Rscript dev/build_shinylive.R`（`shinylive/site/<name>/` を生成。生成物は
+    .gitignore）。再生成すればサイトルートに `shinylive-sw.js` も再作成される（消さない）。
+  - ローカル確認: COOP/COEP 付き静的サーバで配信（COEP は **credentialless**）。
+    実ブラウザ（chromote）で4アプリとも webR 起動を確認済み。
+  - **配信の罠**はメモリ `shinylive-serving-gotchas` 参照。webR の exametrika は
+    repo.r-wasm.org の wasm 版（現状 1.11.0、ローカル/CRAN より遅れることがある）。
+  - **公開先未配置**（さくら + .htaccess 等。SW が COOP/COEP を付与するので素の静的
+    ホスティングで可）。
+- **使い方動画**: 2026-06-07 公開。日本語 https://youtu.be/q5I25ttD_Bs /
+  英語 https://youtu.be/dKi-vMs1iYQ 。制作パイプラインは `docs/video/`
+  （`build_video.py`, `narration_<lang>.md`, `anchors_<lang>.json`,
+  `youtube_descriptions.txt`）。exametrika #31 / shinyExametrika #15 で告知済み。
+- **その他候補**: Shiny Server（研究室サーバ）— 未対応
 
 ---
 
