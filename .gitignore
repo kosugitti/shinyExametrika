@@ -36,4 +36,7 @@ docs/video/*.mp3
 docs/video/*.mp4
 docs/video/*.mov
 docs/video/narration_*.wav
+
+# shinylive: generated apps + exported static site (rebuild via dev/build_shinylive.R)
+shinylive/
 __pycache__/
