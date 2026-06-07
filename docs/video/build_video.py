@@ -26,6 +26,7 @@ shinyExametrika 使い方動画ビルダー（日英）
 """
 
 import os
+import re
 import sys
 import json
 import glob
@@ -56,12 +57,22 @@ PRON_MAP_JA = [
     ("15項目", "じゅうごこうもく"),
     ("二値", "にち"),
     ("母数", "ぼすう"),
+    ("評定", "ひょうてい"),
+    ("右上", "みぎうえ"),
+    ("GitHub", "ギットハブ"),
+    ("Issue", "イシュー"),
+    ("Discussion", "ディスカッション"),
+    ("Enjoy", "エンジョイ"),
 ]
 
 
 def apply_pron_ja(text):
     for a, b in PRON_MAP_JA:
         text = text.replace(a, b)
+    # 英単語(ラテン)と日本語の間のスペースは VOICEVOX で不自然な間になる。
+    # 両隣が ASCII のときだけ残し（"Format Data" 等）、片方でも日本語なら詰める。
+    text = re.sub(r'(?<=[^\x00-\x7f]) +', '', text)
+    text = re.sub(r' +(?=[^\x00-\x7f])', '', text)
     return text
 
 # 英語は OpenAI TTS（gpt-4o-mini-tts, voice=ash, 明るめ口調指定）
@@ -73,6 +84,7 @@ SAY_VOICE = "Aaron"           # フォールバック用 macOS en_US 男性
 W, H = 1920, 1080
 SCENE_GAP = 1.2              # シーン間の無音(秒)
 CARD_SEC = 6                 # タイトル/エンドカードの尺(秒)
+END_CARD_SEC = 5.0           # エンドカード(無音)の尺(秒)
 
 
 # ---- ナレーション原稿のパース --------------------------------------------
@@ -145,6 +157,41 @@ def synth_say(text, out_wav):
                         "-ar", "44100", "-ac", "2", out_wav], check=True)
 
 
+PAUSE_PER = 0.6   # 「…」1文字ぶんの実無音(秒)。「……」=1.2秒
+
+
+def synth_scene(text, out_wav, synth):
+    """シーン本文を合成。本文中の「…」連続を，その文字数に比例した実無音に置き換える。"""
+    tokens = re.split(r'(…+)', text)
+    if not any("…" in t for t in tokens):
+        synth(text, out_wav)
+        return
+    with tempfile.TemporaryDirectory() as td:
+        segs = []
+        for i, t in enumerate(tokens):
+            if not t:
+                continue
+            if set(t) <= {"…"}:
+                dur = len(t) * PAUSE_PER
+                sil = os.path.join(td, f"s{i}.wav")
+                subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi",
+                                "-i", "anullsrc=r=44100:cl=stereo", "-t", str(dur), sil], check=True)
+                segs.append(sil)
+            elif t.strip():
+                raw = os.path.join(td, f"t{i}.wav")
+                synth(t.strip(), raw)
+                norm = os.path.join(td, f"t{i}n.wav")
+                subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", raw,
+                                "-ar", "44100", "-ac", "2", norm], check=True)
+                segs.append(norm)
+        listf = os.path.join(td, "l.txt")
+        with open(listf, "w") as f:
+            for s in segs:
+                f.write(f"file '{s}'\n")
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat",
+                        "-safe", "0", "-i", listf, "-c", "copy", out_wav], check=True)
+
+
 def wav_duration(path):
     out = subprocess.run(
         ["ffprobe", "-v", "error", "-show_entries", "format=duration",
@@ -174,7 +221,7 @@ def cmd_audio(lang):
     for n in sorted(scenes):
         seg = os.path.join(AUDIO, f"{lang}_{n:02d}.wav")
         text = apply_pron_ja(scenes[n]) if lang == "ja" else scenes[n]
-        synth(text, seg)
+        synth_scene(text, seg, synth)
         # 統一フォーマットへ
         norm = os.path.join(AUDIO, f"{lang}_{n:02d}_n.wav")
         subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", seg,
@@ -255,6 +302,7 @@ def cmd_cards():
     _center(d, "kosugitti.shinyapps.io/shinyExametrika", _font(50), 440, (170, 200, 240))
     _center(d, 'Also an R package:  install.packages("exametrika")', _font(44), 560, (200, 220, 250))
     _center(d, "github.com/kosugitti/shinyExametrika", _font(40), 660, (140, 170, 210))
+    _center(d, "Music by Maksym Malko from Pixabay", _font(30), 1010, (110, 130, 165))
     img.save(os.path.join(CARDS, "end.png"))
     print("cards -> cards/title.png, cards/end.png")
 
@@ -300,6 +348,127 @@ def cmd_assemble(lang, rec):
     print(f"[{lang}] -> final_{lang}.mp4  ({wav_duration(os.path.join(BASE, f'final_{lang}.mp4')):.1f}s)")
 
 
+def cmd_assemble2(lang, rec, anchors_path):
+    """録画 + シーン音声を anchors の時刻に配置 + タイトル/エンドカード → final_<lang>.mp4
+
+    anchors_<lang>.json: {"1": 秒, ... "7": 秒, "9": 秒}（録画本編内の開始秒）。
+    シーン9も本編に重ねる（録画の最後まで音声を流す）。
+    タイトルカード=シーン0音声。エンドカードは無音で音声の後に出す。
+    """
+    raw = json.load(open(anchors_path))
+    anchors = {int(k): float(v) for k, v in raw.items()
+               if k.lstrip("-").isdigit()}
+    title = os.path.join(CARDS, "title.png")
+    end = os.path.join(CARDS, "end.png")
+    for p in (title, end, rec):
+        if not os.path.exists(p):
+            sys.exit(f"見つかりません: {p}")
+    D = wav_duration(rec)
+    # _body_end: 本編をこの秒数で切り詰める（エンドカードを早く出す用）
+    body_end = raw.get("_body_end")
+    if body_end is not None:
+        D = min(D, float(body_end))
+
+    body_scenes = sorted(anchors)
+    clips = [os.path.join(AUDIO, f"{lang}_{n:02d}_n.wav") for n in body_scenes]
+    for c in clips:
+        if not os.path.exists(c):
+            sys.exit(f"シーン音声がありません: {c}（先に audio {lang}）")
+
+    with tempfile.TemporaryDirectory() as td:
+        # 1) 本編ナレーション音声を録画尺の無音上に各シーンを配置して合成
+        inputs = []
+        for c in clips:
+            inputs += ["-i", c]
+        fc = [f"anullsrc=r=44100:cl=stereo:d={D:.2f}[base]"]
+        labels = ["[base]"]
+        for i, n in enumerate(body_scenes):
+            ms = int(anchors[n] * 1000)
+            fc.append(f"[{i}:a]adelay={ms}:all=1[a{i}]")
+            labels.append(f"[a{i}]")
+        fc.append("".join(labels) + f"amix=inputs={len(clips)+1}:normalize=0:dropout_transition=0[aout]")
+        body_audio = os.path.join(td, "body.wav")
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", *inputs,
+                        "-filter_complex", ";".join(fc), "-map", "[aout]",
+                        "-t", f"{D:.2f}", body_audio], check=True)
+
+        # 2) 録画映像 + 本編音声
+        body = os.path.join(td, "body.mp4")
+        subprocess.run([
+            "ffmpeg", "-y", "-loglevel", "error", "-i", rec, "-i", body_audio,
+            "-map", "0:v:0", "-map", "1:a:0",
+            "-vf", f"scale={W}:{H}:force_original_aspect_ratio=decrease,"
+                   f"pad={W}:{H}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30",
+            "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", "-ar", "44100",
+            "-t", f"{D:.2f}", body], check=True)
+
+        # 3) カード
+        def card_with_audio(png, audio, out):
+            # 音声つき（音声長+0.6秒）。タイトルカード用。
+            dur = wav_duration(audio) + 0.6
+            subprocess.run([
+                "ffmpeg", "-y", "-loglevel", "error", "-loop", "1", "-i", png, "-i", audio,
+                "-t", f"{dur:.2f}", "-vf", f"scale={W}:{H},setsar=1,fps=30",
+                "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", "-ar", "44100", "-ac", "2",
+                out], check=True)
+
+        def card_silent(png, dur, out):
+            # 無音カード。エンドカード用（ナレーションが終わってから出す）。
+            subprocess.run([
+                "ffmpeg", "-y", "-loglevel", "error", "-loop", "1", "-i", png,
+                "-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo",
+                "-t", f"{dur:.2f}", "-vf", f"scale={W}:{H},setsar=1,fps=30",
+                "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", "-ar", "44100", "-ac", "2",
+                out], check=True)
+        tclip = os.path.join(td, "t.mp4")
+        card_with_audio(title, os.path.join(AUDIO, f"{lang}_00_n.wav"), tclip)
+        eclip = os.path.join(td, "e.mp4")
+        card_silent(end, END_CARD_SEC, eclip)
+
+        # 4) 連結（再エンコードして揃える）
+        listf = os.path.join(td, "list.txt")
+        with open(listf, "w") as f:
+            for p in (tclip, body, eclip):
+                f.write(f"file '{p}'\n")
+        out = os.path.join(BASE, f"final_{lang}.mp4")
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0",
+                        "-i", listf, "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac",
+                        out], check=True)
+    print(f"[{lang}] -> final_{lang}.mp4  ({wav_duration(os.path.join(BASE, f'final_{lang}.mp4')):.1f}s)")
+
+
+def cmd_bgm(in_mp4, music, out_mp4, vol=0.12, start=0.0):
+    """既存の最終動画に BGM を焼き込む。
+    BGM を小音量でループ＋末尾フェードアウト＋ナレーション中は自動で音量を下げる
+    （ダッキング）。start 秒だけ BGM 開始を遅らせる（タイトルカード中は無音にする用）。
+    フェードインはなし（start の地点からそのまま始まる）。in_mp4 の映像はそのままコピー。
+    """
+    for p in (in_mp4, music):
+        if not os.path.exists(p):
+            sys.exit(f"見つかりません: {p}")
+    D = wav_duration(in_mp4)
+    fade_out_st = max(0.0, D - 3.0)
+    # [1:a]=BGM（-stream_loop でループ済み）, [0:a]=ナレーション
+    mus_chain = [f"volume={vol}"]
+    if start > 0:
+        mus_chain.append(f"adelay={int(start * 1000)}:all=1")
+    mus_chain.append(f"afade=t=out:st={fade_out_st:.2f}:d=3")
+    fc = (
+        f"[1:a]{','.join(mus_chain)}[mus];"
+        f"[mus][0:a]sidechaincompress=threshold=0.04:ratio=6:attack=5:release=350[musd];"
+        f"[0:a][musd]amix=inputs=2:normalize=0:duration=first[aout]"
+    )
+    subprocess.run([
+        "ffmpeg", "-y", "-loglevel", "error",
+        "-i", in_mp4,
+        "-stream_loop", "-1", "-i", music,
+        "-filter_complex", fc,
+        "-map", "0:v:0", "-map", "[aout]",
+        "-c:v", "copy", "-c:a", "aac", "-ar", "44100",
+        "-t", f"{D:.2f}", out_mp4], check=True)
+    print(f"bgm -> {out_mp4}  ({wav_duration(out_mp4):.1f}s, vol={vol})")
+
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         sys.exit(__doc__)
@@ -310,5 +479,12 @@ if __name__ == "__main__":
         cmd_cards()
     elif cmd == "assemble":
         cmd_assemble(sys.argv[2], sys.argv[3])
+    elif cmd == "assemble2":
+        cmd_assemble2(sys.argv[2], sys.argv[3], sys.argv[4])
+    elif cmd == "bgm":
+        # bgm <in_mp4> <music> <out_mp4> [volume] [start_sec]
+        cmd_bgm(sys.argv[2], sys.argv[3], sys.argv[4],
+                float(sys.argv[5]) if len(sys.argv) > 5 else 0.12,
+                float(sys.argv[6]) if len(sys.argv) > 6 else 0.0)
     else:
         sys.exit(__doc__)

@@ -1,0 +1,12 @@
+{
+  "_comment": "English narration anchors. Same recording as JA (UI is English), so the per-scene start seconds match the JA anchors. Scene 9 is overlaid on the body tail; _body_end trims the body before the silent end card.",
+  "_body_end": 272,
+  "1": 1,
+  "2": 52,
+  "3": 68,
+  "4": 118,
+  "5": 166,
+  "6": 191,
+  "7": 223,
+  "9": 250
+}

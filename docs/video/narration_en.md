@@ -1,42 +1,64 @@
 # narration_en — English narration (one block per scene)
 
-Parsed by build_video.py. Each `## N` header starts a scene; the lines below
-are the narration text for that scene. Blank lines and this header block are
-ignored.
+build_video.py parses this. `## N` starts a scene. 0 = title card,
+9 = end-card narration (now overlaid on the body tail). Same recording as the
+Japanese version (the UI is in English). Keep each scene within the same window
+as the JA anchors so nothing overlaps.
 
 ## 0
-shinyExametrika. Test data analysis in your browser, with no coding required.
+shinyExametrika. Test data analysis in your browser — no coding required!
 
 ## 1
-This is shinyExametrika, a web app that brings the exametrika package to your browser.
-The Guide tab you land on lays out the workflow in four steps: load your data, format it, run an analysis, and view the results.
-Let's walk through them.
+This is shinyExametrika, a web app that lets you use the features of the exametrika package right in your browser.
+The page you see first sums up how to use it in four steps: load your data, set its type, run an analysis, and view the results.
+Everything you need is right here, so just follow this flow.
+The interface is in English, but if you prefer Japanese, use the language switch at the top right. Pick whichever suits you best.
 
 ## 2
-First, the Data tab. You can upload your own CSV file, but here we'll use a built-in sample: J15S500, a binary dataset of fifteen items and five hundred examinees.
-The preview of the loaded data appears on the right.
+To try it right away, use the built-in sample data.
+Open the Data tab, choose Sample, and load the fifteen-item, five-hundred-person binary dataset.
+A preview appears on the right.
 
 ## 3
-Next we format the data. We tell the app which column is the ID and which items to analyze, then click Format Data.
-The header now shows the active dataset and its shape, and only the analysis tabs that fit this data type light up.
-Since this is binary data, the binary-compatible analyses become available.
+For a real analysis, you load your own CSV file.
+Switch the data source to Upload, and pick your file.
+First, specify which column holds the examinee ID.
+Then choose the columns to analyze. Leave out extra columns, like ID or group, that aren't part of the analysis.
+If a number marks unanswered items, enter it as the missing-value code. Here, it's ninety-nine.
+Leave the response type on automatic.
+Click Format Data, and the data is formatted. The type now in use shows at the top left — detected as binary.
+To make sure it loaded correctly, check the Formatted Data tab.
 
 ## 4
-Let's start with descriptive statistics. The Descriptives tab shows each item's pass rate and the distribution of total scores. A quick feel for the data.
+exametrika supports four response types.
+Binary; ordinal data, such as a five-point rating; nominal data with no order; and rated data — multiple-choice items where you pick the correct option from several.
+In exametrika, this is called the rated type.
+For rated data, choosing Rated reveals a field for the answer key.
+Enter the correct option for each item, in order, separated by commas.
+This way, you can load your data to match its nature.
 
 ## 5
-For a fuller analysis, let's look at item response theory. In the IRT tab we choose a model.
-Hovering the question mark next to each parameter shows an explanation.
-Running it gives the model fit, each item's discrimination and difficulty, and the item characteristic curves.
-Curves further to the right mark harder items. You can download any plot or table with the buttons provided.
+Once your data is ready, the matching analysis tabs become available.
+Let's switch back to the sample data and try item response theory.
+…
+Pick a model in the IRT tab and run it: you'll see the model fit, each item's discrimination and difficulty, and the ability estimates.
+The Plots tab draws the item characteristic curves.
 
 ## 6
-shinyExametrika offers many more models, from latent class analysis to biclustering.
-Biclustering, for instance, groups examinees and items at the same time, and visualizes the reordered response pattern as a heatmap.
+All your results can be saved.
+In the left sidebar, just below the Run button, the output buttons are gathered together.
+Save the fit indices, the item parameters, and the examinee parameters, each as a CSV.
+Or save all the results at once, as a multi-sheet Excel file.
+And the R script button gives you an R script that reproduces everything you did in this session.
+Try it on screen, then reproduce it in code.
 
 ## 7
-The toggle in the top right switches between English and Japanese at any time.
-No code. Just upload your data and click. Give shinyExametrika a try for your own test data analysis.
+There are many more models, like latent class analysis and biclustering.
+In biclustering, for example, examinees and items are grouped at the same time, and you can view the rearranged response pattern as an array plot.
+…
+For all the models you can run in shinyExametrika and exametrika, see the exametrika package website.
 
-## 8
-shinyExametrika. kosugitti dot shinyapps dot io, slash shinyExametrika.
+## 9
+exametrika is also published as an R package, so do use it from R as well.
+Its site is managed on GitHub. If you find a bug, or want a new feature, please open an Issue, and check out the Discussions page too.
+So — enjoy Exametrika!

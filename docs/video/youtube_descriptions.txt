@@ -1,0 +1,68 @@
+================================================================
+YouTube 投稿用テキスト（コピペ用）
+shinyExametrika 使い方動画 — 日本語版 / 英語版
+================================================================
+
+
+================================================================
+【日本語版】
+================================================================
+
+―― タイトル ――
+shinyExametrika の使い方｜コードを書かずにブラウザでテストデータ分析（IRT・潜在クラス・バイクラスタリング）
+
+―― 説明文 ――
+exametrikaがWebアプリで登場！
+コードを書かずにブラウザだけでexametrikaが使える Webアプリ，「shinyExametrika」の使い方を紹介します。データの読み込みから，回答タイプの設定，分析の実行，結果とRスクリプトのダウンロードまでをひと通り解説します。
+
+▼ アプリ
+https://kosugitti.shinyapps.io/shinyExametrika/
+
+▼ ソースコード（GitHub）
+shinyExametrika: https://github.com/kosugitti/shinyExametrika
+exametrika (Rパッケージ): https://github.com/kosugitti/exametrika
+
+▼ 目次
+0:00 オープニング
+0:06 はじめに（4つのステップ）
+0:57 サンプルデータを使う
+1:13 CSVの読み込みとデータ整形
+2:03 4つの回答タイプ（rated・正答キーの入力）
+2:51 項目応答理論（IRT）を実行する
+3:16 結果の保存（CSV／Excel／Rスクリプト）
+3:48 その他のモデル（バイクラスタリング）
+4:15 Rパッケージ exametrika
+
+Music by <a href="https://pixabay.com/users/backgroundmusicforvideos-46459014/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=481995">Maksym Malko</a> from <a href="https://pixabay.com/music//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=481995">Pixabay</a>
+
+
+================================================================
+【English version】
+================================================================
+
+-- Title --
+shinyExametrika: Test Data Analysis in Your Browser — No Coding Required
+
+-- Description --
+exametrika is now a web app!
+Meet shinyExametrika — a web app that lets you use exametrika right in your browser, with no coding required. This walkthrough covers the whole flow: loading your data, setting the response type, running an analysis, and downloading both the results and a reproducible R script.
+
+App
+https://kosugitti.shinyapps.io/shinyExametrika/
+
+Source code (GitHub)
+shinyExametrika: https://github.com/kosugitti/shinyExametrika
+exametrika (R package): https://github.com/kosugitti/exametrika
+
+Chapters
+0:00 Intro
+0:09 Getting started (four steps)
+1:00 Using the sample data
+1:16 Loading a CSV and formatting the data
+2:06 Four response types (rated, answer key)
+2:54 Running item response theory (IRT)
+3:19 Saving results (CSV / Excel / R script)
+3:51 More models (biclustering)
+4:18 The exametrika R package
+
+Music by <a href="https://pixabay.com/users/backgroundmusicforvideos-46459014/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=481995">Maksym Malko</a> from <a href="https://pixabay.com/music//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=481995">Pixabay</a>
