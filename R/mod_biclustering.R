@@ -489,9 +489,7 @@ mod_biclustering_server <- function(id, formatted_data, i18n, script_log = NULL)
           if (is.null(idx) || length(idx) == 0 || is.na(idx)) idx <- 1L
           plot(result(), type = input$plot_type, students = idx)
         } else if (input$plot_type == "FRP") {
-          idx <- as.integer(input$selected_field)
-          if (is.null(idx) || length(idx) == 0 || is.na(idx)) idx <- 1L
-          plot(result(), type = "FRP", fields = idx)
+          plot_frp_field(result(), input$selected_field)
         } else {
           plot(result(), type = input$plot_type)
         }
@@ -569,6 +567,8 @@ mod_biclustering_server <- function(id, formatted_data, i18n, script_log = NULL)
             idx <- as.integer(input$selected_student)
             if (is.null(idx) || length(idx) == 0 || is.na(idx)) idx <- 1L
             plot(result(), type = "CMP", students = idx)
+          } else if (input$plot_type == "FRP") {
+            plot_frp_field(result(), input$selected_field)
           } else {
             plot(result(), type = input$plot_type)
           }

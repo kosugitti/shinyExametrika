@@ -194,3 +194,32 @@ extract_fit_indices <- function(result) {
     data.frame(Index = "Error", Value = NA_real_, stringsAsFactors = FALSE)
   })
 }
+
+#' Base-plot fallback for a single Field Reference Profile
+#'
+#' `plot(result, type = "FRP")` in exametrika draws one plot per field and
+#' ignores field selection (`fields` is not a formal argument; as of
+#' exametrika 1.14.0 it is forwarded to base graphics and triggers
+#' "not a graphical parameter" warnings). Inside `renderPlot()` only the
+#' last field would be shown regardless of the user's selection, so this
+#' helper draws just the selected field, mirroring exametrika's base style.
+#'
+#' @param result An exametrika result object with an `$FRP` matrix
+#'   (fields x classes/ranks) and an `$msg` label ("Class"/"Rank").
+#' @param idx Field index (1-based). Coerced to 1 when missing/invalid.
+#'
+#' @noRd
+plot_frp_field <- function(result, idx) {
+  frp <- result$FRP
+  idx <- suppressWarnings(as.integer(idx))
+  if (length(idx) == 0 || is.na(idx) || idx < 1 || idx > nrow(frp)) idx <- 1L
+  msg <- if (!is.null(result$msg)) result$msg else "Class"
+  plot(
+    as.numeric(frp[idx, ]),
+    type = "b",
+    ylab = "Correct Response Rate",
+    xlab = paste("Latent", msg),
+    ylim = c(0, 1),
+    main = paste("Field", idx)
+  )
+}

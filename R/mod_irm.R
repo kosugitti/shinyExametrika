@@ -390,9 +390,7 @@ mod_irm_server <- function(id, formatted_data, i18n, script_log = NULL) {
       } else {
         # Base plot fallback
         if (input$plot_type == "FRP") {
-          idx <- as.integer(input$selected_field)
-          if (is.null(idx) || length(idx) == 0 || is.na(idx)) idx <- 1L
-          plot(result(), type = "FRP", fields = idx)
+          plot_frp_field(result(), input$selected_field)
         } else {
           plot(result(), type = input$plot_type)
         }
@@ -448,9 +446,7 @@ mod_irm_server <- function(id, formatted_data, i18n, script_log = NULL) {
         } else {
           png(file, width = 800, height = 500)
           if (input$plot_type == "FRP") {
-            idx <- as.integer(input$selected_field)
-            if (is.null(idx) || length(idx) == 0 || is.na(idx)) idx <- 1L
-            plot(result(), type = "FRP", fields = idx)
+            plot_frp_field(result(), input$selected_field)
           } else {
             plot(result(), type = input$plot_type)
           }

@@ -2,6 +2,21 @@
 
 ## Changes
 
+### Fix FRP base-plot fallback field selection (2026-06-10)
+
+- **New helper `plot_frp_field()`** (`R/fct_analysis.R`): draws a single
+  Field Reference Profile from `result$FRP` in exametrika's base style.
+- The base-plot fallbacks in Biclustering and IRM passed `fields = idx` to
+  `plot.exametrika()`, but `fields` is not a formal argument there: the
+  selection was silently ignored (all fields were drawn and only the last
+  one appeared in `renderPlot()`), and with exametrika >= 1.14.0 the
+  argument is forwarded to base graphics, emitting
+  "not a graphical parameter" warnings. The fallbacks in
+  `mod_biclustering.R` (plot + download) and `mod_irm.R` (plot + download)
+  now use `plot_frp_field()`, so the selected field is actually shown and
+  no warnings are emitted. The primary ggExametrika path
+  (`plotFRP_gg(r, fields = idx)`) was already correct and is unchanged.
+
 ### Per-function shinylive builds (2026-06-07)
 
 - **`app_ui()` / `app_server()` now take an optional `tabs` argument.** When
