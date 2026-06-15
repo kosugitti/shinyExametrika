@@ -4,6 +4,15 @@ Per-session internal narrative for shinyExametrika. User-facing changes
 go in `NEWS.md`; this file captures *why* and *what was investigated*.
 Entries are newest-first.
 
+## 2026-06-15 — exametrika 1.14.0 動作確認
+
+- exametrika v1.14.0 が 2026-06-14 に CRAN 受理・公開されたのを受け，shinyExametrika が
+  新バージョンで問題なく動くか確認。
+- ローカルに exametrika 1.14.0.9000（1.14.0 の全変更を含む dev 版，CRAN ミラー未同期のため
+  本体ソースから install）+ ggExametrika 1.1.1 を入れたペアに対して `devtools::test()` を実行。
+- 結果: **FAIL 0 | WARN 0 | SKIP 0 | PASS 183** で全通過。コード変更は不要。
+- shinyExametrika は CRAN 登録対象外（shinyapps.io / shinylive 配布）なので，動作確認のみで完了。
+
 ## 2026-06-03（夕） — shinyapps.io デプロイ詰まり + webR/Shinylive スパイク（GO 確定）
 
 ### shinyapps.io 再デプロイの停止と対応
