@@ -4,6 +4,147 @@ Per-session internal narrative for shinyExametrika. User-facing changes
 go in `NEWS.md`; this file captures *why* and *what was investigated*.
 Entries are newest-first.
 
+## CLAUDE.mdからの退避 (2026-07-07)
+
+CLAUDE.md のダイエットに伴い、日付つきの経緯・完了済みタスクのログを一字一句そのまま以下へ退避した（要約・書き換えなし。「元:」ラベルのみ退避時に付与）。
+
+### 元: ヘッダの最終更新行
+
+**最終更新: 2026-06-07**（使い方動画 日英公開 + shinylive 4アプリ分割実装・公開は見送り + CI 緑化。当セッションで一区切り）
+
+### 元: 開発フェーズ（完了済みチェック項目）
+
+Phase 0: プロジェクト基盤
+
+- [x] golem プロジェクト初期化
+- [x] 依存パッケージのセットアップ
+- [x] CI/CD 設定（GitHub Actions: R-CMD-check.yaml）
+- [x] i18n 基盤の構築（shiny.i18n, translation.json）
+- [x] データ読み込みモジュール（CSV / サンプルデータ）
+- [x] ガイドページ（mod_guide.R — ランディングタブ）
+
+Phase 1: 基本分析
+
+- [x] Descriptives モジュール（記述統計）
+- [x] CTT モジュール
+- [x] IRT モジュール（2PL / 3PL / 4PL）
+- [x] GRM モジュール（多値 IRT）
+
+Phase 2: 潜在構造分析
+
+- [x] LCA モジュール
+- [x] LRA モジュール
+- [x] Biclustering モジュール
+- [x] IRM モジュール（CRP によるクラス数・フィールド数自動決定）
+
+Phase 3: ネットワーク・局所依存モデル
+
+- [x] DAG 入力共通コンポーネント（fct_dag.R — Phase 3 全モジュール共用、ranked DAG対応済み）
+- [x] BNM モジュール（固定DAG / BNM_GA / BNM_PBIL、DAG可視化対応）
+- [x] LDLRA モジュール（固定DAG / LDLRA_PBIL、ランク別DAG入力、OAC表示、2026-03-25 実装済み）
+
+Phase 4: 仕上げ
+
+- [x] デプロイ対応（shinyapps.io デプロイ済み）
+
+### 元: 今後のTODO 短期（完了済み項目）
+
+- [x] IRM モジュールの実装（PR #10 でマージ済み、2026-02-26）
+- [x] IRM seed UI の公開（再現性のための乱数シード指定、2026-02-26 実装済み）
+
+### 元: 今後のTODO 中期（完了済み項目）
+
+- [x] DAG 入力共通コンポーネント（fct_dag.R、From/To CSV アップロード + バリデーション + ranked DAG対応、2026-02-28〜03-25 実装済み）
+- [x] BNM モジュール（固定DAG / BNM_GA / BNM_PBIL の3モード、plotGraph_gg DAG可視化対応、2026-02-28 実装済み）
+- [x] LDLRA モジュール（固定DAG / LDLRA_PBIL、ランク別DAG入力、OAC表示・CCRR・PIRP対応、2026-03-25 実装済み）
+
+### 元: UX 洗練（完了済み項目）
+
+- [x] **優先A-1: データ未読込/型不一致の pre-check 統一**（2026-06-03 実装）
+  - `fct_precheck.R` に `check_data_requirement()` / `precheck_banner()` を新設
+  - 全10分析タブの冒頭に `uiOutput(ns("precheck"))` を配置し、データ未設定/型不一致を
+    黄色アラートで明示（従来は silent な `req()` のみ）。i18n（en/ja）対応
+  - 型要件: binary=CTT/IRT/LCA/LRA/Biclustering/IRM/BNM/LDLRA、ordinal+rated=GRM、any=Descriptives
+- [x] **優先A-2: パラメータ guidance**（2026-06-03 実装）
+  - `fct_param_help.R` の `param_label()` で対象パラメータのラベルに (?) ホバーツールチップ
+    （説明＋推奨/既定値）を付与。IRT 2PL/3PL/4PL、LRA GTM/SOM・MIC、Biclustering ncls/nfld/
+    method/MIC、IRM gamma_c/gamma_f/seed、BNM/LDLRA の analysis_mode/max_parents/population/
+    mutation_rate/pbil_alpha 等。i18n（en/ja）18文字列追加
+- [x] **優先A-3: 各分析タブ上部に折りたたみ式「このモデルは何か」help**（2026-06-03 実装）
+  - `fct_modelhelp.R` の `model_help_block()`（native `<details>`、既定で折りたたみ）を全10タブへ。
+    モデル名・1行説明・データ型バッジを表示。文言は mod_guide の既存翻訳を再利用（新規i18nは3文字列）
+- [x] **タブのデータ準備ゲーティング＋データセット表示＋データタブ整理**（2026-06-03 実装）
+  - 分析タブは dataFormat 前は無効（`.nav-disabled`）、整形後かつ型一致時のみ有効化
+    （binaryではGRM無効、ordinalではDescriptives+GRMのみ）。`analysis_tab_requirements()`
+    （`fct_precheck.R`）＋app_serverの`observe`→**shinyjs::addClass/removeClass(selector=)**。
+    現タブが無効化されたらデータタブへ誘導。chromoteで実ブラウザ検証済み
+  - **i18n ライブ切替の不具合修正**: `shiny.i18n::update_lang()` は shiny.i18n 0.3.0 の
+    `#i18n-state` 入力バインディング経由で、shiny 1.13 と非互換（`Unexpected input value mode`
+    エラーを起動時＋トグル毎に投げる）。`update_lang` をやめ，app_serverの言語observerで
+    **shinyjs::runjs により `.i18n` span を `i18n_translations` 辞書から直接書き換え**＋
+    `ignoreInit=TRUE`。EN/JA切替がエラー0で動作（実ブラウザ検証済み）。
+    当初のタブ制御カスタムJSハンドラはShiny初期化とのレースで有効化が無反応になっていた（→shinyjs化で解消）
+  - ナビヘッダ左に現読み込みデータセットを赤字常時表示（`● k2022.csv [binary, 20 × 6]`）。
+    `mod_data_upload_server` の戻り値を `list(data, name)` に拡張
+  - データ取得方法を「アップロード／サンプル」のラジオ1段に整理（conditionalPanelで該当入力のみ表示）
+- [x] **データタブ: 列選択UI**（2026-06-03 実装）
+  - ID列をプルダウン（列名）＋分析変数を複数選択（`selectizeInput`）に。複数ID列（ID+GID 等）で
+    余分な列が分析に混入し nominal 誤判定になる問題を解消。既定=先頭列ID・残りを分析変数。
+    選択ID は分析変数から自動除外、変数0個は警告。`mod_data_upload.R`、testServer テスト追加
+- [x] **i18n ライブ切替の修正**（2026-06-03）
+  - EN/JA 切替で一部（Settings・Upload 等の静的ラベル）が翻訳されない問題。shiny.i18n は
+    `use_js()` 後の `i18n$t()` が出す `.i18n` span だけをJS差し替えする仕様。`usei18n()` がUI末尾に
+    あり、それ以前の `i18n$t()` がプレーンテキスト化していた。`app_ui()` 冒頭で `i18n$use_js()` を
+    呼ぶ順序に修正（約340ラベルがライブ切替対象に）。属性文脈用に `utils_i18n.R` の `t_plain()` 新設
+  - 残: サーバ描画の動的テキスト（データタブの value box・結果表）はトグルでは即時更新されず，
+    次のデータ操作時に反映（別途対応）
+
+### 元: 依存パッケージの注意書き
+
+**注意**: exametrika v1.10.1 CRAN 公開済み（2026-03-20）。ggExametrika v1.0.0 CRAN 審査中（2026-03-25 時点）。ggExametrika CRAN 公開後に Remotes を削除し、shinyExametrika の CRAN 投稿準備に入る。
+
+### 元: CI / テスト構成 GitHub Actions の現状行
+
+- 現状: **失敗中**（2026-02-28 時点）。exametrika v1.10.0 が CRAN 未公開のため、CI 環境でのインストールに問題がある可能性あり
+
+### 元: 現在のリポジトリ状態（2026-03-25 時点）セクション全体
+
+### ブランチ
+
+- `develop` は `main` より先行（LDLRA モジュール追加分）
+- feature ブランチは全てマージ済み・削除済み
+
+### GitHub Issues / PR
+
+- Open Issues: 0
+- Open PR: 0
+- 全 10 PR が MERGED/CLOSED 済み（#1 data-format 〜 #10 mod-irm）
+- LDLRA はローカルで直接マージ（feature/mod-ldlra → develop）
+
+### CI
+
+- GitHub Actions: R-CMD-check（macOS-latest + ubuntu-latest release/devel の 3 環境）
+- `.github/workflows/R-CMD-check.yaml`
+
+### テスト
+
+- testthat: 3 テストファイル、67 テスト
+  - `test-golem-recommended.R`: golem 基本テスト（app_ui, app_server, app_sys, golem-config の存在と型）
+  - `test-fct_analysis.R`: ヘルパー関数ユニットテスト（safe_field, extract_fit_indices）
+  - `test-fct_dag.R`: DAGヘルパー関数ユニットテスト（acyclicity, parsing, validation, ranked DAG）
+
+### R CMD check 状態
+
+- 0 errors / 0 warnings / 4 NOTEs（2026-03-25 時点）
+- NOTEs は全て既知（.github, License, app.R/rsconnect, 未使用waiter）
+
+### 元: メモ・注意点（完了済み・時点情報）
+
+- ggExametrika v1.0.0 CRAN審査中（2026-03-25 時点）。未実装プロットがある場合は exametrika の `plot()` にフォールバックする
+- README.md の Phase 2 ステータスを更新済み（LCA, LRA, Biclustering, IRM 完了を反映、2026-02-28）
+
+---
+
 ## 2026-06-15 — exametrika 1.14.0 動作確認
 
 - exametrika v1.14.0 が 2026-06-14 に CRAN 受理・公開されたのを受け，shinyExametrika が
