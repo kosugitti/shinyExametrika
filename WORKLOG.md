@@ -445,3 +445,9 @@ load_all 通過確認。
 - shinylive 公開 (上記トリガー発生時)。
 - LDB / BINET タブ実装 (引き続き)。
 - 優先B の UX 洗練 (長時間計算の時間目安+タイムアウト等)。
+
+## CLAUDE.mdからの退避 (2026-07-17)
+
+ホーム索引(~/Dropbox/CLAUDE.md)のステータスセル圧縮時の退避(退避時点の全文):
+
+golem 製 Shiny GUI(12/14タブ実装，LDB/BINET はプレースホルダー)。shinyapps.io 公開・使い方動画(日英)・shinylive 4アプリ分割の当初3目標完了(2026-06-07)で一区切り。exametrika 1.14.0 動作確認済(6/15, 183 tests pass・CRAN登録不要)。次の作業は優先B UX洗練 または LDB/BINET 実装。詳細→Git/shinyExametrika/{CLAUDE,WORKLOG}.md
