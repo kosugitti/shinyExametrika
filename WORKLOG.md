@@ -451,3 +451,17 @@ load_all 通過確認。
 ホーム索引(~/Dropbox/CLAUDE.md)のステータスセル圧縮時の退避(退避時点の全文):
 
 golem 製 Shiny GUI(12/14タブ実装，LDB/BINET はプレースホルダー)。shinyapps.io 公開・使い方動画(日英)・shinylive 4アプリ分割の当初3目標完了(2026-06-07)で一区切り。exametrika 1.14.0 動作確認済(6/15, 183 tests pass・CRAN登録不要)。次の作業は優先B UX洗練 または LDB/BINET 実装。詳細→Git/shinyExametrika/{CLAUDE,WORKLOG}.md
+
+
+## 2026-08-20 exametrika 2.0.0 対応
+
+`safe_field(result, new_name, old_name, default)` から旧名引数を落とし，
+`safe_field(result, field, default)` に簡素化(`e9fb8ea`)。
+
+exametrika 2.0.0 が `Nclass` / `Nfield` / `Nrank` / `N_Cycle` を削除した。
+これらは 1.8.0 から非推奨で，本パッケージは `exametrika (>= 1.10.0)` を要求するため，
+**旧名を試す経路はどのサポート版でも到達不能**だった。呼び出し 2 箇所
+(`mod_ldlra.R`)を更新し，フォールバック挙動を検査していたテストは
+既定値の検査に置き換えた。
+
+exametrika 2.0.0(提出した実物)をインストールした環境で **183 件全通過**。
