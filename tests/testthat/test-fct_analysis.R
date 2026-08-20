@@ -3,21 +3,21 @@
 #
 # Note: safe_field / extract_fit_indices are non-exported functions, accessed via :::
 
-test_that("safe_field returns new name when available", {
-  obj <- list(n_class = 5, Nclass = 3)
-  result <- shinyExametrika:::safe_field(obj, "n_class", "Nclass")
+test_that("safe_field returns the field when present", {
+  obj <- list(n_class = 5)
+  result <- shinyExametrika:::safe_field(obj, "n_class")
   expect_equal(result, 5)
 })
 
-test_that("safe_field falls back to old name", {
-  obj <- list(Nclass = 3)
-  result <- shinyExametrika:::safe_field(obj, "n_class", "Nclass")
-  expect_equal(result, 3)
+test_that("safe_field returns the default when the field is absent", {
+  obj <- list(other = 1)
+  result <- shinyExametrika:::safe_field(obj, "n_class", 2)
+  expect_equal(result, 2)
 })
 
-test_that("safe_field returns NULL when neither exists", {
+test_that("safe_field returns NULL when absent and no default is given", {
   obj <- list(other = 1)
-  result <- shinyExametrika:::safe_field(obj, "n_class", "Nclass")
+  result <- shinyExametrika:::safe_field(obj, "n_class")
   expect_null(result)
 })
 

@@ -2,6 +2,14 @@
 
 ## Changes
 
+### Simplify `safe_field()` (2026-08-20)
+
+- The helper took a PascalCase legacy name to fall back on (`Nclass`,
+  `Nfield`, `Nrank`, `N_Cycle`). exametrika removed those in 2.0.0 and had
+  deprecated them since 1.8.0, and this package requires `>= 1.10.0`, so
+  the fallback could only ever return `NULL`. `safe_field()` now takes the
+  field name and an optional default. Verified against exametrika 2.0.0.
+
 ### Fix FRP base-plot fallback field selection (2026-06-10)
 
 - **New helper `plot_frp_field()`** (`R/fct_analysis.R`): draws a single

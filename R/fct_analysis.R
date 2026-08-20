@@ -5,9 +5,9 @@
 # [Rules for implementing new modules (compliant with exametrika v1.9.0)]
 #
 # 1. Always use snake_case new names for field names:
-#    - n_class (legacy: Nclass), n_field (legacy: Nfield), n_rank (legacy: Nrank)
-#    - n_cycle (legacy: N_Cycle / em_cycle / EM_Cycle)
-#    - Use safe_field() when fallback to legacy names is needed
+#    - n_class, n_field, n_rank
+#    - n_cycle
+#    - Use safe_field() to supply a default when a field may be absent
 #
 # 2. TestFitIndices assumes 16 fields + ModelFit class:
 #    - model_log_like, bench_log_like, null_log_like, model_Chi_sq,
@@ -40,11 +40,10 @@
 #'
 #' @details
 #' Field naming convention since exametrika v1.9.0:
-#' - Uses n_class (legacy: Nclass), n_field (legacy: Nfield), n_rank (legacy: Nrank)
+#' - Uses n_class, n_field, n_rank
 #' - Estimate column added to Students (Biclustering nominal/ordinal)
 #'
 #' Always use snake_case new names when implementing new modules.
-#' Use `result$n_class %||% result$Nclass` for fallback to legacy names when needed.
 #'
 #' @examples
 #' \dontrun{
@@ -116,26 +115,21 @@ extract_ability <- function(result) {
 
 #' Helper to safely retrieve snake_case fields from analysis results
 #'
-#' Prioritizes snake_case names from exametrika v1.9.0 and later,
-#' with fallback to legacy names.
+#' Reads a field that a model may or may not report, falling back to a
+#' default. The PascalCase aliases (Nclass, Nfield, Nrank, N_Cycle) that
+#' this helper used to fall back on were removed in exametrika 2.0.0 and
+#' had been deprecated since 1.8.0; since this package requires >= 1.10.0,
+#' no supported version reaches that path any more.
 #'
 #' @param result An exametrika analysis result object
-#' @param new_name The snake_case new field name (e.g., "n_class")
-#' @param old_name The PascalCase legacy field name (e.g., "Nclass")
+#' @param field The field name (e.g., "n_class")
 #' @param default Default value if the field is not found
 #'
 #' @return The field value, or default if not found.
 #'
-#' @details
-#' Mapping table (new name / legacy name):
-#' - n_class / Nclass (LCA, LDLRA, BINET, Biclustering)
-#' - n_field / Nfield (LDB, BINET, Biclustering)
-#' - n_rank / Nrank (LRA, LDB)
-#' - n_cycle / N_Cycle (IRM, Biclustering nominal/ordinal)
-#'
 #' @noRd
-safe_field <- function(result, new_name, old_name, default = NULL) {
-  result[[new_name]] %||% result[[old_name]] %||% default
+safe_field <- function(result, field, default = NULL) {
+  return(result[[field]] %||% default)
 }
 
 

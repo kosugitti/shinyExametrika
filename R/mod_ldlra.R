@@ -561,7 +561,7 @@ mod_ldlra_server <- function(id, formatted_data, i18n, script_log = NULL) {
     output$table_rank_summary <- DT::renderDT({
       req(result())
       r <- result()
-      ncls <- safe_field(r, "n_class", "Nclass", 2)
+      ncls <- safe_field(r, "n_class", 2)
       msg_label <- if (!is.null(r$msg) && r$msg == "Class") "Class" else "Rank"
       df <- data.frame(
         Label   = paste0(msg_label, " ", seq_len(ncls)),
@@ -645,7 +645,7 @@ mod_ldlra_server <- function(id, formatted_data, i18n, script_log = NULL) {
           selected = 1
         )
       } else if (pt == "DAG") {
-        ncls <- safe_field(r, "n_class", "Nclass", 2)
+        ncls <- safe_field(r, "n_class", 2)
         msg_label <- if (!is.null(r$msg) && r$msg == "Class") {
           "Class"
         } else {
